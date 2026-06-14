@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /generations/{docId} {
+      allow read: if true;
+      allow create: if true;
+    }
+    match /favorites/{docId} {
+      allow read, write: if true;
+    }
+    match /templates/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

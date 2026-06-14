@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Glimr — AI Photo Templates</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
   :root {
     --bg: #0d0d0f;
@@ -110,6 +112,20 @@
     padding: 28px 10px 10px;
     background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
     font-size: 12px; font-weight: 500; color: white;
+  }
+  .card-like-btn {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(0,0,0,0.5); border: none; border-radius: 20px;
+    color: white; font-size: 12px; padding: 4px 8px;
+    cursor: pointer; display: flex; align-items: center; gap: 4px;
+    backdrop-filter: blur(4px); transition: transform .15s;
+    z-index: 2;
+  }
+  .card-like-btn:hover { transform: scale(1.1); }
+  .card-like-btn.liked { color: #ff6b9d; }
+  .card-uses {
+    position: absolute; bottom: 28px; right: 8px;
+    font-size: 10px; color: rgba(255,255,255,0.5);
   }
   .pro-lock {
     position: absolute; top: 8px; right: 8px;
@@ -438,11 +454,18 @@
     const cardInner = t.image
       ? `<img src="${t.image}" alt="${t.label}" style="width:100%;height:100%;object-fit:cover;display:block;">`
       : `<div class="card-img" style="--c1:${c[0]};--c2:${c[1]}">${t.emoji}</div>`;
+    const isLiked = likedTemplates.has(String(t.id));
+    const likeCount = templateCounts[t.id]?.likes || 0;
+    const useCount = templateCounts[t.id]?.uses || 0;
     return `
-      <div class="template-card" onclick="openTemplate(${t.id})" data-cat="${t.cat}">
+      <div class="template-card" onclick="openTemplate(${t.id})" data-cat="${t.cat}" id="card-${t.id}">
         ${cardInner}
         ${t.trending ? '<div class="trending-badge">🔥 Trend</div>' : ''}
         ${t.new && !t.trending ? '<div class="trending-badge" style="background:rgba(103,232,249,0.9);color:#000">NEW</div>' : ''}
+        <button class="card-like-btn ${isLiked ? 'liked' : ''}" id="like-btn-${t.id}" onclick="toggleFavorite(event,${t.id})">
+          ${isLiked ? '❤️' : '🤍'} <span id="like-count-${t.id}">${likeCount > 0 ? likeCount : ''}</span>
+        </button>
+        ${useCount > 0 ? `<div class="card-uses" id="uses-${t.id}">${useCount} uses</div>` : `<div class="card-uses" id="uses-${t.id}"></div>`}
         <div class="card-overlay"><button class="try-btn">Try this ✦</button></div>
         <div class="card-label">${t.label}</div>
       </div>`;
@@ -475,6 +498,7 @@
     document.getElementById('result-emoji').textContent = t.emoji;
     resetPhotoUpload();
     document.getElementById('template-modal').classList.add('open');
+    trackTemplateUse(id);
   }
 
   function closeModal() {
@@ -534,6 +558,7 @@
       const result = await res.json();
       generatedImageUrl = result.image || null;
       if (!generatedImageUrl) throw new Error('No image returned');
+      saveGeneration(currentTemplate.id, currentTemplate.label, generatedImageUrl);
       completeCatScreen();
     } catch (err) {
       hideCatScreen();
@@ -697,8 +722,84 @@
     alert('Welcome to Pro! ✨ Unlimited generations unlocked.');
   }
 
+  // FIREBASE
+  const firebaseConfig = {
+    apiKey: "AIzaSyAO_oyd9HctxxfrY6rlP2lmwSLscEwrIqA",
+    authDomain: "trendy-app-glimr.firebaseapp.com",
+    projectId: "trendy-app-glimr",
+    storageBucket: "trendy-app-glimr.firebasestorage.app",
+    messagingSenderId: "492448280836",
+    appId: "1:492448280836:web:eade558e706cb50b54e051"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const sessionId = localStorage.getItem('glimr-session') || crypto.randomUUID();
+  localStorage.setItem('glimr-session', sessionId);
+
+  const likedTemplates = new Set(JSON.parse(localStorage.getItem('glimr-likes') || '[]'));
+  const templateCounts = {};
+
+  async function loadTemplateCounts() {
+    try {
+      const snap = await db.collection('templates').get();
+      snap.forEach(doc => {
+        templateCounts[doc.id] = doc.data();
+      });
+      buildGrids();
+    } catch(e) { buildGrids(); }
+  }
+
+  async function toggleFavorite(e, templateId) {
+    e.stopPropagation();
+    const id = String(templateId);
+    const ref = db.collection('templates').doc(id);
+    const btn = document.getElementById(`like-btn-${templateId}`);
+    const countEl = document.getElementById(`like-count-${templateId}`);
+
+    if (likedTemplates.has(id)) {
+      likedTemplates.delete(id);
+      await ref.set({ likes: firebase.firestore.FieldValue.increment(-1) }, { merge: true });
+      if (btn) { btn.classList.remove('liked'); btn.innerHTML = `🤍 <span id="like-count-${templateId}">${Math.max(0,(templateCounts[templateId]?.likes||1)-1)||''}</span>`; }
+      if (!templateCounts[templateId]) templateCounts[templateId] = {};
+      templateCounts[templateId].likes = Math.max(0, (templateCounts[templateId].likes || 1) - 1);
+    } else {
+      likedTemplates.add(id);
+      await ref.set({ likes: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+      if (btn) { btn.classList.add('liked'); btn.innerHTML = `❤️ <span id="like-count-${templateId}">${(templateCounts[templateId]?.likes||0)+1}</span>`; }
+      if (!templateCounts[templateId]) templateCounts[templateId] = {};
+      templateCounts[templateId].likes = (templateCounts[templateId].likes || 0) + 1;
+
+      await db.collection('favorites').add({
+        sessionId, templateId, templateLabel: templates.find(t=>t.id===templateId)?.label || '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    localStorage.setItem('glimr-likes', JSON.stringify([...likedTemplates]));
+  }
+
+  async function trackTemplateUse(templateId) {
+    try {
+      const ref = db.collection('templates').doc(String(templateId));
+      await ref.set({ uses: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+      if (!templateCounts[templateId]) templateCounts[templateId] = {};
+      templateCounts[templateId].uses = (templateCounts[templateId].uses || 0) + 1;
+      const el = document.getElementById(`uses-${templateId}`);
+      if (el) el.textContent = templateCounts[templateId].uses + ' uses';
+    } catch(e) {}
+  }
+
+  async function saveGeneration(templateId, templateLabel, imageUrl) {
+    try {
+      await db.collection('generations').add({
+        sessionId, templateId, templateLabel, imageUrl,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch(e) {}
+  }
+
   // INIT
-  buildGrids();
+  loadTemplateCounts();
   updateGenBadge();
 </script>
 </body>
