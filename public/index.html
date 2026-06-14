@@ -475,12 +475,11 @@
     </nav>
   </div>
   <div class="header-right">
-    <div class="gen-badge">
-      <div class="gen-dot" id="dot1"></div>
-      <div class="gen-dot" id="dot2"></div>
-      <span id="gen-count" style="margin-left:4px;font-size:12px;color:var(--text-muted)">2 left</span>
+    <div class="gen-badge" id="gen-badge" style="display:none">
+      <span id="gen-dots" style="display:flex;align-items:center;gap:6px"></span>
+      <span id="gen-count" style="margin-left:4px;font-size:12px;color:var(--text-muted)"></span>
     </div>
-    <div class="plan-badge" id="plan-badge">Free</div>
+    <div class="plan-badge" id="plan-badge" style="display:none">Free</div>
     <div id="auth-header-area">
       <button class="signin-btn" onclick="openAuth('login')">Sign in</button>
     </div>
@@ -741,14 +740,14 @@
   <div class="upsell-card">
     <span class="upsell-emoji">✨</span>
     <h2>You're on a roll!</h2>
-    <p>You've used your 2 free generations. Upgrade to unlock unlimited stunning photos.</p>
+    <p>You've used your 2 free generations. Upgrade to Pro for 30 stunning photos a month.</p>
     <div class="price-box">
       <div class="price-old">$9.99/month</div>
       <div class="price-new" id="upsell-price">$4<span>.99/mo</span></div>
       <div class="price-badge" id="upsell-badge">50% off — today only</div>
     </div>
     <div class="upsell-features">
-      <div class="upsell-feat">Unlimited AI generations</div>
+      <div class="upsell-feat">30 AI generations a month</div>
       <div class="upsell-feat">All premium templates</div>
       <div class="upsell-feat">New templates every week</div>
       <div class="upsell-feat">No watermark on saves</div>
@@ -762,7 +761,8 @@
 <script>
   // STATE
   const FREE_LIMIT = 2;
-  let freeGens = FREE_LIMIT;
+  const PRO_LIMIT = 30;
+  let gensUsed = 0;
   let isPro = false;
   let currentTemplate = null;
   let hasPhoto = false;
@@ -901,7 +901,9 @@
 
   function startGeneration() {
     if (!hasPhoto) return;
-    if (!isPro && freeGens <= 0) { closeModal(); openUpsell('pro'); return; }
+    if (!auth.currentUser) { closeModal(); openAuth('register'); return; }
+    const limit = isPro ? PRO_LIMIT : FREE_LIMIT;
+    if (gensUsed >= limit) { closeModal(); openUpsell(isPro ? 'pro' : 'pro'); return; }
     closeModal();
     showCatScreen();
     runGeneration();
@@ -1040,41 +1042,59 @@
   }
 
   function finishGeneration() {
-    if (!isPro) {
-      freeGens = Math.max(0, freeGens - 1);
-      persistGenCount();
-    }
+    gensUsed += 1;
+    persistGenCount();
     updateGenBadge();
-    if (!isPro && freeGens <= 0) {
+    const limit = isPro ? PRO_LIMIT : FREE_LIMIT;
+    if (gensUsed >= limit) {
       setTimeout(() => openUpsell('pro'), 1200);
     }
   }
 
+  function renderDots(total, remaining) {
+    let html = '';
+    for (let i = 0; i < total; i++) {
+      const used = i >= remaining;
+      html += `<span class="gen-dot${used ? ' used' : ''}"></span>`;
+    }
+    return html;
+  }
+
   function updateGenBadge() {
-    const dot1 = document.getElementById('dot1');
-    const dot2 = document.getElementById('dot2');
+    const genBadge = document.getElementById('gen-badge');
+    const planBadge = document.getElementById('plan-badge');
+    const dotsEl = document.getElementById('gen-dots');
     const countEl = document.getElementById('gen-count');
-    if (isPro) {
-      if (dot1) dot1.className = 'gen-dot';
-      if (dot2) dot2.className = 'gen-dot';
-      if (countEl) countEl.textContent = '∞ left';
+
+    // Badge only appears after sign in
+    if (!auth.currentUser) {
+      if (genBadge) genBadge.style.display = 'none';
+      if (planBadge) planBadge.style.display = 'none';
       return;
     }
-    const used = FREE_LIMIT - freeGens;
-    const dots = [dot1, dot2];
-    dots.forEach((d, i) => {
-      if (!d) return;
-      d.className = 'gen-dot' + (i < used ? ' used' : '');
-    });
-    if (countEl) countEl.textContent = freeGens > 0 ? `${freeGens} left` : 'Upgrade';
+
+    if (genBadge) genBadge.style.display = 'flex';
+    if (planBadge) planBadge.style.display = 'block';
+
+    const limit = isPro ? PRO_LIMIT : FREE_LIMIT;
+    const totalDots = isPro ? 3 : FREE_LIMIT;
+    const remaining = Math.max(0, limit - gensUsed);
+    // map remaining count onto the decorative dots
+    const remainingDots = isPro ? (remaining > 0 ? 3 : 0) : remaining;
+
+    if (dotsEl) dotsEl.innerHTML = renderDots(totalDots, remainingDots);
+    if (countEl) countEl.textContent = remaining > 0 ? String(remaining) : 'Upgrade';
+
+    if (planBadge) {
+      planBadge.textContent = isPro ? 'Pro ✦' : 'Free';
+      planBadge.className = 'plan-badge' + (isPro ? ' pro' : '');
+    }
   }
 
   function persistGenCount() {
     const user = auth.currentUser;
     if (user) {
-      db.collection('users').doc(user.uid).set({ generationsUsed: FREE_LIMIT - freeGens }, { merge: true }).catch(() => {});
-    } else {
-      localStorage.setItem('glimr-gens-used', String(FREE_LIMIT - freeGens));
+      db.collection('users').doc(user.uid).set({ generationsUsed: gensUsed }, { merge: true }).catch(() => {});
     }
   }
 
@@ -1083,21 +1103,14 @@
     if (user) {
       try {
         const doc = await db.collection('users').doc(user.uid).get();
-        const used = (doc.exists && doc.data().generationsUsed) || 0;
-        freeGens = Math.max(0, FREE_LIMIT - used);
+        gensUsed = (doc.exists && doc.data().generationsUsed) || 0;
         isPro = (doc.exists && doc.data().plan === 'pro') || false;
-      } catch(e) { freeGens = FREE_LIMIT; }
+      } catch(e) { gensUsed = 0; isPro = false; }
     } else {
-      const used = parseInt(localStorage.getItem('glimr-gens-used') || '0', 10);
-      freeGens = Math.max(0, FREE_LIMIT - used);
+      gensUsed = 0;
       isPro = false;
     }
     updateGenBadge();
-    const planBadge = document.getElementById('plan-badge');
-    if (planBadge) {
-      planBadge.textContent = isPro ? 'Pro ✦' : 'Free';
-      planBadge.className = 'plan-badge' + (isPro ? ' pro' : '');
-    }
   }
 
   function closeResult() {
@@ -1146,13 +1159,14 @@
   }
 
   function upgradePro() {
+    if (!auth.currentUser) { closeUpsell(); openAuth('register'); return; }
     isPro = true;
-    freeGens = 999;
-    const planBadge = document.getElementById('plan-badge');
-    if (planBadge) { planBadge.textContent = 'Pro ✦'; planBadge.classList.add('pro'); }
+    gensUsed = 0;
+    const user = auth.currentUser;
+    db.collection('users').doc(user.uid).set({ plan: 'pro', generationsUsed: 0 }, { merge: true }).catch(() => {});
     updateGenBadge();
     closeUpsell();
-    alert('Welcome to Pro! ✨ Unlimited generations unlocked.');
+    alert('Welcome to Pro! ✨ 30 generations a month unlocked.');
   }
 
   // AUTH UI
