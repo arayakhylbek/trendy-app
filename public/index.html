@@ -542,7 +542,7 @@
       <div class="pricing-price">$2<span>.99 / mo</span></div>
       <div class="pricing-desc">For the casual creator who posts regularly.</div>
       <ul class="pricing-features">
-        <li>30 generations / month</li>
+        <li>10 generations / month</li>
         <li>All templates + new drops</li>
         <li>HD quality output</li>
         <li>No watermark</li>
@@ -555,9 +555,9 @@
     <div class="pricing-card">
       <div class="pricing-plan-name">Pro</div>
       <div class="pricing-price">$4<span>.99 / mo</span></div>
-      <div class="pricing-desc">Unlimited everything — for the serious creator.</div>
+      <div class="pricing-desc">For the serious creator who posts every day.</div>
       <ul class="pricing-features">
-        <li>Unlimited generations</li>
+        <li>30 generations / month</li>
         <li>All templates + early access</li>
         <li>4K quality output</li>
         <li>No watermark</li>
@@ -740,30 +740,34 @@
   <div class="upsell-card">
     <span class="upsell-emoji">✨</span>
     <h2>You're on a roll!</h2>
-    <p>You've used your 2 free generations. Upgrade to Pro for 30 stunning photos a month.</p>
+    <p id="upsell-sub">You've used all your generations. Upgrade to keep creating stunning photos.</p>
     <div class="price-box">
       <div class="price-old">$9.99/month</div>
       <div class="price-new" id="upsell-price">$4<span>.99/mo</span></div>
       <div class="price-badge" id="upsell-badge">50% off — today only</div>
     </div>
     <div class="upsell-features">
-      <div class="upsell-feat">30 AI generations a month</div>
+      <div class="upsell-feat" id="upsell-feat-gens">30 AI generations a month</div>
       <div class="upsell-feat">All premium templates</div>
       <div class="upsell-feat">New templates every week</div>
       <div class="upsell-feat">No watermark on saves</div>
       <div class="upsell-feat">Priority processing</div>
     </div>
-    <button class="upgrade-btn" onclick="upgradePro()">Upgrade to Pro ✦</button>
+    <button class="upgrade-btn" id="upsell-upgrade-btn" onclick="upgradePlan()">Upgrade to Pro ✦</button>
     <button class="skip-btn" onclick="closeUpsell()">Maybe later</button>
   </div>
 </div>
 
 <script>
   // STATE
-  const FREE_LIMIT = 2;
-  const PRO_LIMIT = 30;
+  const PLANS = {
+    free: { limit: 2,  dots: 2, label: 'Free',  price: '$0',     pretty: 'Free' },
+    lite: { limit: 10, dots: 3, label: 'Lite ✦', price: '$2.99', pretty: 'Lite' },
+    pro:  { limit: 30, dots: 3, label: 'Pro ✦',  price: '$4.99', pretty: 'Pro' },
+  };
+  let plan = 'free';
   let gensUsed = 0;
-  let isPro = false;
+  let offeredPlan = 'pro';
   let currentTemplate = null;
   let hasPhoto = false;
   let generatedImageUrl = null;
@@ -902,8 +906,11 @@
   function startGeneration() {
     if (!hasPhoto) return;
     if (!auth.currentUser) { closeModal(); openAuth('register'); return; }
-    const limit = isPro ? PRO_LIMIT : FREE_LIMIT;
-    if (gensUsed >= limit) { closeModal(); openUpsell(isPro ? 'pro' : 'pro'); return; }
+    if (gensUsed >= PLANS[plan].limit) {
+      closeModal();
+      openUpsell(plan === 'free' ? 'lite' : 'pro');
+      return;
+    }
     closeModal();
     showCatScreen();
     runGeneration();
@@ -1045,16 +1052,15 @@
     gensUsed += 1;
     persistGenCount();
     updateGenBadge();
-    const limit = isPro ? PRO_LIMIT : FREE_LIMIT;
-    if (gensUsed >= limit) {
-      setTimeout(() => openUpsell('pro'), 1200);
+    if (gensUsed >= PLANS[plan].limit) {
+      setTimeout(() => openUpsell(plan === 'free' ? 'lite' : 'pro'), 1200);
     }
   }
 
-  function renderDots(total, remaining) {
+  function renderDots(total, lit) {
     let html = '';
     for (let i = 0; i < total; i++) {
-      const used = i >= remaining;
+      const used = i >= lit;
       html += `<span class="gen-dot${used ? ' used' : ''}"></span>`;
     }
     return html;
@@ -1076,18 +1082,17 @@
     if (genBadge) genBadge.style.display = 'flex';
     if (planBadge) planBadge.style.display = 'block';
 
-    const limit = isPro ? PRO_LIMIT : FREE_LIMIT;
-    const totalDots = isPro ? 3 : FREE_LIMIT;
-    const remaining = Math.max(0, limit - gensUsed);
-    // map remaining count onto the decorative dots
-    const remainingDots = isPro ? (remaining > 0 ? 3 : 0) : remaining;
+    const p = PLANS[plan];
+    const remaining = Math.max(0, p.limit - gensUsed);
+    // free deplete dots 1:1, paid plans light all dots while any remain
+    const lit = plan === 'free' ? remaining : (remaining > 0 ? p.dots : 0);
 
-    if (dotsEl) dotsEl.innerHTML = renderDots(totalDots, remainingDots);
+    if (dotsEl) dotsEl.innerHTML = renderDots(p.dots, lit);
     if (countEl) countEl.textContent = remaining > 0 ? String(remaining) : 'Upgrade';
 
     if (planBadge) {
-      planBadge.textContent = isPro ? 'Pro ✦' : 'Free';
-      planBadge.className = 'plan-badge' + (isPro ? ' pro' : '');
+      planBadge.textContent = p.label;
+      planBadge.className = 'plan-badge' + (plan !== 'free' ? ' pro' : '');
     }
   }
 
@@ -1104,11 +1109,12 @@
       try {
         const doc = await db.collection('users').doc(user.uid).get();
         gensUsed = (doc.exists && doc.data().generationsUsed) || 0;
-        isPro = (doc.exists && doc.data().plan === 'pro') || false;
-      } catch(e) { gensUsed = 0; isPro = false; }
+        const savedPlan = doc.exists && doc.data().plan;
+        plan = PLANS[savedPlan] ? savedPlan : 'free';
+      } catch(e) { gensUsed = 0; plan = 'free'; }
     } else {
       gensUsed = 0;
-      isPro = false;
+      plan = 'free';
     }
     updateGenBadge();
   }
@@ -1143,14 +1149,24 @@
     }
   }
 
-  function openUpsell(plan) {
-    if (plan === 'lite') {
-      document.getElementById('upsell-price').innerHTML = '$2<span>.99/mo</span>';
-      document.getElementById('upsell-badge').textContent = 'Best value';
+  function openUpsell(target) {
+    offeredPlan = PLANS[target] ? target : 'pro';
+    const p = PLANS[offeredPlan];
+    const priceEl = document.getElementById('upsell-price');
+    const badgeEl = document.getElementById('upsell-badge');
+    const featEl = document.getElementById('upsell-feat-gens');
+    const btnEl = document.getElementById('upsell-upgrade-btn');
+    if (offeredPlan === 'lite') {
+      if (priceEl) priceEl.innerHTML = '$2<span>.99/mo</span>';
+      if (badgeEl) badgeEl.textContent = 'Most popular';
     } else {
-      document.getElementById('upsell-price').innerHTML = '$4<span>.99/mo</span>';
-      document.getElementById('upsell-badge').textContent = '50% off — today only';
+      if (priceEl) priceEl.innerHTML = '$4<span>.99/mo</span>';
+      if (badgeEl) badgeEl.textContent = 'Best value';
     }
+    if (featEl) featEl.textContent = `${p.limit} AI generations a month`;
+    if (btnEl) btnEl.textContent = `Upgrade to ${p.pretty} ✦`;
+    const subEl = document.getElementById('upsell-sub');
+    if (subEl) subEl.textContent = `You've used all ${PLANS[plan].limit} of your ${PLANS[plan].pretty} generations. Upgrade to ${p.pretty} for ${p.limit} photos a month.`;
     document.getElementById('upsell-modal').classList.add('open');
   }
 
@@ -1158,15 +1174,15 @@
     document.getElementById('upsell-modal').classList.remove('open');
   }
 
-  function upgradePro() {
+  function upgradePlan() {
     if (!auth.currentUser) { closeUpsell(); openAuth('register'); return; }
-    isPro = true;
+    plan = offeredPlan;
     gensUsed = 0;
     const user = auth.currentUser;
-    db.collection('users').doc(user.uid).set({ plan: 'pro', generationsUsed: 0 }, { merge: true }).catch(() => {});
+    db.collection('users').doc(user.uid).set({ plan, generationsUsed: 0 }, { merge: true }).catch(() => {});
     updateGenBadge();
     closeUpsell();
-    alert('Welcome to Pro! ✨ 30 generations a month unlocked.');
+    alert(`Welcome to ${PLANS[plan].pretty}! ✨ ${PLANS[plan].limit} generations a month unlocked.`);
   }
 
   // AUTH UI
