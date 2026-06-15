@@ -395,29 +395,38 @@
   .pricing-title { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.2rem); margin-bottom: 0.5rem; }
   .pricing-title em { font-style: italic; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   .pricing-subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 2.5rem; }
-  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; max-width: 760px; margin: 0 auto; }
+  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; max-width: 880px; margin: 0 auto; }
   .pricing-card {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 20px; padding: 1.75rem 1.5rem; text-align: left;
+    border-radius: 24px; padding: 2.75rem 2rem 2.25rem; text-align: left;
     position: relative; transition: transform .2s, box-shadow .2s;
+    display: flex; flex-direction: column;
   }
-  .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.4); }
-  .pricing-card.featured { border-color: rgba(255,107,157,0.5); background: linear-gradient(135deg, rgba(255,107,157,0.06), rgba(192,132,252,0.06)); }
-  .pricing-card-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; font-size: 11px; font-weight: 600; padding: 4px 14px; border-radius: 20px; white-space: nowrap; letter-spacing: .04em; }
-  .pricing-plan-name { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 0.75rem; }
-  .pricing-old { font-size: 14px; color: var(--text-muted); text-decoration: line-through; margin-bottom: 2px; }
-  .pricing-price { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; margin-bottom: 0.25rem; }
-  .pricing-price span { font-size: 14px; font-weight: 400; color: var(--text-muted); font-family: 'DM Sans', sans-serif; }
-  .pricing-promo { display: inline-block; background: rgba(74,222,128,0.15); color: var(--free); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; margin-bottom: 0.75rem; }
-  .pricing-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5; }
+  .pricing-card:hover { transform: translateY(-6px); box-shadow: 0 24px 56px rgba(0,0,0,0.5); }
+  .pricing-card.featured { border-color: rgba(255,107,157,0.5); background: linear-gradient(135deg, rgba(255,107,157,0.08), rgba(192,132,252,0.08)); box-shadow: 0 0 0 1px rgba(255,107,157,0.2), 0 12px 40px rgba(255,107,157,0.12); }
+  .pricing-card-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; font-size: 11px; font-weight: 700; padding: 5px 16px; border-radius: 20px; white-space: nowrap; letter-spacing: .04em; box-shadow: 0 4px 14px rgba(255,107,157,0.4); }
+  .pricing-plan-name { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 1.25rem; }
+  .price-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 0.75rem; }
+  .pricing-price { font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 800; color: #ffffff; line-height: 0.9; letter-spacing: -1px; }
+  .pricing-price span { font-size: 18px; font-weight: 400; color: var(--text-muted); font-family: 'DM Sans', sans-serif; letter-spacing: 0; }
+  .pricing-old { font-size: 24px; color: var(--text-muted); text-decoration: line-through; margin-top: 6px; font-family: 'DM Sans', sans-serif; }
+  .pricing-promo {
+    display: inline-block; align-self: flex-start;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #ffffff; font-size: 12px; font-weight: 700; letter-spacing: .05em;
+    text-transform: uppercase; padding: 7px 14px; border-radius: 20px; margin-bottom: 1.5rem;
+    box-shadow: 0 6px 18px rgba(255,107,157,0.45);
+  }
+  .pricing-promo.neutral { background: var(--surface2); color: var(--text-muted); box-shadow: none; border: 1px solid var(--border); }
+  .pricing-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5; }
   .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
   .pricing-features li { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
   .pricing-features li::before { content: '✦'; color: var(--accent); font-size: 10px; flex-shrink: 0; }
   .pricing-features li.muted::before { color: var(--border); }
   .pricing-features li.muted { opacity: 0.5; }
   .pricing-cta {
-    width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border);
-    background: var(--surface2); color: var(--text); font-size: 13px; font-weight: 500;
+    width: 100%; margin-top: auto; padding: 14px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); font-size: 14px; font-weight: 500;
     cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .2s;
   }
   .pricing-cta:hover { border-color: var(--accent); color: var(--accent); }
@@ -533,7 +542,10 @@
     <!-- Free -->
     <div class="pricing-card">
       <div class="pricing-plan-name">Free</div>
-      <div class="pricing-price">$0<span> / forever</span></div>
+      <div class="price-row">
+        <div class="pricing-price">$0<span>/forever</span></div>
+      </div>
+      <div class="pricing-promo neutral">Always free</div>
       <div class="pricing-desc">Perfect for trying it out. 2 generations on us.</div>
       <ul class="pricing-features">
         <li>2 AI photo generations</li>
@@ -549,9 +561,11 @@
     <div class="pricing-card featured">
       <div class="pricing-card-badge">MOST POPULAR</div>
       <div class="pricing-plan-name">Lite</div>
-      <div class="pricing-old">$3.99 / mo</div>
-      <div class="pricing-price">$2<span>.99 / mo</span></div>
-      <div class="pricing-promo">Save 25% — limited time</div>
+      <div class="price-row">
+        <div class="pricing-price">$2.99<span>/mo</span></div>
+        <div class="pricing-old">$3.99</div>
+      </div>
+      <div class="pricing-promo">Limited time — 25% off</div>
       <div class="pricing-desc">For the casual creator who posts regularly.</div>
       <ul class="pricing-features">
         <li>10 generations / month</li>
@@ -566,9 +580,11 @@
     <!-- Pro -->
     <div class="pricing-card">
       <div class="pricing-plan-name">Pro</div>
-      <div class="pricing-old">$6.99 / mo</div>
-      <div class="pricing-price">$4<span>.99 / mo</span></div>
-      <div class="pricing-promo">Save 28% — limited time</div>
+      <div class="price-row">
+        <div class="pricing-price">$4.99<span>/mo</span></div>
+        <div class="pricing-old">$6.99</div>
+      </div>
+      <div class="pricing-promo">Limited time — 30% off</div>
       <div class="pricing-desc">For the serious creator who posts every day.</div>
       <ul class="pricing-features">
         <li>30 generations / month</li>
