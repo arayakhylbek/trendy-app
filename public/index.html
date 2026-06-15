@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Glimr — AI Photo Templates</title>
+<title>Trendy — AI Photo Templates</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -219,17 +219,25 @@
   .upsell-emoji { font-size: 3rem; margin-bottom: 1rem; display: block; }
   .upsell-card h2 { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 0.5rem; }
   .upsell-card p { color: var(--text-muted); font-size: 14px; line-height: 1.6; margin-bottom: 1.5rem; }
-  .price-box {
-    background: linear-gradient(135deg, rgba(255,107,157,0.1), rgba(192,132,252,0.1));
-    border: 1px solid rgba(255,107,157,0.2); border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem;
+  .upsell-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: left; margin-bottom: 0.5rem; }
+  @media (max-width: 520px) { .upsell-plans { grid-template-columns: 1fr; } }
+  .tier {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 18px; padding: 1.5rem 1.25rem; display: flex; flex-direction: column; position: relative;
   }
-  .price-old { font-size: 14px; color: var(--text-muted); text-decoration: line-through; }
-  .price-new { font-size: 32px; font-weight: 700; color: var(--accent); }
-  .price-new span { font-size: 16px; }
-  .price-badge { display: inline-block; background: var(--accent); color: white; font-size: 12px; padding: 4px 10px; border-radius: 20px; margin-top: 4px; }
-  .upsell-features { text-align: left; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px; }
-  .upsell-feat { font-size: 13px; display: flex; align-items: center; gap: 8px; }
-  .upsell-feat::before { content: '✦'; color: var(--accent); flex-shrink: 0; }
+  .tier.popular { border-color: rgba(255,107,157,0.5); background: linear-gradient(135deg, rgba(255,107,157,0.08), rgba(192,132,252,0.08)); }
+  .tier-pop-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; font-size: 11px; font-weight: 600; padding: 4px 14px; border-radius: 20px; white-space: nowrap; letter-spacing: .04em; }
+  .tier-name { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 10px; }
+  .tier-old { font-size: 14px; color: var(--text-muted); text-decoration: line-through; margin-bottom: 2px; }
+  .tier-price { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; line-height: 1; }
+  .tier-price small { font-size: 13px; font-weight: 400; color: var(--text-muted); font-family: 'DM Sans', sans-serif; }
+  .tier-promo { display: inline-block; align-self: flex-start; background: rgba(74,222,128,0.15); color: var(--free); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; margin-top: 8px; }
+  .tier-gens { font-size: 13px; color: var(--text); margin: 12px 0 4px; font-weight: 500; }
+  .tier-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; flex: 1; margin-bottom: 1rem; }
+  .tier-btn { width: 100%; padding: 11px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .2s; }
+  .tier-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tier-btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); border-color: transparent; color: white; }
+  .tier-btn.primary:hover { opacity: 0.9; }
   .upgrade-btn {
     width: 100%; padding: 14px; border-radius: 14px; border: none;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -397,8 +405,10 @@
   .pricing-card.featured { border-color: rgba(255,107,157,0.5); background: linear-gradient(135deg, rgba(255,107,157,0.06), rgba(192,132,252,0.06)); }
   .pricing-card-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; font-size: 11px; font-weight: 600; padding: 4px 14px; border-radius: 20px; white-space: nowrap; letter-spacing: .04em; }
   .pricing-plan-name { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 0.75rem; }
+  .pricing-old { font-size: 14px; color: var(--text-muted); text-decoration: line-through; margin-bottom: 2px; }
   .pricing-price { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; margin-bottom: 0.25rem; }
   .pricing-price span { font-size: 14px; font-weight: 400; color: var(--text-muted); font-family: 'DM Sans', sans-serif; }
+  .pricing-promo { display: inline-block; background: rgba(74,222,128,0.15); color: var(--free); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; margin-bottom: 0.75rem; }
   .pricing-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5; }
   .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
   .pricing-features li { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
@@ -468,7 +478,7 @@
 <!-- HEADER -->
 <header>
   <div style="display:flex;align-items:center;gap:2rem">
-    <div class="logo">Glimr</div>
+    <div class="logo">Trendy</div>
     <nav class="nav-links">
       <a class="nav-link" href="#section-all" onclick="document.getElementById('section-all').scrollIntoView({behavior:'smooth'});return false;">Templates</a>
       <a class="nav-link" href="#pricing" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'});return false;">Pricing</a>
@@ -539,7 +549,9 @@
     <div class="pricing-card featured">
       <div class="pricing-card-badge">MOST POPULAR</div>
       <div class="pricing-plan-name">Lite</div>
+      <div class="pricing-old">$3.99 / mo</div>
       <div class="pricing-price">$2<span>.99 / mo</span></div>
+      <div class="pricing-promo">Save 25% — limited time</div>
       <div class="pricing-desc">For the casual creator who posts regularly.</div>
       <ul class="pricing-features">
         <li>10 generations / month</li>
@@ -554,7 +566,9 @@
     <!-- Pro -->
     <div class="pricing-card">
       <div class="pricing-plan-name">Pro</div>
+      <div class="pricing-old">$6.99 / mo</div>
       <div class="pricing-price">$4<span>.99 / mo</span></div>
+      <div class="pricing-promo">Save 28% — limited time</div>
       <div class="pricing-desc">For the serious creator who posts every day.</div>
       <ul class="pricing-features">
         <li>30 generations / month</li>
@@ -572,8 +586,8 @@
 <!-- FOOTER -->
 <footer>
   <div>
-    <div class="footer-brand">Glimr</div>
-    <div class="footer-copy" style="margin-top:4px">© 2025 Glimr. All rights reserved.</div>
+    <div class="footer-brand">Trendy</div>
+    <div class="footer-copy" style="margin-top:4px">© 2025 Trendy. All rights reserved.</div>
   </div>
   <div class="footer-links">
     <button class="footer-link">Privacy Policy</button>
@@ -588,7 +602,7 @@
 
     <!-- LOGIN VIEW -->
     <div class="auth-view active" id="auth-login-view">
-      <div class="auth-logo">Glimr</div>
+      <div class="auth-logo">Trendy</div>
       <div class="auth-subtitle">Sign in to save your creations</div>
       <div class="auth-body">
         <div class="auth-error-banner" id="login-error"></div>
@@ -620,7 +634,7 @@
 
     <!-- REGISTER VIEW -->
     <div class="auth-view" id="auth-register-view">
-      <div class="auth-logo">Glimr</div>
+      <div class="auth-logo">Trendy</div>
       <div class="auth-subtitle">Create your account</div>
       <div class="auth-body">
         <div class="auth-error-banner" id="reg-error"></div>
@@ -663,7 +677,7 @@
 
     <!-- RESET PASSWORD VIEW -->
     <div class="auth-view" id="auth-reset-view">
-      <div class="auth-logo">Glimr</div>
+      <div class="auth-logo">Trendy</div>
       <div class="auth-subtitle">Reset your password</div>
       <div class="auth-body">
         <button class="auth-back" onclick="showAuthView('login')">← Back to sign in</button>
@@ -725,7 +739,7 @@
   <div class="result-card">
     <div class="result-image" id="result-image">
       <span id="result-emoji">🌸</span>
-      <div class="result-watermark">✦ Glimr</div>
+      <div class="result-watermark">✦ Trendy</div>
     </div>
     <div class="result-actions">
       <button class="action-btn" onclick="shareResult()">↗ Share</button>
@@ -737,24 +751,32 @@
 
 <!-- UPSELL MODAL -->
 <div class="upsell-overlay" id="upsell-modal">
-  <div class="upsell-card">
+  <div class="upsell-card" style="max-width:540px">
     <span class="upsell-emoji">✨</span>
     <h2>You're on a roll!</h2>
-    <p id="upsell-sub">You've used all your generations. Upgrade to keep creating stunning photos.</p>
-    <div class="price-box">
-      <div class="price-old">$9.99/month</div>
-      <div class="price-new" id="upsell-price">$4<span>.99/mo</span></div>
-      <div class="price-badge" id="upsell-badge">50% off — today only</div>
+    <p id="upsell-sub">You've used all your generations. Pick a plan to keep creating — limited-time promo prices.</p>
+    <div class="upsell-plans">
+      <div class="tier">
+        <div class="tier-name">Lite</div>
+        <div class="tier-old">$3.99/mo</div>
+        <div class="tier-price">$2.99<small>/mo</small></div>
+        <div class="tier-promo">Save 25%</div>
+        <div class="tier-gens">10 generations / month</div>
+        <div class="tier-desc">For casual creators who post regularly.</div>
+        <button class="tier-btn" onclick="upgradePlan('lite')">Choose Lite</button>
+      </div>
+      <div class="tier popular">
+        <div class="tier-pop-badge">★ POPULAR</div>
+        <div class="tier-name">Pro</div>
+        <div class="tier-old">$6.99/mo</div>
+        <div class="tier-price">$4.99<small>/mo</small></div>
+        <div class="tier-promo">Save 28%</div>
+        <div class="tier-gens">30 generations / month</div>
+        <div class="tier-desc">For serious creators who post every day.</div>
+        <button class="tier-btn primary" onclick="upgradePlan('pro')">Choose Pro ✦</button>
+      </div>
     </div>
-    <div class="upsell-features">
-      <div class="upsell-feat" id="upsell-feat-gens">30 AI generations a month</div>
-      <div class="upsell-feat">All premium templates</div>
-      <div class="upsell-feat">New templates every week</div>
-      <div class="upsell-feat">No watermark on saves</div>
-      <div class="upsell-feat">Priority processing</div>
-    </div>
-    <button class="upgrade-btn" id="upsell-upgrade-btn" onclick="upgradePlan()">Upgrade to Pro ✦</button>
-    <button class="skip-btn" onclick="closeUpsell()">Maybe later</button>
+    <button class="skip-btn" onclick="closeUpsell()" style="margin-top:1rem">Maybe later</button>
   </div>
 </div>
 
@@ -1141,7 +1163,7 @@
     if (generatedImageUrl) {
       const a = document.createElement('a');
       a.href = generatedImageUrl;
-      a.download = `glimr-${currentTemplate.label.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+      a.download = `trendy-${currentTemplate.label.replace(/\s+/g, '-').toLowerCase()}.jpg`;
       a.target = '_blank';
       a.click();
     } else {
@@ -1151,22 +1173,10 @@
 
   function openUpsell(target) {
     offeredPlan = PLANS[target] ? target : 'pro';
-    const p = PLANS[offeredPlan];
-    const priceEl = document.getElementById('upsell-price');
-    const badgeEl = document.getElementById('upsell-badge');
-    const featEl = document.getElementById('upsell-feat-gens');
-    const btnEl = document.getElementById('upsell-upgrade-btn');
-    if (offeredPlan === 'lite') {
-      if (priceEl) priceEl.innerHTML = '$2<span>.99/mo</span>';
-      if (badgeEl) badgeEl.textContent = 'Most popular';
-    } else {
-      if (priceEl) priceEl.innerHTML = '$4<span>.99/mo</span>';
-      if (badgeEl) badgeEl.textContent = 'Best value';
-    }
-    if (featEl) featEl.textContent = `${p.limit} AI generations a month`;
-    if (btnEl) btnEl.textContent = `Upgrade to ${p.pretty} ✦`;
     const subEl = document.getElementById('upsell-sub');
-    if (subEl) subEl.textContent = `You've used all ${PLANS[plan].limit} of your ${PLANS[plan].pretty} generations. Upgrade to ${p.pretty} for ${p.limit} photos a month.`;
+    if (subEl) {
+      subEl.textContent = `You've used all ${PLANS[plan].limit} of your ${PLANS[plan].pretty} generations. Pick a plan to keep creating — limited-time promo prices.`;
+    }
     document.getElementById('upsell-modal').classList.add('open');
   }
 
@@ -1174,7 +1184,8 @@
     document.getElementById('upsell-modal').classList.remove('open');
   }
 
-  function upgradePlan() {
+  function upgradePlan(target) {
+    if (target && PLANS[target]) offeredPlan = target;
     if (!auth.currentUser) { closeUpsell(); openAuth('register'); return; }
     plan = offeredPlan;
     gensUsed = 0;
