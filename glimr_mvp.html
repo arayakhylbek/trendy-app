@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Glimr — AI Photo Templates</title>
+<title>Trendy — AI Photo Templates</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -202,17 +202,6 @@
   .upsell-emoji { font-size: 3rem; margin-bottom: 1rem; display: block; }
   .upsell-card h2 { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 0.5rem; }
   .upsell-card p { color: var(--text-muted); font-size: 14px; line-height: 1.6; margin-bottom: 1.5rem; }
-  .price-box {
-    background: linear-gradient(135deg, rgba(255,107,157,0.1), rgba(192,132,252,0.1));
-    border: 1px solid rgba(255,107,157,0.2); border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem;
-  }
-  .price-old { font-size: 14px; color: var(--text-muted); text-decoration: line-through; }
-  .price-new { font-size: 32px; font-weight: 700; color: var(--accent); }
-  .price-new span { font-size: 16px; }
-  .price-badge { display: inline-block; background: var(--accent); color: white; font-size: 12px; padding: 4px 10px; border-radius: 20px; margin-top: 4px; }
-  .upsell-features { text-align: left; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px; }
-  .upsell-feat { font-size: 13px; display: flex; align-items: center; gap: 8px; }
-  .upsell-feat::before { content: '✦'; color: var(--accent); flex-shrink: 0; }
   .upgrade-btn {
     width: 100%; padding: 14px; border-radius: 14px; border: none;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -223,6 +212,54 @@
   .upgrade-btn:hover { opacity: 0.9; }
   .skip-btn { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
   .skip-btn:hover { color: var(--text); }
+
+  /* PRICING LINK + TIERS */
+  .pricing-link { background: none; border: none; color: var(--text-muted); font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: color .2s; }
+  .pricing-link:hover { color: var(--text); }
+
+  .pricing-overlay {
+    position: fixed; inset: 0; z-index: 450;
+    background: rgba(0,0,0,0.9); backdrop-filter: blur(12px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem; opacity: 0; pointer-events: none; transition: opacity .3s; overflow-y: auto;
+  }
+  .pricing-overlay.open { opacity: 1; pointer-events: all; }
+  .pricing-modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 28px; max-width: 780px; width: 100%; padding: 2rem;
+    transform: scale(0.95); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .pricing-overlay.open .pricing-modal { transform: scale(1); }
+  .pricing-head { text-align: center; margin-bottom: 1.75rem; position: relative; }
+  .pricing-head h2 { font-family: 'Playfair Display', serif; font-size: 26px; margin-bottom: 6px; }
+  .pricing-head h2 em { font-style: italic; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .pricing-head p { color: var(--text-muted); font-size: 14px; }
+  .pricing-close { position: absolute; top: -6px; right: -6px; background: var(--surface2); border: none; color: var(--text-muted); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; }
+  .pricing-close:hover { color: var(--text); }
+
+  .tier-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .upsell-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: left; margin-bottom: 0.5rem; }
+  @media (max-width: 640px) { .tier-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) { .upsell-plans { grid-template-columns: 1fr; } }
+  .tier {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 18px; padding: 1.5rem 1.25rem; display: flex; flex-direction: column; position: relative;
+  }
+  .tier.popular { border-color: rgba(255,107,157,0.5); background: linear-gradient(135deg, rgba(255,107,157,0.08), rgba(192,132,252,0.08)); }
+  .tier-pop-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; font-size: 11px; font-weight: 600; padding: 4px 14px; border-radius: 20px; white-space: nowrap; letter-spacing: .04em; }
+  .tier-name { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 10px; }
+  .tier-old { font-size: 14px; color: var(--text-muted); text-decoration: line-through; margin-bottom: 2px; }
+  .tier-price { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; line-height: 1; }
+  .tier-price small { font-size: 13px; font-weight: 400; color: var(--text-muted); font-family: 'DM Sans', sans-serif; }
+  .tier-promo { display: inline-block; align-self: flex-start; background: rgba(74,222,128,0.15); color: var(--free); font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; margin-top: 8px; }
+  .tier-gens { font-size: 13px; color: var(--text); margin: 12px 0 4px; font-weight: 500; }
+  .tier-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; flex: 1; margin-bottom: 1rem; }
+  .tier-btn { width: 100%; padding: 11px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .2s; }
+  .tier-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tier-btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); border-color: transparent; color: white; }
+  .tier-btn.primary:hover { opacity: 0.9; }
+  .tier-btn:disabled { opacity: 0.5; cursor: default; }
+  .tier-btn:disabled:hover { border-color: var(--border); color: var(--text); }
 
   /* RESULT MODAL */
   .result-overlay {
@@ -264,11 +301,11 @@
 <header>
   <div class="logo">Trendy</div>
   <div class="header-right">
+    <button class="pricing-link" onclick="openPricing()">Pricing</button>
     <div class="gen-badge">
       <div class="gen-dot" id="dot1"></div>
       <div class="gen-dot" id="dot2"></div>
-      <div class="gen-dot" id="dot3"></div>
-      <span id="gen-count" style="margin-left:4px;font-size:12px;color:var(--text-muted)">3 left</span>
+      <span id="gen-count" style="margin-left:4px;font-size:12px;color:var(--text-muted)">2 left</span>
     </div>
     <div class="plan-badge" id="plan-badge">Free</div>
     <div class="avatar">A</div>
@@ -358,30 +395,78 @@
 
 <!-- UPSELL MODAL -->
 <div class="upsell-overlay" id="upsell-modal">
-  <div class="upsell-card">
+  <div class="upsell-card" style="max-width:540px">
     <span class="upsell-emoji">✨</span>
     <h2>You're on a roll!</h2>
-    <p>You've used all 3 free generations. Upgrade to Pro and unlock unlimited access.</p>
-    <div class="price-box">
-      <div class="price-old">$9.99/month</div>
-      <div class="price-new">$4<span>.99/mo</span></div>
-      <div class="price-badge">50% off — today only</div>
+    <p>You've used all 2 free generations. Pick a plan to keep creating — limited-time promo prices.</p>
+    <div class="upsell-plans">
+      <div class="tier">
+        <div class="tier-name">Lite</div>
+        <div class="tier-old">$3.99/mo</div>
+        <div class="tier-price">$2.99<small>/mo</small></div>
+        <div class="tier-promo">Save 25%</div>
+        <div class="tier-gens">10 generations / month</div>
+        <div class="tier-desc">For casual creators who post regularly.</div>
+        <button class="tier-btn" onclick="upgrade('lite')">Choose Lite</button>
+      </div>
+      <div class="tier popular">
+        <div class="tier-pop-badge">★ POPULAR</div>
+        <div class="tier-name">Pro</div>
+        <div class="tier-old">$6.99/mo</div>
+        <div class="tier-price">$4.99<small>/mo</small></div>
+        <div class="tier-promo">Save 28%</div>
+        <div class="tier-gens">30 generations / month</div>
+        <div class="tier-desc">For serious creators who post every day.</div>
+        <button class="tier-btn primary" onclick="upgrade('pro')">Choose Pro ✦</button>
+      </div>
     </div>
-    <div class="upsell-features">
-      <div class="upsell-feat">Unlimited AI generations</div>
-      <div class="upsell-feat">All premium templates</div>
-      <div class="upsell-feat">New templates every week</div>
-      <div class="upsell-feat">No watermark on saves</div>
-      <div class="upsell-feat">Priority processing</div>
+    <button class="skip-btn" onclick="closeUpsell()" style="margin-top:1rem">Maybe later</button>
+  </div>
+</div>
+
+<!-- PRICING MODAL -->
+<div class="pricing-overlay" id="pricing-modal" onclick="if(event.target===this)closePricing()">
+  <div class="pricing-modal">
+    <div class="pricing-head">
+      <button class="pricing-close" onclick="closePricing()">✕</button>
+      <h2>Choose your <em>vibe</em></h2>
+      <p>Start free — upgrade anytime, cancel whenever.</p>
     </div>
-    <button class="upgrade-btn" onclick="upgradePro()">Upgrade to Pro ✦</button>
-    <button class="skip-btn" onclick="closeUpsell()">Maybe later</button>
+    <div class="tier-grid">
+      <div class="tier">
+        <div class="tier-name">Free</div>
+        <div class="tier-price">$0</div>
+        <div class="tier-gens">2 generations forever</div>
+        <div class="tier-desc">Try the magic with 2 AI photos on us — no card needed.</div>
+        <button class="tier-btn" id="free-tier-btn" disabled>Current plan</button>
+      </div>
+      <div class="tier">
+        <div class="tier-name">Lite</div>
+        <div class="tier-old">$3.99/mo</div>
+        <div class="tier-price">$2.99<small>/mo</small></div>
+        <div class="tier-promo">Save 25%</div>
+        <div class="tier-gens">10 generations / month</div>
+        <div class="tier-desc">For casual creators who post regularly.</div>
+        <button class="tier-btn" onclick="upgrade('lite')">Choose Lite</button>
+      </div>
+      <div class="tier popular">
+        <div class="tier-pop-badge">★ POPULAR</div>
+        <div class="tier-name">Pro</div>
+        <div class="tier-old">$6.99/mo</div>
+        <div class="tier-price">$4.99<small>/mo</small></div>
+        <div class="tier-promo">Save 28%</div>
+        <div class="tier-gens">30 generations / month</div>
+        <div class="tier-desc">For serious creators who post every day.</div>
+        <button class="tier-btn primary" onclick="upgrade('pro')">Choose Pro ✦</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
   // STATE
-  let freeGens = 999;
+  let freeGens = 2;       // remaining generations
+  let planLimit = 2;      // current plan's monthly limit
   let isPro = false;
   let currentTemplate = null;
   let hasPhoto = false;
@@ -512,7 +597,7 @@
 
   function startGeneration() {
     if (!hasPhoto) return;
-    if (!isPro && freeGens <= 0) { return; }
+    if (freeGens <= 0) { closeModal(); openUpsell(); return; }
     closeModal();
     showCatScreen();
     runGeneration();
@@ -639,14 +724,23 @@
   }
 
   function finishGeneration() {
+    if (freeGens > 0) freeGens -= 1;
     updateGenBadge();
+    if (freeGens <= 0) setTimeout(openUpsell, 1000);
   }
 
   function updateGenBadge() {
-    const dots = [document.getElementById('dot1'), document.getElementById('dot2'), document.getElementById('dot3')];
-    dots.forEach(d => { d.className = 'gen-dot'; });
+    const dot1 = document.getElementById('dot1');
+    const dot2 = document.getElementById('dot2');
     const countEl = document.getElementById('gen-count');
-    countEl.textContent = '∞';
+    // light dots = remaining (visualised on 2 dots)
+    const lit = isPro ? (freeGens > 0 ? 2 : 0) : freeGens;
+    [dot1, dot2].forEach((d, i) => { if (d) d.className = 'gen-dot' + (i >= lit ? ' used' : ''); });
+    if (countEl) {
+      countEl.textContent = freeGens > 0
+        ? (isPro ? `${freeGens}/mo` : `${freeGens} left`)
+        : 'Upgrade';
+    }
   }
 
   function closeResult() {
@@ -671,7 +765,7 @@
     if (generatedImageUrl) {
       const a = document.createElement('a');
       a.href = generatedImageUrl;
-      a.download = `glimr-${currentTemplate.label.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+      a.download = `trendy-${currentTemplate.label.replace(/\s+/g, '-').toLowerCase()}.jpg`;
       a.target = '_blank';
       a.click();
     } else {
@@ -687,14 +781,32 @@
     document.getElementById('upsell-modal').classList.remove('open');
   }
 
-  function upgradePro() {
+  function openPricing() {
+    document.getElementById('pricing-modal').classList.add('open');
+  }
+
+  function closePricing() {
+    document.getElementById('pricing-modal').classList.remove('open');
+  }
+
+  const PLANS = {
+    lite: { label: 'Lite ✦', limit: 10, pretty: 'Lite' },
+    pro:  { label: 'Pro ✦',  limit: 30, pretty: 'Pro' },
+  };
+
+  function upgrade(planKey) {
+    const p = PLANS[planKey];
+    if (!p) return;
     isPro = true;
-    document.getElementById('plan-badge').textContent = 'Pro ✦';
-    document.getElementById('plan-badge').classList.add('pro');
-    freeGens = 999;
+    planLimit = p.limit;
+    freeGens = p.limit;
+    const badge = document.getElementById('plan-badge');
+    badge.textContent = p.label;
+    badge.classList.add('pro');
     updateGenBadge();
     closeUpsell();
-    alert('Welcome to Pro! ✨ Unlimited generations unlocked.');
+    closePricing();
+    alert(`Welcome to ${p.pretty}! ✨ ${p.limit} generations a month unlocked.`);
   }
 
   // INIT
