@@ -958,6 +958,8 @@
   function openTemplate(id) {
     const t = templates.find(x => x.id === id);
     if (!t) return;
+    // Require sign-up before using a template
+    if (!auth.currentUser) { openAuth('register'); return; }
     currentTemplate = t;
     document.getElementById('modal-title').textContent = t.label;
     document.getElementById('modal-style').textContent = t.style;
