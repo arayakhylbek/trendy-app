@@ -870,6 +870,13 @@
   let plan = 'free';
   let gensUsed = 0;
   let offeredPlan = 'pro';
+
+  // Owner account — unlimited generations for testing
+  const OWNER_EMAIL = 'araiakhylbek78@gmail.com';
+  function isOwner() {
+    const u = auth.currentUser;
+    return !!(u && u.email && u.email.toLowerCase() === OWNER_EMAIL);
+  }
   let currentTemplate = null;
   let hasPhoto = false;
   let generatedImageUrl = null;
@@ -1010,7 +1017,7 @@
   function startGeneration() {
     if (!hasPhoto) return;
     if (!auth.currentUser) { closeModal(); openAuth('register'); return; }
-    if (gensUsed >= PLANS[plan].limit) {
+    if (!isOwner() && gensUsed >= PLANS[plan].limit) {
       closeModal();
       openUpsell(plan === 'free' ? 'lite' : 'pro');
       return;
@@ -1153,6 +1160,7 @@
   }
 
   function finishGeneration() {
+    if (isOwner()) { updateGenBadge(); return; }
     gensUsed += 1;
     persistGenCount();
     updateGenBadge();
@@ -1185,6 +1193,14 @@
 
     if (genBadge) genBadge.style.display = 'flex';
     if (planBadge) planBadge.style.display = 'block';
+
+    // Owner — unlimited
+    if (isOwner()) {
+      if (dotsEl) dotsEl.innerHTML = renderDots(3, 3);
+      if (countEl) countEl.textContent = '∞';
+      if (planBadge) { planBadge.textContent = 'Unlimited ✦'; planBadge.className = 'plan-badge pro'; }
+      return;
+    }
 
     const p = PLANS[plan];
     const remaining = Math.max(0, p.limit - gensUsed);
