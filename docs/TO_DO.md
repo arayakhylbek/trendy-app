@@ -3,7 +3,7 @@
 Tasks that **you** need to do by hand (things I can't do from code).
 I'll keep adding new manual tasks here as they come up.
 
-Last updated: 2026-06-14
+Last updated: 2026-06-15
 
 ---
 
@@ -24,10 +24,12 @@ https://console.firebase.google.com/project/trendy-app-glimr/authentication/prov
 - [ ] Authentication → Settings → Authorized domains → add `trendy-app-one.vercel.app`
 
 ### 3. Publish Firestore security rules
-The repo has `firestore.rules` (includes the new `users/{uid}` collection).
+The repo has `firestore.rules` (includes the `users/{uid}` collection **and** the new
+`users/{uid}/generations/{genId}` subcollection that powers the personal Gallery).
 
 - [ ] Deploy rules: `firebase deploy --only firestore:rules`
   (or paste them in Firebase Console → Firestore → Rules)
+- [ ] **Gallery won't load saved creations until these updated rules are published.**
 
 ---
 
