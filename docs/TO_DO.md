@@ -27,9 +27,9 @@ https://console.firebase.google.com/project/trendy-app-glimr/authentication/prov
 The repo has `firestore.rules` (includes the `users/{uid}` collection **and** the new
 `users/{uid}/generations/{genId}` subcollection that powers the personal Gallery).
 
-- [ ] Deploy rules: `firebase deploy --only firestore:rules`
-  (or paste them in Firebase Console → Firestore → Rules)
-- [ ] **Gallery won't load saved creations until these updated rules are published.**
+- [x] Deploy rules: `firebase deploy --only firestore:rules`
+  (deployed 2026-06-15 to project trendy-app-glimr)
+- [x] **Gallery rules published** — personal generations subcollection now readable/writable by its owner.
 
 ---
 
