@@ -18,5 +18,9 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == uid;
       }
     }
+    match /publishedTemplates/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'araiakhylbek78@gmail.com';
+    }
   }
 }

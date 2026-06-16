@@ -13,6 +13,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <style>
   :root {
     --bg: #0d0d0f;
@@ -523,6 +524,105 @@
   .action-btn:hover { border-color: var(--accent); color: var(--accent); }
   .action-btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
   .action-btn.primary:hover { opacity: 0.9; }
+
+  /* ADMIN PANEL */
+  .admin-nav-btn {
+    padding: 6px 13px; border-radius: 20px;
+    background: linear-gradient(135deg, rgba(192,132,252,0.15), rgba(255,107,157,0.1));
+    border: 1px solid rgba(192,132,252,0.4);
+    color: var(--accent2); font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .2s;
+    letter-spacing: .03em;
+  }
+  .admin-nav-btn:hover { background: linear-gradient(135deg, rgba(192,132,252,0.25), rgba(255,107,157,0.2)); }
+  .admin-overlay {
+    position: fixed; inset: 0; z-index: 700;
+    background: rgba(13,13,15,0.98); backdrop-filter: blur(16px);
+    display: none; flex-direction: column; overflow-y: auto;
+  }
+  .admin-overlay.open { display: flex; }
+  .admin-head {
+    position: sticky; top: 0; z-index: 2;
+    background: rgba(13,13,15,0.95); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 1.1rem 2rem; display: flex; align-items: center; justify-content: space-between;
+  }
+  .admin-head h2 { font-family: 'Playfair Display', serif; font-size: 22px; }
+  .admin-head h2 em { font-style: italic; background: linear-gradient(135deg, var(--accent2), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .admin-body { padding: 2rem; max-width: 820px; width: 100%; margin: 0 auto; }
+  .admin-section { margin-bottom: 2.5rem; }
+  .admin-section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--accent2); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 8px;
+  }
+  .admin-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .admin-row { display: flex; gap: 10px; align-items: center; }
+  .admin-input {
+    width: 100%; padding: 11px 14px; border-radius: 12px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif;
+    outline: none; transition: border-color .2s;
+  }
+  .admin-input:focus { border-color: rgba(192,132,252,0.5); }
+  .admin-select {
+    padding: 11px 14px; border-radius: 12px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif;
+    outline: none; cursor: pointer; min-width: 150px;
+  }
+  .admin-gen-btn {
+    padding: 11px 20px; border-radius: 12px; border: none; white-space: nowrap; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: white; font-size: 14px; font-weight: 500; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: opacity .2s;
+  }
+  .admin-gen-btn:hover { opacity: 0.9; }
+  .admin-gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .prompt-list { display: flex; flex-direction: column; gap: 10px; }
+  .prompt-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 8px;
+  }
+  .prompt-item-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .prompt-item-cat { font-size: 11px; color: var(--accent2); text-transform: uppercase; letter-spacing: .06em; }
+  .prompt-item-text { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .prompt-item-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .prompt-copy-btn {
+    padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-muted); font-size: 12px;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s;
+  }
+  .prompt-copy-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .prompt-use-btn {
+    padding: 6px 14px; border-radius: 8px; border: none;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: white; font-size: 12px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: opacity .15s;
+  }
+  .prompt-use-btn:hover { opacity: 0.9; }
+  .admin-publish-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .admin-publish-grid { grid-template-columns: 1fr; } }
+  .admin-field { display: flex; flex-direction: column; gap: 6px; }
+  .admin-label { font-size: 12px; font-weight: 500; color: var(--text-muted); letter-spacing: .03em; }
+  .admin-file-area {
+    padding: 14px; border-radius: 12px; border: 2px dashed var(--border);
+    background: var(--surface2); color: var(--text-muted); font-size: 13px;
+    cursor: pointer; text-align: center; transition: border-color .2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .admin-file-area:hover { border-color: var(--accent2); color: var(--accent2); }
+  .admin-preview-thumb { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; display: none; margin-top: 8px; border: 1px solid var(--border); }
+  .admin-publish-btn {
+    width: 100%; padding: 14px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: white; font-size: 15px; font-weight: 500; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: opacity .2s; margin-top: 1.5rem;
+  }
+  .admin-publish-btn:hover { opacity: 0.9; }
+  .admin-publish-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .admin-status { font-size: 13px; margin-top: 0.75rem; min-height: 20px; }
+  .admin-status.success { color: #4ade80; }
+  .admin-status.error { color: #ef4444; }
 </style>
 </head>
 <body>
@@ -538,6 +638,7 @@
     </nav>
   </div>
   <div class="header-right">
+    <button class="admin-nav-btn" id="admin-btn" style="display:none" onclick="openAdmin()">⚙ Admin</button>
     <div class="gen-badge" id="gen-badge" style="display:none">
       <span id="gen-dots" style="display:flex;align-items:center;gap:6px"></span>
       <span id="gen-count" style="margin-left:4px;font-size:12px;color:var(--text-muted)"></span>
@@ -860,6 +961,77 @@
   </div>
 </div>
 
+<!-- ADMIN PANEL -->
+<div class="admin-overlay" id="admin-overlay">
+  <div class="admin-head">
+    <h2><em>Admin</em> Panel</h2>
+    <button class="close-btn" onclick="closeAdmin()">✕</button>
+  </div>
+  <div class="admin-body">
+
+    <!-- Section 1: Generate prompts -->
+    <div class="admin-section">
+      <div class="admin-section-title">1 — Generate prompt ideas with Gemini</div>
+      <div class="admin-row">
+        <input class="admin-input" id="admin-theme" type="text" placeholder="Enter theme: e.g. Dark Academia, Summer Beach, Y2K Party...">
+        <button class="admin-gen-btn" id="admin-gen-btn" onclick="generatePrompts()">✦ Generate 5 ideas</button>
+      </div>
+      <div class="admin-status" id="admin-gen-status"></div>
+    </div>
+
+    <!-- Section 2: Prompt results -->
+    <div class="admin-section" id="admin-prompts-section" style="display:none">
+      <div class="admin-section-title">2 — Generated ideas</div>
+      <div class="prompt-list" id="admin-prompt-list"></div>
+    </div>
+
+    <!-- Section 3: Publish -->
+    <div class="admin-section" id="admin-publish-section">
+      <div class="admin-section-title">3 — Publish template</div>
+      <div class="admin-publish-grid">
+        <div class="admin-field">
+          <label class="admin-label">Template name</label>
+          <input class="admin-input" id="pub-name" type="text" placeholder="e.g. Dark Academia">
+        </div>
+        <div class="admin-field">
+          <label class="admin-label">Category</label>
+          <select class="admin-select" id="pub-category">
+            <option value="aesthetic">Aesthetic</option>
+            <option value="kdrama">K-Drama</option>
+            <option value="anime">Anime</option>
+            <option value="fantasy">Fantasy</option>
+            <option value="vintage">Vintage</option>
+            <option value="horror">Horror</option>
+            <option value="trending">Trending</option>
+          </select>
+        </div>
+      </div>
+      <div class="admin-field" style="margin-top:14px">
+        <label class="admin-label">Preview image</label>
+        <div class="admin-file-area" onclick="document.getElementById('pub-img-input').click()">
+          📸 Click to upload preview image
+        </div>
+        <input type="file" id="pub-img-input" accept="image/*" style="display:none" onchange="handleAdminPreview(event)">
+        <img id="pub-preview-thumb" class="admin-preview-thumb" alt="preview">
+      </div>
+      <div class="admin-field" style="margin-top:14px">
+        <label class="admin-label">Prompt (paste or use "Use this ↓" above)</label>
+        <textarea class="admin-input" id="pub-prompt" rows="6" style="resize:vertical" placeholder="AI image generation prompt goes here..."></textarea>
+      </div>
+      <div class="admin-field" style="margin-top:14px">
+        <label class="admin-label">Mark as Trending?</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-muted)">
+          <input type="checkbox" id="pub-trending" style="width:16px;height:16px;accent-color:var(--accent)">
+          Show 🔥 Trend badge on card
+        </label>
+      </div>
+      <button class="admin-publish-btn" id="admin-publish-btn" onclick="publishTemplate()">Publish Template →</button>
+      <div class="admin-status" id="admin-pub-status"></div>
+    </div>
+
+  </div>
+</div>
+
 <script>
   // STATE
   const PLANS = {
@@ -928,19 +1100,22 @@
 
   function renderCard(t) {
     const colors = ['#1a0a2e,#4a1a6e','#0a1a2e,#1a4a6e','#2e0a0a,#6e1a1a','#0a2e1a,#1a6e4a','#2e2a0a,#6e5a1a'];
-    const c = colors[t.id % colors.length].split(',');
+    const colorIdx = typeof t.id === 'number' ? t.id % colors.length
+      : t.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % colors.length;
+    const c = colors[colorIdx].split(',');
     const cardInner = t.image
       ? `<img src="${t.image}" alt="${t.label}" style="width:100%;height:100%;object-fit:cover;display:block;">`
-      : `<div class="card-img" style="--c1:${c[0]};--c2:${c[1]}">${t.emoji}</div>`;
+      : `<div class="card-img" style="--c1:${c[0]};--c2:${c[1]}">${t.emoji || '✨'}</div>`;
+    const idJs = typeof t.id === 'number' ? t.id : `'${t.id}'`;
     const isLiked = likedTemplates.has(String(t.id));
-    const likeCount = templateCounts[t.id]?.likes || 0;
-    const useCount = templateCounts[t.id]?.uses || 0;
+    const likeCount = templateCounts[String(t.id)]?.likes || 0;
+    const useCount = templateCounts[String(t.id)]?.uses || 0;
     return `
-      <div class="template-card" onclick="openTemplate(${t.id})" data-cat="${t.cat}" id="card-${t.id}">
+      <div class="template-card" onclick="openTemplate(${idJs})" data-cat="${t.cat}" id="card-${t.id}">
         ${cardInner}
         ${t.trending ? '<div class="trending-badge">🔥 Trend</div>' : ''}
         ${t.new && !t.trending ? '<div class="trending-badge" style="background:rgba(103,232,249,0.9);color:#000">NEW</div>' : ''}
-        <button class="card-like-btn ${isLiked ? 'liked' : ''}" id="like-btn-${t.id}" onclick="toggleFavorite(event,${t.id})">
+        <button class="card-like-btn ${isLiked ? 'liked' : ''}" id="like-btn-${t.id}" onclick="toggleFavorite(event,${idJs})">
           ${isLiked ? '❤️' : '🤍'} <span id="like-count-${t.id}">${likeCount > 0 ? likeCount : ''}</span>
         </button>
         ${useCount > 0 ? `<div class="card-uses" id="uses-${t.id}">${useCount} uses</div>` : `<div class="card-uses" id="uses-${t.id}"></div>`}
@@ -949,26 +1124,32 @@
       </div>`;
   }
 
+  function allTemplatesList() {
+    return [...templates, ...firestoreTemplates];
+  }
+
   function buildGrids() {
-    document.getElementById('grid-all').innerHTML = templates.map(renderCard).join('');
+    document.getElementById('grid-all').innerHTML = allTemplatesList().map(renderCard).join('');
   }
 
   function filterCat(el, cat) {
     document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
     el.classList.add('active');
+    const all = allTemplatesList();
     if (cat === 'all') {
-      document.getElementById('grid-all').innerHTML = templates.map(renderCard).join('');
+      document.getElementById('grid-all').innerHTML = all.map(renderCard).join('');
     } else if (cat === 'trending') {
-      document.getElementById('grid-all').innerHTML = templates.filter(t => t.trending).map(renderCard).join('');
+      document.getElementById('grid-all').innerHTML = all.filter(t => t.trending).map(renderCard).join('');
     } else if (cat === 'new') {
-      document.getElementById('grid-all').innerHTML = templates.filter(t => t.new).map(renderCard).join('');
+      document.getElementById('grid-all').innerHTML = all.filter(t => t.new).map(renderCard).join('');
     } else {
-      document.getElementById('grid-all').innerHTML = templates.filter(t => t.cat === cat).map(renderCard).join('');
+      document.getElementById('grid-all').innerHTML = all.filter(t => t.cat === cat).map(renderCard).join('');
     }
   }
 
   function openTemplate(id) {
-    const t = templates.find(x => x.id === id);
+    let t = templates.find(x => x.id === id);
+    if (!t) t = firestoreTemplates.find(x => x.id === id);
     if (!t) return;
     // Require sign-up before using a template
     if (!auth.currentUser) { openAuth('register'); return; }
@@ -1443,8 +1624,11 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const storage = firebase.storage();
 
   const auth = firebase.auth();
+
+  let firestoreTemplates = [];
 
   // Auth state — update header
   auth.onAuthStateChanged(user => {
@@ -1472,7 +1656,9 @@
     }
     const navGallery = document.getElementById('nav-gallery');
     if (navGallery) navGallery.style.display = user ? 'inline-block' : 'none';
-    if (!user) closeGallery();
+    const adminBtn = document.getElementById('admin-btn');
+    if (adminBtn) adminBtn.style.display = (user && isOwner()) ? 'inline-block' : 'none';
+    if (!user) { closeGallery(); closeAdmin(); }
     loadGenCount();
   });
 
@@ -1736,8 +1922,191 @@
     } catch(e) { alert('Could not delete. Please try again.'); }
   }
 
+  // PUBLISHED TEMPLATES FROM FIRESTORE
+  async function loadPublishedTemplates() {
+    try {
+      const snap = await db.collection('publishedTemplates').orderBy('createdAt', 'desc').get();
+      firestoreTemplates = [];
+      snap.forEach(doc => {
+        const d = doc.data();
+        firestoreTemplates.push({
+          id: d.numId || ('fs' + doc.id.slice(0, 8)),
+          firestoreId: doc.id,
+          label: d.name || 'Template',
+          style: d.category || 'aesthetic',
+          cat: d.category || 'aesthetic',
+          image: d.previewUrl || null,
+          emoji: '✨',
+          prompt: d.prompt || '',
+          trending: d.isTrending || false,
+          new: true,
+          fromFirestore: true
+        });
+      });
+      buildGrids();
+    } catch(e) {}
+  }
+
+  // ADMIN PANEL
+  let generatedPrompts = [];
+  let adminPreviewFile = null;
+
+  function openAdmin() {
+    const d = document.getElementById('user-dropdown');
+    if (d) d.classList.remove('open');
+    document.getElementById('admin-overlay').classList.add('open');
+  }
+
+  function closeAdmin() {
+    document.getElementById('admin-overlay').classList.remove('open');
+  }
+
+  async function generatePrompts() {
+    const theme = document.getElementById('admin-theme').value.trim();
+    if (!theme) return;
+    const btn = document.getElementById('admin-gen-btn');
+    const statusEl = document.getElementById('admin-gen-status');
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+    statusEl.textContent = '';
+    statusEl.className = 'admin-status';
+
+    try {
+      const res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gemini API error');
+
+      generatedPrompts = data.ideas || [];
+      if (generatedPrompts.length === 0) throw new Error('No ideas returned — check GEMINI_API_KEY');
+
+      renderPromptList();
+      document.getElementById('admin-prompts-section').style.display = 'block';
+      statusEl.textContent = `✓ Generated ${generatedPrompts.length} ideas`;
+      statusEl.className = 'admin-status success';
+    } catch(err) {
+      statusEl.textContent = 'Error: ' + err.message;
+      statusEl.className = 'admin-status error';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✦ Generate 5 ideas';
+    }
+  }
+
+  function renderPromptList() {
+    const list = document.getElementById('admin-prompt-list');
+    list.innerHTML = generatedPrompts.map((p, i) => `
+      <div class="prompt-item">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div>
+            <div class="prompt-item-name">${p.name || 'Idea ' + (i + 1)}</div>
+            <div class="prompt-item-cat">${p.suggestedCategory || ''}</div>
+          </div>
+        </div>
+        <div class="prompt-item-text">${p.prompt || ''}</div>
+        <div class="prompt-item-actions">
+          <button class="prompt-copy-btn" onclick="copyAdminPrompt(${i})">Copy prompt</button>
+          <button class="prompt-use-btn" onclick="usePrompt(${i})">Use this ↓</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function copyAdminPrompt(i) {
+    const p = generatedPrompts[i];
+    navigator.clipboard.writeText(p.prompt || '').then(() => alert('Copied!')).catch(() => {});
+  }
+
+  function usePrompt(i) {
+    const p = generatedPrompts[i];
+    document.getElementById('pub-name').value = p.name || '';
+    const cat = (p.suggestedCategory || '').toLowerCase();
+    const catSel = document.getElementById('pub-category');
+    for (const opt of catSel.options) {
+      if (cat.includes(opt.value) || opt.value.includes(cat)) { catSel.value = opt.value; break; }
+    }
+    document.getElementById('pub-prompt').value = p.prompt || '';
+    document.getElementById('admin-publish-section').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function handleAdminPreview(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    adminPreviewFile = file;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const thumb = document.getElementById('pub-preview-thumb');
+      thumb.src = ev.target.result;
+      thumb.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function publishTemplate() {
+    const name = document.getElementById('pub-name').value.trim();
+    const category = document.getElementById('pub-category').value;
+    const prompt = document.getElementById('pub-prompt').value.trim();
+    const isTrending = document.getElementById('pub-trending').checked;
+    const statusEl = document.getElementById('admin-pub-status');
+    const btn = document.getElementById('admin-publish-btn');
+
+    if (!name || !prompt) {
+      statusEl.textContent = 'Name and prompt are required';
+      statusEl.className = 'admin-status error';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Publishing...';
+    statusEl.textContent = '';
+    statusEl.className = 'admin-status';
+
+    try {
+      let previewUrl = '';
+
+      if (adminPreviewFile) {
+        statusEl.textContent = 'Uploading image...';
+        const ext = adminPreviewFile.name.split('.').pop();
+        const ref = storage.ref(`template-previews/${Date.now()}.${ext}`);
+        await ref.put(adminPreviewFile);
+        previewUrl = await ref.getDownloadURL();
+      }
+
+      const numId = Date.now();
+      await db.collection('publishedTemplates').add({
+        numId, name, category, previewUrl, prompt, isTrending,
+        publishedBy: auth.currentUser?.email || '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      statusEl.textContent = '✓ Template published! Visible on the page now.';
+      statusEl.className = 'admin-status success';
+
+      // Reset form
+      document.getElementById('pub-name').value = '';
+      document.getElementById('pub-prompt').value = '';
+      document.getElementById('pub-trending').checked = false;
+      document.getElementById('pub-preview-thumb').style.display = 'none';
+      document.getElementById('pub-img-input').value = '';
+      adminPreviewFile = null;
+
+      // Reload grid
+      await loadPublishedTemplates();
+    } catch(err) {
+      statusEl.textContent = 'Error: ' + err.message;
+      statusEl.className = 'admin-status error';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Publish Template →';
+    }
+  }
+
   // INIT
   loadTemplateCounts();
+  loadPublishedTemplates();
 </script>
 </body>
 </html>
