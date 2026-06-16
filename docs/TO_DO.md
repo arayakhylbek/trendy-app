@@ -10,11 +10,19 @@ Last updated: 2026-06-15
 ## 🔴 Required — app won't fully work until these are done
 
 ### 1. Add environment variables on Vercel
-Project → Settings → Environment Variables. Add both, then redeploy.
+Project → Settings → Environment Variables. Add all three, then redeploy.
 
 - [ ] `ANTHROPIC_API_KEY` — your Anthropic API key (for claude-opus-4-7 prompt enhancement)
 - [ ] `REPLICATE_TOKEN` — a **new** Replicate token (the old one was revoked). Create at https://replicate.com/account/api-tokens
+- [ ] `GEMINI_API_KEY` — Google AI Studio key for Admin Panel prompt generation. Get at https://aistudio.google.com/app/apikey
 - [ ] After adding, trigger a redeploy so the variables load (`vercel --prod` or push to GitHub)
+
+### 2. Enable Firebase Storage (for admin preview image uploads)
+Admin panel can upload preview images to Firebase Storage, but Storage must be set up first:
+
+- [ ] Go to https://console.firebase.google.com/project/trendy-app-glimr/storage
+- [ ] Click **Get Started**, choose a storage region (e.g. us-central1), click Done
+- [ ] Then run: `firebase deploy --only storage` to apply the security rules (only you can upload)
 
 ### 2. Enable Firebase Auth providers
 https://console.firebase.google.com/project/trendy-app-glimr/authentication/providers
@@ -30,6 +38,7 @@ The repo has `firestore.rules` (includes the `users/{uid}` collection **and** th
 - [x] Deploy rules: `firebase deploy --only firestore:rules`
   (deployed 2026-06-15 to project trendy-app-glimr)
 - [x] **Gallery rules published** — personal generations subcollection now readable/writable by its owner.
+- [x] **Admin publishedTemplates rules deployed** — only araiakhylbek78@gmail.com can write, everyone can read.
 
 ---
 
@@ -53,3 +62,5 @@ The repo has `firestore.rules` (includes the `users/{uid}` collection **and** th
 - [x] Generation gate: badge appears after sign-in, per-account limits tracked in Firestore
 - [x] AI model switched to `claude-opus-4-7` in `api/[...path].js`
 - [x] Deployed to https://trendy-app-one.vercel.app
+- [x] Admin panel — visible only for araiakhylbek78@gmail.com; Gemini prompt generator + Firestore template publishing
+- [x] Templates grid now loads hardcoded + Firestore publishedTemplates collection
