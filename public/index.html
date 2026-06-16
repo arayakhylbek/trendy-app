@@ -660,17 +660,6 @@
   </div>
 </div>
 
-<!-- CATEGORIES -->
-<div class="categories">
-  <div class="cat-pill active" onclick="filterCat(this,'all')">All</div>
-  <div class="cat-pill" onclick="filterCat(this,'trending')">Trending</div>
-  <div class="cat-pill" onclick="filterCat(this,'kdrama')">K-Drama</div>
-  <div class="cat-pill" onclick="filterCat(this,'anime')">Anime</div>
-  <div class="cat-pill" onclick="filterCat(this,'aesthetic')">Aesthetic</div>
-  <div class="cat-pill" onclick="filterCat(this,'fantasy')">Fantasy</div>
-  <div class="cat-pill" onclick="filterCat(this,'vintage')">Vintage</div>
-  <div class="cat-pill" onclick="filterCat(this,'new')">New</div>
-</div>
 
 <!-- ALL TEMPLATES -->
 <div class="grid-section" id="section-all" style="margin-top:1rem">
@@ -968,67 +957,23 @@
     <button class="close-btn" onclick="closeAdmin()">✕</button>
   </div>
   <div class="admin-body">
-
-    <!-- Section 1: Generate prompts -->
-    <div class="admin-section">
-      <div class="admin-section-title">1 — Generate prompt ideas with Gemini</div>
-      <div class="admin-row">
-        <input class="admin-input" id="admin-theme" type="text" placeholder="Enter theme: e.g. Dark Academia, Summer Beach, Y2K Party...">
-        <button class="admin-gen-btn" id="admin-gen-btn" onclick="generatePrompts()">✦ Generate 5 ideas</button>
-      </div>
-      <div class="admin-status" id="admin-gen-status"></div>
-    </div>
-
-    <!-- Section 2: Prompt results -->
-    <div class="admin-section" id="admin-prompts-section" style="display:none">
-      <div class="admin-section-title">2 — Generated ideas</div>
-      <div class="prompt-list" id="admin-prompt-list"></div>
-    </div>
-
-    <!-- Section 3: Publish -->
     <div class="admin-section" id="admin-publish-section">
-      <div class="admin-section-title">3 — Publish template</div>
-      <div class="admin-publish-grid">
-        <div class="admin-field">
-          <label class="admin-label">Template name</label>
-          <input class="admin-input" id="pub-name" type="text" placeholder="e.g. Dark Academia">
-        </div>
-        <div class="admin-field">
-          <label class="admin-label">Category</label>
-          <select class="admin-select" id="pub-category">
-            <option value="aesthetic">Aesthetic</option>
-            <option value="kdrama">K-Drama</option>
-            <option value="anime">Anime</option>
-            <option value="fantasy">Fantasy</option>
-            <option value="vintage">Vintage</option>
-            <option value="horror">Horror</option>
-            <option value="trending">Trending</option>
-          </select>
-        </div>
+      <div class="admin-section-title">Publish template</div>
+      <div class="admin-field">
+        <label class="admin-label">Template name</label>
+        <input class="admin-input" id="pub-name" type="text" placeholder="e.g. Dark Academia">
       </div>
       <div class="admin-field" style="margin-top:14px">
-        <label class="admin-label">Preview image</label>
+        <label class="admin-label">Photo</label>
         <div class="admin-file-area" onclick="document.getElementById('pub-img-input').click()">
-          📸 Click to upload preview image
+          📸 Click to upload photo
         </div>
         <input type="file" id="pub-img-input" accept="image/*" style="display:none" onchange="handleAdminPreview(event)">
         <img id="pub-preview-thumb" class="admin-preview-thumb" alt="preview">
       </div>
-      <div class="admin-field" style="margin-top:14px">
-        <label class="admin-label">Prompt (paste or use "Use this ↓" above)</label>
-        <textarea class="admin-input" id="pub-prompt" rows="6" style="resize:vertical" placeholder="AI image generation prompt goes here..."></textarea>
-      </div>
-      <div class="admin-field" style="margin-top:14px">
-        <label class="admin-label">Mark as Trending?</label>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-muted)">
-          <input type="checkbox" id="pub-trending" style="width:16px;height:16px;accent-color:var(--accent)">
-          Show 🔥 Trend badge on card
-        </label>
-      </div>
-      <button class="admin-publish-btn" id="admin-publish-btn" onclick="publishTemplate()">Publish Template →</button>
+      <button class="admin-publish-btn" id="admin-publish-btn" onclick="publishTemplate()">Publish →</button>
       <div class="admin-status" id="admin-pub-status"></div>
     </div>
-
   </div>
 </div>
 
@@ -1948,7 +1893,6 @@
   }
 
   // ADMIN PANEL
-  let generatedPrompts = [];
   let adminPreviewFile = null;
 
   function openAdmin() {
@@ -1959,77 +1903,6 @@
 
   function closeAdmin() {
     document.getElementById('admin-overlay').classList.remove('open');
-  }
-
-  async function generatePrompts() {
-    const theme = document.getElementById('admin-theme').value.trim();
-    if (!theme) return;
-    const btn = document.getElementById('admin-gen-btn');
-    const statusEl = document.getElementById('admin-gen-status');
-    btn.disabled = true;
-    btn.textContent = 'Generating...';
-    statusEl.textContent = '';
-    statusEl.className = 'admin-status';
-
-    try {
-      const res = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ theme })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gemini API error');
-
-      generatedPrompts = data.ideas || [];
-      if (generatedPrompts.length === 0) throw new Error('No ideas returned — check GEMINI_API_KEY');
-
-      renderPromptList();
-      document.getElementById('admin-prompts-section').style.display = 'block';
-      statusEl.textContent = `✓ Generated ${generatedPrompts.length} ideas`;
-      statusEl.className = 'admin-status success';
-    } catch(err) {
-      statusEl.textContent = 'Error: ' + err.message;
-      statusEl.className = 'admin-status error';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '✦ Generate 5 ideas';
-    }
-  }
-
-  function renderPromptList() {
-    const list = document.getElementById('admin-prompt-list');
-    list.innerHTML = generatedPrompts.map((p, i) => `
-      <div class="prompt-item">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-          <div>
-            <div class="prompt-item-name">${p.name || 'Idea ' + (i + 1)}</div>
-            <div class="prompt-item-cat">${p.suggestedCategory || ''}</div>
-          </div>
-        </div>
-        <div class="prompt-item-text">${p.prompt || ''}</div>
-        <div class="prompt-item-actions">
-          <button class="prompt-copy-btn" onclick="copyAdminPrompt(${i})">Copy prompt</button>
-          <button class="prompt-use-btn" onclick="usePrompt(${i})">Use this ↓</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  function copyAdminPrompt(i) {
-    const p = generatedPrompts[i];
-    navigator.clipboard.writeText(p.prompt || '').then(() => alert('Copied!')).catch(() => {});
-  }
-
-  function usePrompt(i) {
-    const p = generatedPrompts[i];
-    document.getElementById('pub-name').value = p.name || '';
-    const cat = (p.suggestedCategory || '').toLowerCase();
-    const catSel = document.getElementById('pub-category');
-    for (const opt of catSel.options) {
-      if (cat.includes(opt.value) || opt.value.includes(cat)) { catSel.value = opt.value; break; }
-    }
-    document.getElementById('pub-prompt').value = p.prompt || '';
-    document.getElementById('admin-publish-section').scrollIntoView({ behavior: 'smooth' });
   }
 
   function handleAdminPreview(e) {
@@ -2047,60 +1920,56 @@
 
   async function publishTemplate() {
     const name = document.getElementById('pub-name').value.trim();
-    const category = document.getElementById('pub-category').value;
-    const prompt = document.getElementById('pub-prompt').value.trim();
-    const isTrending = document.getElementById('pub-trending').checked;
     const statusEl = document.getElementById('admin-pub-status');
     const btn = document.getElementById('admin-publish-btn');
 
-    if (!name || !prompt) {
-      statusEl.textContent = 'Name and prompt are required';
+    if (!name) {
+      statusEl.textContent = 'Template name is required';
+      statusEl.className = 'admin-status error';
+      return;
+    }
+    if (!adminPreviewFile) {
+      statusEl.textContent = 'Please upload a photo';
       statusEl.className = 'admin-status error';
       return;
     }
 
     btn.disabled = true;
     btn.textContent = 'Publishing...';
-    statusEl.textContent = '';
+    statusEl.textContent = 'Uploading image...';
     statusEl.className = 'admin-status';
 
     try {
-      let previewUrl = '';
-
-      if (adminPreviewFile) {
-        statusEl.textContent = 'Uploading image...';
-        const ext = adminPreviewFile.name.split('.').pop();
-        const ref = storage.ref(`template-previews/${Date.now()}.${ext}`);
-        await ref.put(adminPreviewFile);
-        previewUrl = await ref.getDownloadURL();
-      }
+      const ext = adminPreviewFile.name.split('.').pop();
+      const ref = storage.ref(`template-previews/${Date.now()}.${ext}`);
+      await ref.put(adminPreviewFile);
+      const previewUrl = await ref.getDownloadURL();
 
       const numId = Date.now();
       await db.collection('publishedTemplates').add({
-        numId, name, category, previewUrl, prompt, isTrending,
+        numId, name, previewUrl,
+        category: 'aesthetic',
+        prompt: '',
+        isTrending: false,
         publishedBy: auth.currentUser?.email || '',
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      statusEl.textContent = '✓ Template published! Visible on the page now.';
+      statusEl.textContent = '✓ Published! Now visible on the site.';
       statusEl.className = 'admin-status success';
 
-      // Reset form
       document.getElementById('pub-name').value = '';
-      document.getElementById('pub-prompt').value = '';
-      document.getElementById('pub-trending').checked = false;
       document.getElementById('pub-preview-thumb').style.display = 'none';
       document.getElementById('pub-img-input').value = '';
       adminPreviewFile = null;
 
-      // Reload grid
       await loadPublishedTemplates();
     } catch(err) {
       statusEl.textContent = 'Error: ' + err.message;
       statusEl.className = 'admin-status error';
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Publish Template →';
+      btn.textContent = 'Publish →';
     }
   }
 
