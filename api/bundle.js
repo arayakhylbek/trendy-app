@@ -803,7 +803,7 @@ Return ONLY valid JSON with these fields:
   // Generates a template preview image (no user face)
   async generateTemplateImage(concept) {
     const result = await geminiPost(
-      "gemini-2.0-flash-exp-image-generation:generateContent",
+      "gemini-2.5-flash-image:generateContent",
       {
         contents: [
           {
@@ -872,7 +872,7 @@ Portrait orientation, cinematic lighting, ultra-detailed.`
       });
     }
     const result = await geminiPost(
-      "gemini-2.0-flash-exp-image-generation:generateContent",
+      "gemini-2.5-flash-image:generateContent",
       {
         contents: [{ parts }],
         generationConfig: { responseModalities: ["IMAGE", "TEXT"] }
