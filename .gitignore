@@ -7,7 +7,6 @@ dist/
 build/
 .vercel/
 apps/web/dist/
-api/bundle.cjs
 
 # env & secrets
 .env
