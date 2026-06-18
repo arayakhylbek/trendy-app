@@ -49,7 +49,7 @@ app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.use(errorHandler);
 
 const PORT = process.env['PORT'] ?? 3001;
-if (process.env['NODE_ENV'] !== 'test') {
+if (!process.env['VERCEL'] && process.env['NODE_ENV'] !== 'test') {
   app.listen(PORT, () => {
     logger.info(`API server running on port ${PORT}`);
   });
