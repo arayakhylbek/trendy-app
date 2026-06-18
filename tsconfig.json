@@ -1,0 +1,20 @@
+{
+  "extends": "./apps/api/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "strict": false
+  },
+  "include": [
+    "api/**/*.ts",
+    "apps/api/src/**/*.ts",
+    "packages/shared/src/**/*.ts"
+  ],
+  "exclude": [
+    "apps/web",
+    "node_modules",
+    "**/node_modules"
+  ]
+}
