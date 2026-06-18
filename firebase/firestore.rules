@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users: owner can read their own doc; NO client writes (Admin SDK only)
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+
+      match /generations/{genId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Templates: public read; backend-only write
+    match /templates/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Generation runs: public read for dashboard; backend-only write
+    match /generationRuns/{date} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Webhook events: no client access
+    match /webhookEvents/{eventId} {
+      allow read, write: if false;
+    }
+  }
+}

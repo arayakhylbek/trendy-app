@@ -1,6 +1,27 @@
+# deps
 node_modules/
-.DS_Store
-*.log
-.env
+.pnpm-store/
+
+# build output
 dist/
-.vercel
+build/
+.vercel/
+apps/web/dist/
+
+# env & secrets
+.env
+.env.*
+!.env.example
+*-service-account.json
+firebase-adminsdk*.json
+
+# logs / os / editor
+*.log
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# misc
+coverage/
+.turbo/

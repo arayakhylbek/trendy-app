@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Template preview images: public read, backend-only write
+    match /templates/{fileName} {
+      allow read: if true;
+      allow write: if false;
+    }
+    // Legacy path support
+    match /template-previews/{fileName} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
