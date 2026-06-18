@@ -70,9 +70,8 @@ Last updated: 2026-06-18
   POLAR_PRODUCT_STUDIO
 
   # AI
-  GEMINI_API_KEY
-  ANTHROPIC_API_KEY
-  REPLICATE_TOKEN
+  GEMINI_API_KEY          # Required — Gemini generates all images
+  ANTHROPIC_API_KEY       # Optional — Claude enhances prompts (falls back gracefully if missing)
 
   # App
   APP_BASE_URL=https://trendy-app-one.vercel.app

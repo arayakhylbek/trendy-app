@@ -73,8 +73,8 @@ async function runGeneration(
           label: concept.label,
           style: concept.style,
           cat: concept.cat,
-          prompt: concept.prompt, // the full AI prompt stored with the template
-          previewImage: imageDataUri,
+          prompt: concept.prompt,
+          image: imageDataUri,       // matches TemplateSchema
           trendTopic: trend.topic,
           trendSource: trend.source,
           trendKeywords: trend.keywords,

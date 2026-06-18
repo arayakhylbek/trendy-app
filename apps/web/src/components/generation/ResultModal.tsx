@@ -5,30 +5,59 @@ interface Props {
   onNew: () => void;
 }
 
+function dataUriToBlob(dataUri: string): Blob {
+  const [header, data] = dataUri.split(',');
+  const mime = header?.match(/:(.*?);/)?.[1] ?? 'image/jpeg';
+  const binary = atob(data ?? '');
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
+function getExtension(dataUri: string): string {
+  const mime = dataUri.match(/data:(image\/\w+);/)?.[1];
+  if (mime === 'image/png') return 'png';
+  if (mime === 'image/webp') return 'webp';
+  return 'jpg';
+}
+
 export function ResultModal({ imageUrl, templateEmoji, onClose, onNew }: Props) {
   if (!imageUrl && !templateEmoji) return null;
+
+  const isDataUri = imageUrl?.startsWith('data:');
 
   async function handleShare() {
     if (!imageUrl) return;
     try {
-      await navigator.clipboard.writeText(imageUrl);
-      alert('Image URL copied!');
+      if (isDataUri && navigator.share) {
+        const blob = dataUriToBlob(imageUrl);
+        const ext = getExtension(imageUrl);
+        const file = new File([blob], `trendy.${ext}`, { type: blob.type });
+        await navigator.share({ files: [file], title: 'Made with Trendy ✦' });
+      } else if (navigator.share) {
+        await navigator.share({ url: imageUrl, title: 'Made with Trendy ✦' });
+      } else {
+        handleDownload();
+      }
     } catch {
-      alert('Could not copy link');
+      handleDownload();
     }
   }
 
   function handleDownload() {
     if (!imageUrl) return;
+    const ext = isDataUri ? getExtension(imageUrl) : 'jpg';
     const a = document.createElement('a');
     a.href = imageUrl;
-    a.download = 'trendy-result.webp';
+    a.download = `trendy-result.${ext}`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
   }
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-sm bg-surface rounded-2xl border border-surface-border overflow-hidden">
+      <div className="relative w-full max-w-sm bg-surface rounded-2xl border border-surface-border overflow-hidden">
         <div className="relative" style={{ aspectRatio: '3/4' }}>
           {imageUrl ? (
             <img src={imageUrl} alt="Generated result" className="w-full h-full object-cover" />
