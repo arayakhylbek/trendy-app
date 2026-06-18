@@ -20,7 +20,11 @@ export async function ensureAuth(req: Request, _res: Response, next: NextFunctio
     const decoded = await adminAuth.verifyIdToken(header.slice(7));
     req.uid = decoded.uid;
     next();
-  } catch {
-    next(new UnauthorizedError('Invalid or expired token'));
+  } catch (e) {
+    if (e instanceof Error && e.message.includes('Firebase Admin credentials not configured')) {
+      next(new UnauthorizedError('Server not configured: FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY are required'));
+    } else {
+      next(new UnauthorizedError('Invalid or expired token'));
+    }
   }
 }

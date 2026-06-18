@@ -14,8 +14,9 @@ export function errorHandler(
     });
   }
 
-  logger.error(err, 'Unhandled error');
+  const msg = err instanceof Error ? err.message : String(err);
+  logger.error({ err, msg }, 'Unhandled error');
   return res.status(500).json({
-    error: { code: 'INTERNAL', message: 'Internal server error' },
+    error: { code: 'INTERNAL', message: msg },
   });
 }

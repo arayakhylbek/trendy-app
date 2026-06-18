@@ -170,9 +170,10 @@ function errorHandler(err, _req, res, _next) {
       error: { code: err.code, message: err.message }
     });
   }
-  logger.error(err, "Unhandled error");
+  const msg = err instanceof Error ? err.message : String(err);
+  logger.error({ err, msg }, "Unhandled error");
   return res.status(500).json({
-    error: { code: "INTERNAL", message: "Internal server error" }
+    error: { code: "INTERNAL", message: msg }
   });
 }
 
@@ -325,8 +326,12 @@ async function ensureAuth(req, _res, next) {
     const decoded = await adminAuth.verifyIdToken(header.slice(7));
     req.uid = decoded.uid;
     next();
-  } catch {
-    next(new UnauthorizedError("Invalid or expired token"));
+  } catch (e) {
+    if (e instanceof Error && e.message.includes("Firebase Admin credentials not configured")) {
+      next(new UnauthorizedError("Server not configured: FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY are required"));
+    } else {
+      next(new UnauthorizedError("Invalid or expired token"));
+    }
   }
 }
 
