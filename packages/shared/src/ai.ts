@@ -4,6 +4,7 @@ export interface Trend {
   keywords: string[];
   score: number;
   source: string;
+  trendContext?: string;
 }
 
 export interface TemplateConcept {

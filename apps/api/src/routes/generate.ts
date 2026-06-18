@@ -6,7 +6,7 @@ import { rateLimit } from '../middleware/rateLimit.js';
 import { db } from '../lib/firebase.js';
 import { GenerateRequestSchema, ValidationError } from '@trendy/shared';
 import { ClaudePromptEnhancer } from '../ai/ClaudePromptEnhancer.js';
-import { ReplicateProvider } from '../ai/ReplicateProvider.js';
+import { GeminiProvider } from '../ai/GeminiProvider.js';
 
 const router: ReturnType<typeof Router> = Router();
 
@@ -18,11 +18,15 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     }
     const { prompt, imageBase64 } = parsed.data;
 
+    // Step 1: Claude enhances the template prompt (skip if ANTHROPIC_API_KEY not set)
     const enhancer = new ClaudePromptEnhancer();
-    const replicate = new ReplicateProvider();
-
     const enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
-    const imageUrl = await replicate.generateImage(enhancedPrompt);
+
+    // Step 2: Gemini generates the personalized image
+    // If user uploaded a photo → face-aware generation
+    // If no photo → pure text-to-image
+    const gemini = new GeminiProvider();
+    const imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64);
 
     await db
       .collection('users')
@@ -32,7 +36,7 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
         updatedAt: new Date().toISOString(),
       });
 
-    res.json({ image: imageUrl, prompt: enhancedPrompt });
+    res.json({ image: imageDataUri, prompt: enhancedPrompt });
   } catch (e) {
     next(e);
   }

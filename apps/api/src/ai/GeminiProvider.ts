@@ -17,6 +17,7 @@ async function geminiPost(endpoint: string, body: unknown): Promise<GeminiRespon
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(55000),
     }
   );
 
@@ -29,17 +30,28 @@ async function geminiPost(endpoint: string, body: unknown): Promise<GeminiRespon
 }
 
 export class GeminiProvider implements AIProvider {
-  async generateTemplateConcept(trend: Trend): Promise<TemplateConcept> {
-    const prompt = `Generate a creative AI photo template for the trending topic: "${trend.topic}" (${trend.category}).
+  async generateTemplateConcept(trend: Trend & { trendContext?: string }): Promise<TemplateConcept> {
+    const contextHint = trend.trendContext ? `\nContext: ${trend.trendContext}` : '';
+    const keywordsHint =
+      trend.keywords?.length > 0 ? `\nRelated hashtags: ${trend.keywords.join(', ')}` : '';
 
-Return a JSON object with these exact fields:
-- emoji: a single relevant emoji
-- label: a catchy name (2-3 words)
-- style: a short style description (1-2 words, e.g. "Cinematic", "Aesthetic", "Editorial")
-- cat: category from this list: kdrama, aesthetic, anime, fantasy, vintage
-- prompt: a detailed image generation prompt (80-120 words) optimized for AI face insertion, photorealistic, viral on TikTok/Instagram
+    const prompt = `You are a creative director for a viral photo app. Create an AI photo template concept.
 
-Return ONLY valid JSON, no markdown.`;
+Trend: "${trend.topic}" (${trend.category})${contextHint}${keywordsHint}
+
+The template will be used so users can insert their face/photo into a generated scene. Design it to be:
+- Highly shareable on TikTok/Instagram
+- Photorealistic, cinematic quality
+- Have a clear aesthetic identity
+
+Return ONLY valid JSON with these fields:
+{
+  "emoji": "single relevant emoji",
+  "label": "catchy 2-3 word name",
+  "style": "style descriptor (1-2 words, e.g. Cinematic, Ethereal, Editorial)",
+  "cat": "one of: kdrama, aesthetic, anime, fantasy, vintage, fashion, nature, urban",
+  "prompt": "detailed image generation prompt (100-150 words): describe the full scene, lighting, colors, mood, camera angle, background details. Include 'face placeholder area' or 'portrait position' for where the user's face will go. Optimized for Gemini image generation."
+}`;
 
     const result = await geminiPost('gemini-2.0-flash:generateContent', {
       contents: [{ parts: [{ text: prompt }] }],
@@ -49,7 +61,7 @@ Return ONLY valid JSON, no markdown.`;
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new AppError('GEMINI_PARSE_ERROR', 'Failed to parse Gemini concept response', 502);
+      throw new AppError('GEMINI_PARSE_ERROR', 'Failed to parse concept response', 502);
     }
 
     const parsed = JSON.parse(jsonMatch[0]) as TemplateConcept;
@@ -62,18 +74,95 @@ Return ONLY valid JSON, no markdown.`;
     };
   }
 
+  // Generates a template preview image (no user face)
   async generateTemplateImage(concept: TemplateConcept): Promise<string> {
     const result = await geminiPost(
       'gemini-2.0-flash-preview-image-generation:generateContent',
       {
-        contents: [{ parts: [{ text: concept.prompt }] }],
+        contents: [
+          {
+            parts: [
+              {
+                text: `Create a stunning, photorealistic template preview image for social media.
+
+Style: ${concept.style} | Category: ${concept.cat}
+Label: ${concept.label} ${concept.emoji}
+
+Image generation prompt:
+${concept.prompt}
+
+Requirements:
+- Photorealistic, professional photography quality
+- Cinematic lighting and composition
+- Leave a natural portrait/face area visible in the foreground
+- Do NOT include a real human face, show the scene empty or with a silhouette placeholder
+- Ultra high quality, 4K detail`,
+              },
+            ],
+          },
+        ],
         generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
       }
     );
 
     const parts = result.candidates?.[0]?.content?.parts ?? [];
     const imagePart = parts.find((p) => p.inlineData);
+    if (!imagePart?.inlineData) {
+      throw new AppError('GEMINI_NO_IMAGE', 'No image returned from Gemini', 502);
+    }
 
+    const { mimeType, data } = imagePart.inlineData;
+    return `data:${mimeType};base64,${data}`;
+  }
+
+  // Generates a personalized image using the user's uploaded face photo + template prompt
+  async generateUserImage(templatePrompt: string, userImageBase64?: string): Promise<string> {
+    const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+
+    if (userImageBase64) {
+      // Strip data URI prefix if present
+      const base64Data = userImageBase64.replace(/^data:[^;]+;base64,/, '');
+
+      parts.push({
+        inlineData: {
+          mimeType: 'image/jpeg',
+          data: base64Data,
+        },
+      });
+
+      parts.push({
+        text: `You have the user's photo above. Apply this visual style template to them:
+
+${templatePrompt}
+
+Instructions:
+- Preserve the person's facial features, skin tone, and likeness
+- Apply the template's background, lighting, color grade, and artistic style
+- Blend the person naturally into the scene
+- Output a high-quality, photorealistic, portrait-format image
+- Make it look like a professional styled photo shoot`,
+      });
+    } else {
+      parts.push({
+        text: `Generate a high-quality, photorealistic styled portrait image:
+
+${templatePrompt}
+
+Create a beautiful, magazine-quality photo that would go viral on TikTok and Instagram.
+Portrait orientation, cinematic lighting, ultra-detailed.`,
+      });
+    }
+
+    const result = await geminiPost(
+      'gemini-2.0-flash-preview-image-generation:generateContent',
+      {
+        contents: [{ parts }],
+        generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
+      }
+    );
+
+    const responseParts = result.candidates?.[0]?.content?.parts ?? [];
+    const imagePart = responseParts.find((p) => p.inlineData);
     if (!imagePart?.inlineData) {
       throw new AppError('GEMINI_NO_IMAGE', 'No image returned from Gemini', 502);
     }
