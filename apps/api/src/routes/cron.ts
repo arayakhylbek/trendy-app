@@ -1,4 +1,5 @@
-import { type Router as IRouter, Router } from 'express';
+import { Router } from 'express';
+import type { DocumentReference } from 'firebase-admin/firestore';
 import { db } from '../lib/firebase.js';
 import { logger } from '../lib/logger.js';
 import { GeminiTrendSource } from '../ai/GeminiTrendSource.js';
@@ -41,7 +42,7 @@ router.post('/generate-daily', async (req, res) => {
 
 async function runGeneration(
   date: string,
-  runRef: FirebaseFirestore.DocumentReference
+  runRef: DocumentReference
 ) {
   const trendSource = new GeminiTrendSource();
   const gemini = new GeminiProvider();
@@ -114,5 +115,4 @@ async function runGeneration(
   }
 }
 
-// Explicit type annotation to avoid TS2742
-export default router as IRouter;
+export default router;
