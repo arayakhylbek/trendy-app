@@ -173,7 +173,7 @@ function errorHandler(err, _req, res, _next) {
   const msg = err instanceof Error ? err.message : String(err);
   logger.error({ err, msg }, "Unhandled error");
   return res.status(500).json({
-    error: { code: "INTERNAL", message: msg }
+    error: { code: "INTERNAL", message: "Internal server error" }
   });
 }
 
