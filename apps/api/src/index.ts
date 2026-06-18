@@ -1,4 +1,4 @@
-import express, { type Express } from 'express';
+import express from 'express';
 import pinoHttp from 'pino-http';
 import { logger } from './lib/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -9,7 +9,7 @@ import billingRouter from './routes/billing.js';
 import generateRouter from './routes/generate.js';
 import cronRouter from './routes/cron.js';
 
-const app: Express = express();
+const app: ReturnType<typeof express> = express();
 
 const allowedOrigins = [
   process.env['APP_BASE_URL'] ?? 'http://localhost:5173',

@@ -1,10 +1,10 @@
-import { type Router as ExpressRouter, Router } from 'express';
+import { Router } from 'express';
 import express from 'express';
 import { db } from '../lib/firebase.js';
 import { logger } from '../lib/logger.js';
 import { getPlanByProductId } from '../lib/polarConfig.js';
 
-const router: ExpressRouter = Router();
+const router: ReturnType<typeof Router> = Router();
 
 interface SubscriptionData {
   id: string;

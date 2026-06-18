@@ -1,10 +1,10 @@
-import { type Router as ExpressRouter, Router } from 'express';
+import { Router } from 'express';
 import { db } from '../lib/firebase.js';
 import { logger } from '../lib/logger.js';
 import { GeminiTrendSource } from '../ai/GeminiTrendSource.js';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
 
-const router: ExpressRouter = Router();
+const router: ReturnType<typeof Router> = Router();
 
 router.post('/generate-daily', async (req, res) => {
   if (req.headers['authorization'] !== `Bearer ${process.env['CRON_SECRET']}`) {

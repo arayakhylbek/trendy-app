@@ -1,4 +1,4 @@
-import { type Router as ExpressRouter, Router } from 'express';
+import { Router } from 'express';
 import { ensureAuth } from '../middleware/auth.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 import { db } from '../lib/firebase.js';
@@ -7,7 +7,7 @@ import { createCheckoutSession, createCustomerPortalSession } from '../services/
 import { adminAuth } from '../lib/firebase.js';
 import { getProductIdByPlan } from '../lib/polarConfig.js';
 
-const router: ExpressRouter = Router();
+const router: ReturnType<typeof Router> = Router();
 
 router.post('/checkout', ensureAuth, rateLimit(5), async (req, res, next) => {
   try {
