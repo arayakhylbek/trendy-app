@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { type Router as ExpressRouter, Router } from 'express';
 import { FieldValue } from 'firebase-admin/firestore';
 import { ensureAuth } from '../middleware/auth.js';
 import { checkQuota } from '../middleware/quota.js';
@@ -8,7 +8,7 @@ import { GenerateRequestSchema, ValidationError } from '@trendy/shared';
 import { ClaudePromptEnhancer } from '../ai/ClaudePromptEnhancer.js';
 import { ReplicateProvider } from '../ai/ReplicateProvider.js';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) => {
   try {

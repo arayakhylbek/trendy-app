@@ -1,11 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { PLANS, getPlanById, getPlanByProductId } from '../plans.js';
+import { PLANS, getPlanById } from '../plans.js';
 
 describe('PLANS', () => {
   it('free plan has limit of 5', () => {
     expect(PLANS.free.monthlyLimit).toBe(5);
     expect(PLANS.free.price).toBe(0);
-    expect(PLANS.free.polarProductId).toBeNull();
   });
 
   it('pro plan has limit of 200 at $19', () => {
@@ -32,15 +31,5 @@ describe('getPlanById', () => {
 
   it('returns undefined for unknown id', () => {
     expect(getPlanById('enterprise')).toBeUndefined();
-  });
-});
-
-describe('getPlanByProductId', () => {
-  it('returns undefined when no product id matched', () => {
-    expect(getPlanByProductId('nonexistent-product')).toBeUndefined();
-  });
-
-  it('returns undefined for free plan (no product id)', () => {
-    expect(getPlanByProductId('')).toBeUndefined();
   });
 });

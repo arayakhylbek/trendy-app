@@ -1,8 +1,8 @@
-import { Router } from 'express';
+import { type Router as ExpressRouter, Router } from 'express';
 import { db } from '../lib/firebase.js';
 import { NotFoundError } from '@trendy/shared';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 router.get('/', async (req, res, next) => {
   try {

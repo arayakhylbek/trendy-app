@@ -5,7 +5,6 @@ export const PLANS = {
     price: 0,
     monthlyLimit: 5,
     features: ['5 generations / month', 'Limited template library', 'Standard quality'],
-    polarProductId: null as null,
   },
   pro: {
     id: 'pro' as const,
@@ -13,7 +12,6 @@ export const PLANS = {
     price: 19,
     monthlyLimit: 200,
     features: ['200 generations / month', 'Full daily template library', 'HD downloads'],
-    polarProductId: process.env['POLAR_PRODUCT_PRO'] ?? '',
   },
   studio: {
     id: 'studio' as const,
@@ -25,7 +23,6 @@ export const PLANS = {
       'Full library + early access',
       'Priority generation',
     ],
-    polarProductId: process.env['POLAR_PRODUCT_STUDIO'] ?? '',
   },
 } as const;
 
@@ -34,11 +31,4 @@ export type Plan = (typeof PLANS)[PlanId];
 
 export function getPlanById(id: string): Plan | undefined {
   return PLANS[id as PlanId];
-}
-
-export function getPlanByProductId(productId: string): Plan | undefined {
-  if (!productId) return undefined;
-  return Object.values(PLANS).find(
-    (p) => p.polarProductId !== null && p.polarProductId !== '' && p.polarProductId === productId
-  );
 }

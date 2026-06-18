@@ -10,8 +10,8 @@ vi.mock('../lib/firebase.js', () => ({
 vi.mock('@polar-sh/sdk/webhooks', () => ({
   validateEvent: vi.fn(),
   WebhookVerificationError: class WebhookVerificationError extends Error {
-    constructor() {
-      super('bad sig');
+    constructor(message: string = 'bad sig') {
+      super(message);
       this.name = 'WebhookVerificationError';
     }
   },
@@ -25,19 +25,19 @@ describe('Webhook handler logic', () => {
   });
 
   it('getPlanByProductId returns undefined for empty string', async () => {
-    const { getPlanByProductId } = await import('@trendy/shared');
+    const { getPlanByProductId } = await import('../lib/polarConfig.js');
     expect(getPlanByProductId('')).toBeUndefined();
   });
 
   it('getPlanByProductId returns undefined for unknown product id', async () => {
-    const { getPlanByProductId } = await import('@trendy/shared');
+    const { getPlanByProductId } = await import('../lib/polarConfig.js');
     expect(getPlanByProductId('nonexistent_product_xyz_99')).toBeUndefined();
   });
 
   it('Polar webhook: validates event signature check runs', async () => {
     const { validateEvent, WebhookVerificationError } = await import('@polar-sh/sdk/webhooks');
     vi.mocked(validateEvent).mockImplementation(() => {
-      throw new WebhookVerificationError();
+      throw new WebhookVerificationError('bad signature');
     });
 
     let threw = false;

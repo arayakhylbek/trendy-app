@@ -1,12 +1,13 @@
-import { Router } from 'express';
+import { type Router as ExpressRouter, Router } from 'express';
 import { ensureAuth } from '../middleware/auth.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 import { db } from '../lib/firebase.js';
-import { CheckoutRequestSchema, PLANS, ValidationError, AppError } from '@trendy/shared';
+import { CheckoutRequestSchema, ValidationError, AppError } from '@trendy/shared';
 import { createCheckoutSession, createCustomerPortalSession } from '../services/polarService.js';
 import { adminAuth } from '../lib/firebase.js';
+import { getProductIdByPlan } from '../lib/polarConfig.js';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 router.post('/checkout', ensureAuth, rateLimit(5), async (req, res, next) => {
   try {
@@ -15,9 +16,7 @@ router.post('/checkout', ensureAuth, rateLimit(5), async (req, res, next) => {
       return next(new ValidationError(parsed.error.message));
     }
     const { planId } = parsed.data;
-    const plan = PLANS[planId];
-
-    const productId = plan.polarProductId;
+    const productId = getProductIdByPlan(planId);
     if (!productId) {
       return next(new ValidationError('Invalid plan'));
     }

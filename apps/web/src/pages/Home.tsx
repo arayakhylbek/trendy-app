@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { CategoryPills } from '../components/templates/CategoryPills';
 import { TemplateGrid } from '../components/templates/TemplateGrid';
 import { TemplateModal } from '../components/generation/TemplateModal';
@@ -25,7 +24,6 @@ export function Home() {
   const { user } = useAuth();
   const { data: currentUser, refetch: refetchUser } = useCurrentUser();
   const { data: templates = [], isLoading, error } = useTemplates(activeCategory);
-  const navigate = useNavigate();
 
   const tier = currentUser?.tier ?? 'free';
   const plan = PLANS[tier];

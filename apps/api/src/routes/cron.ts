@@ -1,14 +1,15 @@
-import { Router } from 'express';
+import { type Router as ExpressRouter, Router } from 'express';
 import { db } from '../lib/firebase.js';
 import { logger } from '../lib/logger.js';
 import { GeminiTrendSource } from '../ai/GeminiTrendSource.js';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 router.post('/generate-daily', async (req, res) => {
   if (req.headers['authorization'] !== `Bearer ${process.env['CRON_SECRET']}`) {
-    return res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Invalid cron secret' } });
+    res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Invalid cron secret' } });
+    return;
   }
 
   const date = new Date().toISOString().slice(0, 10);
@@ -16,7 +17,8 @@ router.post('/generate-daily', async (req, res) => {
 
   const existing = await runRef.get();
   if (existing.exists && existing.data()?.['status'] === 'completed') {
-    return res.json({ ok: true, skipped: true, date });
+    res.json({ ok: true, skipped: true, date });
+    return;
   }
 
   await runRef.set({

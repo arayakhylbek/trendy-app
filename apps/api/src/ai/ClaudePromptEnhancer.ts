@@ -1,5 +1,3 @@
-import { AppError } from '@trendy/shared';
-
 interface AnthropicMessage {
   role: 'user';
   content: Array<{ type: string; text?: string; source?: { type: string; media_type: string; data: string } }>;

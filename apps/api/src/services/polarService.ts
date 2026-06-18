@@ -16,6 +16,6 @@ export async function createCheckoutSession(
 
 export async function createCustomerPortalSession(customerId: string): Promise<string> {
   const polar = getPolar();
-  const portal = await polar.customerPortal.create({ customerId });
-  return portal.url;
+  const session = await polar.customerSessions.create({ customerId });
+  return session.customerPortalUrl;
 }

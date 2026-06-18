@@ -1,10 +1,10 @@
-import { Router } from 'express';
+import { type Router as ExpressRouter, Router } from 'express';
 import { ensureAuth } from '../middleware/auth.js';
 import { ensureUser, getUserDoc } from '../services/userService.js';
 import { adminAuth } from '../lib/firebase.js';
 import { NotFoundError } from '@trendy/shared';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 router.get('/me', ensureAuth, async (req, res, next) => {
   try {

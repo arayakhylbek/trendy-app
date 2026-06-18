@@ -1,42 +1,65 @@
-import { Router } from 'express';
+import { type Router as ExpressRouter, Router } from 'express';
 import express from 'express';
 import { db } from '../lib/firebase.js';
 import { logger } from '../lib/logger.js';
-import { getPlanByProductId } from '@trendy/shared';
+import { getPlanByProductId } from '../lib/polarConfig.js';
 
-const router = Router();
+const router: ExpressRouter = Router();
+
+interface SubscriptionData {
+  id: string;
+  productId: string;
+  customerId: string;
+  customer: { email: string };
+}
+
+interface PolarEvent {
+  type?: string;
+  data: unknown;
+}
 
 router.post('/polar', express.raw({ type: 'application/json' }), async (req, res) => {
-  let event: { id: string; type: string; data: Record<string, unknown> };
+  let event: PolarEvent;
 
   try {
-    const { validateEvent, WebhookVerificationError } = await import('@polar-sh/sdk/webhooks');
+    const { validateEvent } = await import('@polar-sh/sdk/webhooks');
     event = validateEvent(
       req.body as Buffer,
       req.headers as Record<string, string>,
       process.env['POLAR_WEBHOOK_SECRET']!
-    );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any) {
-    if (e?.name === 'WebhookVerificationError' || e?.constructor?.name === 'WebhookVerificationError') {
+    ) as PolarEvent;
+  } catch (e: unknown) {
+    const err = e as { name?: string; constructor?: { name?: string } };
+    if (
+      err?.name === 'WebhookVerificationError' ||
+      err?.constructor?.name === 'WebhookVerificationError'
+    ) {
       logger.warn('Polar webhook: signature verification failed');
-      return res.status(403).json({ error: { code: 'INVALID_SIGNATURE', message: 'Invalid signature' } });
+      res.status(403).json({ error: { code: 'INVALID_SIGNATURE', message: 'Invalid signature' } });
+      return;
     }
     logger.warn({ err: e }, 'Polar webhook: parse error');
-    return res.status(400).json({ error: { code: 'BAD_REQUEST', message: 'Bad request' } });
+    res.status(400).json({ error: { code: 'BAD_REQUEST', message: 'Bad request' } });
+    return;
   }
 
-  const eventRef = db.collection('webhookEvents').doc(event.id);
+  const eventType = event.type ?? 'unknown';
+  const data = event.data as SubscriptionData;
+
+  // Idempotency: use subscription id + event type as key (Polar payloads have no top-level id)
+  const idempotencyKey = `${data?.id ?? ''}-${eventType}`;
+  const eventRef = db.collection('webhookEvents').doc(idempotencyKey);
   const existing = await eventRef.get();
   if (existing.exists) {
-    return res.json({ ok: true, skipped: true });
+    res.json({ ok: true, skipped: true });
+    return;
   }
 
   try {
-    await handlePolarEvent(event.type, event.data);
+    await handlePolarEvent(eventType, data);
     await eventRef.set({
-      eventId: event.id,
-      type: event.type,
+      eventKey: idempotencyKey,
+      type: eventType,
       processedAt: new Date().toISOString(),
     });
     res.json({ ok: true });
@@ -46,22 +69,20 @@ router.post('/polar', express.raw({ type: 'application/json' }), async (req, res
   }
 });
 
-async function handlePolarEvent(type: string, data: Record<string, unknown>) {
+async function handlePolarEvent(type: string, data: SubscriptionData) {
   logger.info({ type }, 'Processing Polar webhook');
 
   if (type === 'subscription.active' || type === 'subscription.updated') {
-    const productId = (data['productId'] ?? data['product_id']) as string | undefined;
-    const customerId = (data['customerId'] ?? data['customer_id']) as string | undefined;
-    const customer = data['customer'] as Record<string, unknown> | undefined;
-    const customerEmail = customer?.['email'] as string | undefined;
+    const productId = data?.productId;
+    const customerId = data?.customerId;
+    const customerEmail = data?.customer?.email;
 
     if (!customerEmail) {
-      logger.warn({ data: '[omitted for PII]' }, 'Webhook: no customer email');
+      logger.warn({ type }, 'Webhook: no customer email');
       return;
     }
 
-    const newPlan = productId ? getPlanByProductId(productId) : undefined;
-    const newTier = newPlan?.id ?? 'free';
+    const newTier = productId ? (getPlanByProductId(productId) ?? 'free') : 'free';
 
     const snap = await db.collection('users').where('email', '==', customerEmail).limit(1).get();
     if (snap.empty) {
@@ -80,8 +101,7 @@ async function handlePolarEvent(type: string, data: Record<string, unknown>) {
   }
 
   if (type === 'subscription.canceled' || type === 'subscription.revoked') {
-    const customer = data['customer'] as Record<string, unknown> | undefined;
-    const customerEmail = customer?.['email'] as string | undefined;
+    const customerEmail = data?.customer?.email;
     if (!customerEmail) return;
 
     const snap = await db.collection('users').where('email', '==', customerEmail).limit(1).get();

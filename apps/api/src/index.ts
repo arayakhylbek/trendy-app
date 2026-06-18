@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { type Express } from 'express';
 import pinoHttp from 'pino-http';
 import { logger } from './lib/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -9,7 +9,7 @@ import billingRouter from './routes/billing.js';
 import generateRouter from './routes/generate.js';
 import cronRouter from './routes/cron.js';
 
-const app = express();
+const app: Express = express();
 
 const allowedOrigins = [
   process.env['APP_BASE_URL'] ?? 'http://localhost:5173',
@@ -23,7 +23,10 @@ app.use((req, res, next) => {
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
   next();
 });
 
