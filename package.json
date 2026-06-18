@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "pnpm --parallel --filter './apps/*' dev",
     "build": "pnpm --filter '@trendy/web' build && pnpm run bundle:api",
-    "bundle:api": "esbuild apps/api/src/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=api/bundle.cjs --external:express --external:firebase-admin --external:pino --external:pino-http --external:zod --external:@polar-sh/sdk",
+    "bundle:api": "esbuild apps/api/src/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=api/bundle.js --external:express --external:firebase-admin --external:pino --external:pino-http --external:zod --external:@polar-sh/sdk",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",

@@ -6,7 +6,7 @@
     { "source": "/api/(.*)", "destination": "/api/bundle" }
   ],
   "functions": {
-    "api/bundle.cjs": {
+    "api/bundle.js": {
       "maxDuration": 60
     }
   },
