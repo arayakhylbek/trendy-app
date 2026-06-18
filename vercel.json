@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "buildCommand": "pnpm --filter @trendy/web build",
+  "buildCommand": "pnpm run build",
   "outputDirectory": "apps/web/dist",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" }
+    { "source": "/api/(.*)", "destination": "/api/bundle" }
   ],
   "functions": {
-    "api/index.ts": {
+    "api/bundle.cjs": {
       "maxDuration": 60
     }
   },
