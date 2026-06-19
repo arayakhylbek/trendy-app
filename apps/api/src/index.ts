@@ -7,6 +7,7 @@ import usersRouter from './routes/users.js';
 import templatesRouter from './routes/templates.js';
 import billingRouter from './routes/billing.js';
 import generateRouter from './routes/generate.js';
+import generateTemplateRouter from './routes/generateTemplate.js';
 import cronRouter from './routes/cron.js';
 
 const app: ReturnType<typeof express> = express();
@@ -45,6 +46,7 @@ app.use('/api/me', (req, res, next) => {
 app.use('/api/templates', templatesRouter);
 app.use('/api/billing', billingRouter);
 app.use('/api/generate', generateRouter);
+app.use('/api/generate-template', generateTemplateRouter);
 app.use('/api/cron', cronRouter);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

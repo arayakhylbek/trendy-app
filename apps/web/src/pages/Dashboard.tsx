@@ -9,12 +9,30 @@ export function Dashboard() {
   const { user } = useAuth();
   const { data: currentUser } = useCurrentUser();
   const [portalLoading, setPortalLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const isAdmin = user?.email === 'araiakhylbek78@gmail.com';
 
   const tier = currentUser?.tier ?? 'free';
   const plan = PLANS[tier];
   const used = currentUser?.generationsUsed ?? 0;
   const limit = plan.monthlyLimit === Infinity ? '∞' : plan.monthlyLimit;
   const pct = plan.monthlyLimit === Infinity ? 0 : Math.round((used / plan.monthlyLimit) * 100);
+
+  async function handleAutoGenerate() {
+    setGenerating(true);
+    setLastGenerated(null);
+    try {
+      const { template } = await apiFetch<{ template: { label: string } }>('/api/generate-template', {
+        method: 'POST',
+      });
+      setLastGenerated(template.label);
+    } catch (e) {
+      alert((e as Error).message);
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   async function handlePortal() {
     setPortalLoading(true);
@@ -83,6 +101,22 @@ export function Dashboard() {
           )}
         </div>
       </div>
+
+      {isAdmin && (
+        <div className="bg-surface rounded-2xl border border-surface-border p-6 mb-6">
+          <p className="text-text-muted text-sm mb-3">Admin</p>
+          <button
+            onClick={handleAutoGenerate}
+            disabled={generating}
+            className="w-full py-2.5 rounded-xl bg-gradient-accent text-black font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {generating ? 'Generating...' : 'Auto-generate template'}
+          </button>
+          {lastGenerated && (
+            <p className="text-text-muted text-xs mt-2 text-center">Added: &quot;{lastGenerated}&quot;</p>
+          )}
+        </div>
+      )}
 
       <Link to="/" className="text-accent text-sm hover:underline">
         ← Back to gallery
