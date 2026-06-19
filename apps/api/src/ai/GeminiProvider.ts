@@ -115,41 +115,41 @@ Requirements:
     return `data:${mimeType};base64,${data}`;
   }
 
-  // Generates a personalized image using the user's uploaded face photo + template prompt
-  async generateUserImage(templatePrompt: string, userImageBase64?: string): Promise<string> {
+  // Generates a personalized image using both the template image and the user's face photo
+  async generateUserImage(templatePrompt: string, userImageBase64?: string, templateImageBase64?: string): Promise<string> {
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
 
-    if (userImageBase64) {
-      // Strip data URI prefix if present
+    if (userImageBase64 && templateImageBase64) {
+      // Face-swap: send template image first, then user face image
+      parts.push({
+        inlineData: {
+          mimeType: 'image/png',
+          data: templateImageBase64.replace(/^data:[^;]+;base64,/, ''),
+        },
+      });
+      parts.push({
+        inlineData: {
+          mimeType: 'image/jpeg',
+          data: userImageBase64.replace(/^data:[^;]+;base64,/, ''),
+        },
+      });
+      parts.push({
+        text: 'Take the first image as the base template. Replace ONLY the face in the first image with the face from the second image. Keep absolutely everything else exactly the same — same background, same clothes, same pose, same lighting, same composition. Only the face should change. The result must look natural and photorealistic.',
+      });
+    } else if (userImageBase64) {
       const base64Data = userImageBase64.replace(/^data:[^;]+;base64,/, '');
-
       parts.push({
         inlineData: {
           mimeType: 'image/jpeg',
           data: base64Data,
         },
       });
-
       parts.push({
-        text: `You have the user's photo above. Apply this visual style template to them:
-
-${templatePrompt}
-
-Instructions:
-- Preserve the person's facial features, skin tone, and likeness
-- Apply the template's background, lighting, color grade, and artistic style
-- Blend the person naturally into the scene
-- Output a high-quality, photorealistic, portrait-format image
-- Make it look like a professional styled photo shoot`,
+        text: `You have the user's photo above. Apply this visual style template to them:\n\n${templatePrompt}\n\nInstructions:\n- Preserve the person's facial features, skin tone, and likeness\n- Apply the template's background, lighting, color grade, and artistic style\n- Blend the person naturally into the scene\n- Output a high-quality, photorealistic, portrait-format image\n- Make it look like a professional styled photo shoot`,
       });
     } else {
       parts.push({
-        text: `Generate a high-quality, photorealistic styled portrait image:
-
-${templatePrompt}
-
-Create a beautiful, magazine-quality photo that would go viral on TikTok and Instagram.
-Portrait orientation, cinematic lighting, ultra-detailed.`,
+        text: `Generate a high-quality, photorealistic styled portrait image:\n\n${templatePrompt}\n\nCreate a beautiful, magazine-quality photo that would go viral on TikTok and Instagram.\nPortrait orientation, cinematic lighting, ultra-detailed.`,
       });
     }
 

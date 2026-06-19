@@ -1012,7 +1012,7 @@
 
   async function runGeneration() {
     try {
-      // Read the uploaded photo as base64
+      // Read the uploaded user photo as base64
       let imageBase64 = null;
       const photoInput = document.getElementById('photo-input');
       if (photoInput.files[0]) {
@@ -1023,10 +1023,24 @@
         });
       }
 
+      // Read the template preview image as base64
+      let templateBase64 = null;
+      if (currentTemplate.image) {
+        try {
+          const imgRes = await fetch(currentTemplate.image);
+          const blob = await imgRes.blob();
+          templateBase64 = await new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result.split(',')[1]);
+            reader.readAsDataURL(blob);
+          });
+        } catch(e) {}
+      }
+
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: currentTemplate.prompt, imageBase64 })
+        body: JSON.stringify({ prompt: currentTemplate.prompt, imageBase64, templateBase64 })
       });
 
       if (!res.ok) {

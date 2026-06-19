@@ -16,17 +16,18 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     if (!parsed.success) {
       return next(new ValidationError(parsed.error.message));
     }
-    const { prompt, imageBase64 } = parsed.data;
+    const { prompt, imageBase64, templateBase64 } = parsed.data;
 
     // Step 1: Claude enhances the template prompt (skip if ANTHROPIC_API_KEY not set)
     const enhancer = new ClaudePromptEnhancer();
     const enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
 
     // Step 2: Gemini generates the personalized image
-    // If user uploaded a photo → face-aware generation
+    // If both template and user photo provided → face-swap mode
+    // If only user photo → style-transfer generation
     // If no photo → pure text-to-image
     const gemini = new GeminiProvider();
-    const imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64);
+    const imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, templateBase64);
 
     await db
       .collection('users')
