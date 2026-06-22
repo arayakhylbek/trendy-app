@@ -44,6 +44,12 @@ export function Header() {
           Pricing
         </button>
 
+        {user && (
+          <Link to="/gallery" className="text-text-muted hover:text-white transition-colors text-sm">
+            Gallery
+          </Link>
+        )}
+
         {user && <GenBadge remaining={remaining} limit={limit} tier={tier} atLimit={atLimit} onUpgrade={scrollToPricing} />}
 
         {user ? (

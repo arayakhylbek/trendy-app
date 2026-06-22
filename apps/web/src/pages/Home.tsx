@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CategoryPills } from '../components/templates/CategoryPills';
 import { TemplateGrid } from '../components/templates/TemplateGrid';
 import { TemplateModal } from '../components/generation/TemplateModal';
@@ -9,6 +10,7 @@ import { AuthModal } from '../components/auth/AuthModal';
 import { useTemplates } from '../hooks/useTemplates';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useAuth } from '../hooks/useAuth';
+import { useSaveGeneration } from '../hooks/useGallery';
 import { apiFetch, ApiError } from '../lib/api';
 import { PLANS } from '@trendy/shared';
 import type { Template } from '@trendy/shared';
@@ -17,14 +19,16 @@ import { PricingSection } from '../components/PricingSection';
 export function Home() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [, setPendingTemplate] = useState<Template | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
-
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { data: currentUser, refetch: refetchUser } = useCurrentUser();
   const { data: templates = [], isLoading, error } = useTemplates(activeCategory);
+  const saveGen = useSaveGeneration(user?.uid);
 
   const tier = currentUser?.tier ?? 'free';
   const plan = PLANS[tier];
@@ -41,6 +45,7 @@ export function Home() {
       return;
     }
 
+    setPendingTemplate(template);
     setIsGenerating(true);
     try {
       const result = await apiFetch<{ image: string }>('/api/generate', {
@@ -49,6 +54,14 @@ export function Home() {
       });
       setResultImage(result.image);
       refetchUser();
+
+      // Save to gallery (fire-and-forget — never blocks the UI)
+      saveGen.mutate({
+        imageBase64: result.image,
+        templateLabel: template.label,
+        templateEmoji: template.emoji,
+        createdAt: new Date().toISOString(),
+      });
     } catch (e) {
       if (e instanceof ApiError && e.status === 429) {
         setShowUpgrade(true);
@@ -57,6 +70,7 @@ export function Home() {
       }
     } finally {
       setIsGenerating(false);
+      setPendingTemplate(null);
     }
   }
 
@@ -71,6 +85,32 @@ export function Home() {
           <p className="text-text-muted text-lg max-w-md mx-auto">
             Fresh AI-generated templates every day from the latest trends.
           </p>
+
+          {user && (
+            <button
+              onClick={() => navigate('/gallery')}
+              style={{
+                marginTop: '1.25rem',
+                padding: '9px 20px',
+                borderRadius: 20,
+                border: '1px solid rgba(255,255,255,0.1)',
+                background: '#1e1e24',
+                color: '#888',
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: 'pointer',
+                fontFamily: '"DM Sans", sans-serif',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                transition: 'border-color .2s, color .2s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ff6b9d'; e.currentTarget.style.color = '#ff6b9d'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#888'; }}
+            >
+              🖼 My Gallery
+            </button>
+          )}
         </div>
 
         <div className="mb-6">
@@ -127,6 +167,7 @@ export function Home() {
           imageUrl={resultImage}
           onClose={() => setResultImage(null)}
           onNew={() => setResultImage(null)}
+          onViewGallery={() => { setResultImage(null); navigate('/gallery'); }}
         />
       )}
 

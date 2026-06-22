@@ -3,6 +3,7 @@ interface Props {
   templateEmoji?: string;
   onClose: () => void;
   onNew: () => void;
+  onViewGallery?: () => void;
 }
 
 function dataUriToBlob(dataUri: string): Blob {
@@ -21,7 +22,7 @@ function getExtension(dataUri: string): string {
   return 'jpg';
 }
 
-export function ResultModal({ imageUrl, templateEmoji, onClose, onNew }: Props) {
+export function ResultModal({ imageUrl, templateEmoji, onClose, onNew, onViewGallery }: Props) {
   if (!imageUrl && !templateEmoji) return null;
 
   const isDataUri = imageUrl?.startsWith('data:');
@@ -80,7 +81,7 @@ export function ResultModal({ imageUrl, templateEmoji, onClose, onNew }: Props) 
             onClick={handleDownload}
             className="flex-1 py-2.5 rounded-xl border border-surface-border text-text-muted hover:text-white hover:border-white/20 transition-colors text-sm"
           >
-            Save
+            ↓ Save
           </button>
           <button
             onClick={onNew}
@@ -89,6 +90,16 @@ export function ResultModal({ imageUrl, templateEmoji, onClose, onNew }: Props) 
             New ✦
           </button>
         </div>
+        {onViewGallery && (
+          <div className="px-4 pb-4">
+            <button
+              onClick={onViewGallery}
+              className="w-full py-2.5 rounded-xl border border-surface-border text-text-muted hover:text-white hover:border-white/20 transition-colors text-sm"
+            >
+              🖼 View Gallery
+            </button>
+          </div>
+        )}
 
         <button
           onClick={onClose}
