@@ -2352,7 +2352,7 @@ Return ONLY valid JSON with these fields:
   "cat": "one of: kdrama, aesthetic, anime, fantasy, vintage, fashion, nature, urban",
   "prompt": "detailed image generation prompt (100-150 words): describe the full scene, lighting, colors, mood, camera angle, background details. Include 'face placeholder area' or 'portrait position' for where the user's face will go. Optimized for Gemini image generation."
 }`;
-    const result = await geminiPost("gemini-2.0-flash:generateContent", {
+    const result = await geminiPost("gemini-2.5-flash:generateContent", {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: { temperature: 0.9, maxOutputTokens: 1024 }
     });
@@ -2738,7 +2738,7 @@ async function geminiGroundedSearch(prompt) {
   const apiKey = process.env["GEMINI_API_KEY"];
   if (!apiKey) throw new AppError("MISSING_CONFIG", "GEMINI_API_KEY not configured", 500);
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -2815,7 +2815,7 @@ Return ONLY the JSON array.`;
       logger.warn({ err: e }, "Gemini grounded search failed, falling back to ungrounded");
       const apiKey = process.env["GEMINI_API_KEY"];
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

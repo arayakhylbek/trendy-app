@@ -53,7 +53,7 @@ Return ONLY valid JSON with these fields:
   "prompt": "detailed image generation prompt (100-150 words): describe the full scene, lighting, colors, mood, camera angle, background details. Include 'face placeholder area' or 'portrait position' for where the user's face will go. Optimized for Gemini image generation."
 }`;
 
-    const result = await geminiPost('gemini-2.0-flash:generateContent', {
+    const result = await geminiPost('gemini-2.5-flash:generateContent', {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: { temperature: 0.9, maxOutputTokens: 1024 },
     });
