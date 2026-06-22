@@ -58,13 +58,18 @@ Return ONLY valid JSON with these fields:
       generationConfig: { temperature: 0.9, maxOutputTokens: 1024 },
     });
 
-    const text = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const raw = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    const cleaned = raw.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '').trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new AppError('GEMINI_PARSE_ERROR', 'Failed to parse concept response', 502);
+      throw new AppError('GEMINI_PARSE_ERROR', `No JSON in concept response: ${cleaned.slice(0, 300)}`, 502);
     }
-
-    const parsed = JSON.parse(jsonMatch[0]) as TemplateConcept;
+    let parsed: TemplateConcept;
+    try {
+      parsed = JSON.parse(jsonMatch[0]) as TemplateConcept;
+    } catch {
+      throw new AppError('GEMINI_PARSE_ERROR', `Invalid concept JSON: ${jsonMatch[0].slice(0, 200)}`, 502);
+    }
     return {
       emoji: parsed.emoji ?? '✨',
       label: parsed.label ?? trend.topic,
