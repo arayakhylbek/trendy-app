@@ -14,6 +14,7 @@ import { apiFetch, ApiError } from '../lib/api';
 import { PLANS } from '@trendy/shared';
 import type { Template } from '@trendy/shared';
 import { PricingSection } from '../components/PricingSection';
+import { UpgradeModal } from '../components/billing/UpgradeModal';
 
 function scrollToPricing() {
   document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
@@ -187,35 +188,7 @@ export function Home() {
       )}
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
-
-      {showUpgrade && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-surface rounded-2xl border border-surface-border p-6 text-center">
-            <div className="text-4xl mb-3">✨</div>
-            <h2 className="text-white font-display text-xl font-bold mb-2">
-              You've used your free generations
-            </h2>
-            <p className="text-text-muted text-sm mb-6">
-              Upgrade to keep creating. Lite plan starts at just $2.99/month.
-            </p>
-            <button
-              onClick={() => {
-                setShowUpgrade(false);
-                document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="w-full py-3 rounded-xl font-semibold bg-gradient-accent text-black hover:opacity-90 transition-opacity mb-3"
-            >
-              See Plans
-            </button>
-            <button
-              onClick={() => setShowUpgrade(false)}
-              className="w-full py-2 text-text-muted text-sm hover:text-white transition-colors"
-            >
-              Maybe later
-            </button>
-          </div>
-        </div>
-      )}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </>
   );
 }
