@@ -11,17 +11,18 @@ router.use(ensureOwner);
 router.get('/templates', async (req, res, next) => {
   try {
     const status = (req.query['status'] as string) || 'pending';
-    let query = db.collection('templates').orderBy('createdAt', 'desc').limit(100);
 
-    if (status !== 'all') {
-      query = db.collection('templates')
-        .where('status', '==', status)
-        .orderBy('createdAt', 'desc')
-        .limit(100);
+    // Fetch all and filter in code — avoids composite index requirement
+    const snap = await db.collection('templates').orderBy('createdAt', 'desc').limit(200).get();
+    let templates = snap.docs.map((d) => ({ id: d.id, ...d.data() as Record<string, unknown> }));
+
+    if (status === 'pending') {
+      templates = templates.filter((t) => t['status'] === 'pending');
+    } else if (status === 'published') {
+      // Old templates (no status field) are treated as published
+      templates = templates.filter((t) => !t['status'] || t['status'] === 'published');
     }
 
-    const snap = await query.get();
-    const templates = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     res.json({ templates, total: templates.length });
   } catch (e) {
     next(e);
