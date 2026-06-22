@@ -5,7 +5,6 @@ import { TemplateGrid } from '../components/templates/TemplateGrid';
 import { TemplateModal } from '../components/generation/TemplateModal';
 import { CatLoadingScreen } from '../components/generation/CatLoadingScreen';
 import { ResultModal } from '../components/generation/ResultModal';
-import { UpgradeModal } from '../components/billing/UpgradeModal';
 import { AuthModal } from '../components/auth/AuthModal';
 import { useTemplates } from '../hooks/useTemplates';
 import { useCurrentUser } from '../hooks/useCurrentUser';
@@ -16,20 +15,22 @@ import { PLANS } from '@trendy/shared';
 import type { Template } from '@trendy/shared';
 import { PricingSection } from '../components/PricingSection';
 
+function scrollToPricing() {
+  document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+}
+
 export function Home() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [, setPendingTemplate] = useState<Template | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultImage, setResultImage] = useState<string | null>(null);
-  const [showUpgrade, setShowUpgrade] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: currentUser, refetch: refetchUser } = useCurrentUser();
   const { data: templates = [], isLoading, error } = useTemplates(activeCategory);
   const saveGen = useSaveGeneration(user?.uid);
-  // holds the in-flight Firestore save promise so "View Gallery" can await it
   const savingRef = useRef<Promise<void> | null>(null);
 
   const isOwner = user?.email?.toLowerCase() === 'araiakhylbek78@gmail.com';
@@ -44,7 +45,7 @@ export function Home() {
       return;
     }
     if (atLimit) {
-      setShowUpgrade(true);
+      scrollToPricing();
       return;
     }
 
@@ -58,7 +59,6 @@ export function Home() {
       setResultImage(result.image);
       refetchUser();
 
-      // Save to gallery in the background; track the promise so View Gallery can await it
       savingRef.current = saveGen.mutateAsync({
         imageBase64: result.image,
         templateLabel: template.label,
@@ -67,7 +67,7 @@ export function Home() {
       }).catch((err) => { console.error('[gallery] save error:', err); });
     } catch (e) {
       if (e instanceof ApiError && e.status === 429) {
-        setShowUpgrade(true);
+        scrollToPricing();
       } else {
         alert(`Generation failed: ${(e as Error).message}`);
       }
@@ -142,15 +142,13 @@ export function Home() {
           <div id="section-all">
             <TemplateGrid
               templates={templates}
-              onSelect={(t) => {
-                setSelectedTemplate(t);
-              }}
+              onSelect={(t) => setSelectedTemplate(t)}
             />
           </div>
         )}
       </main>
 
-      <PricingSection onUpgrade={() => setShowUpgrade(true)} />
+      <PricingSection onUpgrade={scrollToPricing} />
 
       {selectedTemplate && (
         <TemplateModal
@@ -172,14 +170,12 @@ export function Home() {
           onNew={() => setResultImage(null)}
           onViewGallery={async () => {
             setResultImage(null);
-            // wait for the Firestore write to complete before showing gallery
             await savingRef.current;
             navigate('/gallery');
           }}
         />
       )}
 
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
     </>
   );
