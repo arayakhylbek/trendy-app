@@ -27,8 +27,11 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     const gemini = new GeminiProvider();
     let imageDataUri: string;
 
-    if (imageBase64 && useReplicate) {
-      // New flow: Gemini generates styled template → Replicate swaps user's face in
+    if (imageBase64 && templateBase64 && useReplicate) {
+      // Fast path: template image already exists → just face-swap, no Gemini needed
+      imageDataUri = await faceSwap(templateBase64, imageBase64);
+    } else if (imageBase64 && useReplicate) {
+      // No template image: generate one with Gemini first, then face-swap
       const templateImage = await gemini.generateTemplateOnly(enhancedPrompt);
       imageDataUri = await faceSwap(templateImage, imageBase64);
     } else {

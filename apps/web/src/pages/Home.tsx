@@ -54,7 +54,11 @@ export function Home() {
     try {
       const result = await apiFetch<{ image: string }>('/api/generate', {
         method: 'POST',
-        body: JSON.stringify({ prompt: template.prompt, imageBase64 }),
+        body: JSON.stringify({
+          prompt: template.prompt,
+          imageBase64,
+          templateBase64: template.image,
+        }),
       });
       setResultImage(result.image);
       refetchUser();
