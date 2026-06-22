@@ -21,12 +21,13 @@ export function Header() {
     }
   }
 
+  const isOwner = user?.email?.toLowerCase() === 'araiakhylbek78@gmail.com';
   const tier = currentUser?.tier ?? 'free';
   const plan = PLANS[tier];
   const used = currentUser?.generationsUsed ?? 0;
-  const limit = plan.monthlyLimit === Infinity ? null : plan.monthlyLimit;
+  const limit = isOwner || plan.monthlyLimit === Infinity ? null : plan.monthlyLimit;
   const remaining = limit !== null ? Math.max(0, limit - used) : null;
-  const atLimit = remaining === 0;
+  const atLimit = !isOwner && remaining === 0;
 
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-bg/90 backdrop-blur border-b border-surface-border">

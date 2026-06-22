@@ -32,10 +32,11 @@ export function Home() {
   // holds the in-flight Firestore save promise so "View Gallery" can await it
   const savingRef = useRef<Promise<void> | null>(null);
 
+  const isOwner = user?.email?.toLowerCase() === 'araiakhylbek78@gmail.com';
   const tier = currentUser?.tier ?? 'free';
   const plan = PLANS[tier];
   const used = currentUser?.generationsUsed ?? 0;
-  const atLimit = plan.monthlyLimit !== Infinity && used >= plan.monthlyLimit;
+  const atLimit = !isOwner && plan.monthlyLimit !== Infinity && used >= plan.monthlyLimit;
 
   async function handleGenerate(template: Template, imageBase64: string | undefined) {
     if (!user) {

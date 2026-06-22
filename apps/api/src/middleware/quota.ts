@@ -3,6 +3,8 @@ import { db } from '../lib/firebase.js';
 import { PLANS, QuotaExceededError, NotFoundError } from '@trendy/shared';
 import type { PlanId } from '@trendy/shared';
 
+const OWNER_EMAIL = 'araiakhylbek78@gmail.com';
+
 export async function checkQuota(req: Request, _res: Response, next: NextFunction) {
   try {
     const snap = await db.collection('users').doc(req.uid).get();
@@ -10,6 +12,12 @@ export async function checkQuota(req: Request, _res: Response, next: NextFunctio
       return next(new NotFoundError('User'));
     }
     const user = snap.data()!;
+
+    // Owner account — unlimited generations, skip quota check
+    if ((user['email'] as string | undefined)?.toLowerCase() === OWNER_EMAIL) {
+      return next();
+    }
+
     const tier = (user['tier'] as PlanId) ?? 'free';
     const plan = PLANS[tier] ?? PLANS.free;
 
