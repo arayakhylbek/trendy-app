@@ -36,9 +36,10 @@ function AdminInner({ tab, setTab, generating, setGenerating, generateMsg, setGe
         try {
             const result = await apiFetch('/api/admin/generate', { method: 'POST' });
             const count = result.templatesGenerated ?? 0;
+            const errDetail = result.error ?? result.errors?.join(' | ') ?? '';
             setGenerateMsg(count > 0
                 ? `✅ Generated ${count} template${count !== 1 ? 's' : ''}! Check Pending tab.`
-                : `⚠️ Generation finished but 0 templates created. Check Vercel logs.`);
+                : `⚠️ 0 templates generated. ${errDetail || 'Unknown error — check Vercel logs.'}`);
             qc.invalidateQueries({ queryKey: ['admin-templates'] });
         }
         catch (e) {

@@ -77,7 +77,7 @@ Return ONLY valid JSON with these fields:
   // Generates a template preview image (no user face)
   async generateTemplateImage(concept: TemplateConcept): Promise<string> {
     const result = await geminiPost(
-      'gemini-2.5-flash-image:generateContent',
+      'gemini-2.0-flash-preview-image-generation:generateContent',
       {
         contents: [
           {
@@ -117,7 +117,7 @@ Requirements:
 
   // Generates a styled template image (with a person, no user face) for face-swap
   async generateTemplateOnly(prompt: string): Promise<string> {
-    const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
+    const result = await geminiPost('gemini-2.0-flash-preview-image-generation:generateContent', {
       contents: [{
         parts: [{
           text: `Generate a photorealistic styled portrait photo of a person:\n\n${prompt}\n\nRequirements:\n- A person must be clearly visible with a well-lit face\n- Professional photography, cinematic quality\n- The face should be prominent in the frame\n- Photorealistic, high detail`,

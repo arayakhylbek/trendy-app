@@ -7,7 +7,7 @@ import { GeminiProvider } from '../ai/GeminiProvider.js';
 
 const router: ReturnType<typeof Router> = Router();
 
-const TEMPLATES_PER_RUN = 6; // Generate 6 templates daily
+const TEMPLATES_PER_RUN = 3; // Generate 3 templates per run (faster, within Vercel timeout)
 
 router.post('/generate-daily', async (req, res) => {
   if (req.headers['authorization'] !== `Bearer ${process.env['CRON_SECRET']}`) {

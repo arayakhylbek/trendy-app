@@ -56,14 +56,15 @@ function AdminInner({
     setGenerating(true);
     setGenerateMsg('⏳ Generating templates… this takes 2–4 min, please wait.');
     try {
-      const result = await apiFetch<{ templatesGenerated: number; errors: string[] | null }>(
+      const result = await apiFetch<{ templatesGenerated: number; errors: string[] | null; error?: string | null; status?: string }>(
         '/api/admin/generate',
         { method: 'POST' },
       );
       const count = result.templatesGenerated ?? 0;
+      const errDetail = result.error ?? result.errors?.join(' | ') ?? '';
       setGenerateMsg(count > 0
         ? `✅ Generated ${count} template${count !== 1 ? 's' : ''}! Check Pending tab.`
-        : `⚠️ Generation finished but 0 templates created. Check Vercel logs.`
+        : `⚠️ 0 templates generated. ${errDetail || 'Unknown error — check Vercel logs.'}`
       );
       qc.invalidateQueries({ queryKey: ['admin-templates'] });
     } catch (e) {

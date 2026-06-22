@@ -77,8 +77,10 @@ router.post('/generate', async (req, res, next) => {
     res.json({
       ok: true,
       date,
+      status: runData['status'],
       templatesGenerated: runData['templatesGenerated'] ?? 0,
       errors: runData['errors'] ?? null,
+      error: runData['error'] ?? null,
     });
   } catch (e) {
     next(e);

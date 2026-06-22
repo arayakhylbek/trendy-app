@@ -2373,7 +2373,7 @@ Return ONLY valid JSON with these fields:
   // Generates a template preview image (no user face)
   async generateTemplateImage(concept) {
     const result = await geminiPost(
-      "gemini-2.5-flash-image:generateContent",
+      "gemini-2.0-flash-preview-image-generation:generateContent",
       {
         contents: [
           {
@@ -2410,7 +2410,7 @@ Requirements:
   }
   // Generates a styled template image (with a person, no user face) for face-swap
   async generateTemplateOnly(prompt) {
-    const result = await geminiPost("gemini-2.5-flash-image:generateContent", {
+    const result = await geminiPost("gemini-2.0-flash-preview-image-generation:generateContent", {
       contents: [{
         parts: [{
           text: `Generate a photorealistic styled portrait photo of a person:
@@ -2830,7 +2830,7 @@ Return ONLY the JSON array.`;
 
 // apps/api/src/routes/cron.ts
 var router7 = (0, import_express8.Router)();
-var TEMPLATES_PER_RUN = 6;
+var TEMPLATES_PER_RUN = 3;
 router7.post("/generate-daily", async (req, res) => {
   if (req.headers["authorization"] !== `Bearer ${process.env["CRON_SECRET"]}`) {
     res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Invalid cron secret" } });
@@ -2992,8 +2992,10 @@ router8.post("/generate", async (req, res, next) => {
     res.json({
       ok: true,
       date,
+      status: runData["status"],
       templatesGenerated: runData["templatesGenerated"] ?? 0,
-      errors: runData["errors"] ?? null
+      errors: runData["errors"] ?? null,
+      error: runData["error"] ?? null
     });
   } catch (e) {
     next(e);
