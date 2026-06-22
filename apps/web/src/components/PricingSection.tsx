@@ -1,5 +1,10 @@
+import { useState } from 'react';
+import { apiFetch } from '../lib/api';
+import { useAuth } from '../hooks/useAuth';
+
 interface Props {
   onUpgrade: () => void;
+  onNeedAuth?: () => void;
 }
 
 const FEATURES = {
@@ -14,7 +19,32 @@ const DISABLED = {
   pro: [],
 };
 
-export function PricingSection({ onUpgrade }: Props) {
+export function PricingSection({ onNeedAuth }: Props) {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState<'lite' | 'pro' | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  async function handleCheckout(uiPlan: 'lite' | 'pro') {
+    if (!user) {
+      onNeedAuth?.();
+      return;
+    }
+    // UI "Lite" → backend planId 'pro'; UI "Pro" → backend planId 'studio'
+    const planId = uiPlan === 'lite' ? 'pro' : 'studio';
+    setLoading(uiPlan);
+    setCheckoutError(null);
+    try {
+      const { checkoutUrl } = await apiFetch<{ checkoutUrl: string }>('/api/billing/checkout', {
+        method: 'POST',
+        body: JSON.stringify({ planId }),
+      });
+      window.location.href = checkoutUrl;
+    } catch (e) {
+      setCheckoutError((e as Error).message);
+      setLoading(null);
+    }
+  }
+
   return (
     <section id="pricing" className="px-4 sm:px-6 py-14 text-center">
       <h2
@@ -82,7 +112,9 @@ export function PricingSection({ onUpgrade }: Props) {
           <PromoBadge>Limited time — 25% off</PromoBadge>
           <Desc>For the casual creator who posts regularly.</Desc>
           <FeatureList features={FEATURES.lite} disabled={DISABLED.lite} />
-          <GradientButton onClick={onUpgrade}>Upgrade to Lite ✦</GradientButton>
+          <GradientButton onClick={() => handleCheckout('lite')} disabled={loading === 'lite'}>
+            {loading === 'lite' ? 'Redirecting…' : 'Upgrade to Lite ✦'}
+          </GradientButton>
         </Card>
 
         {/* PRO */}
@@ -96,10 +128,15 @@ export function PricingSection({ onUpgrade }: Props) {
           <PromoBadge>Limited time — 30% off</PromoBadge>
           <Desc>For the serious creator who posts every day.</Desc>
           <FeatureList features={FEATURES.pro} disabled={DISABLED.pro} />
-          <DarkButton onClick={onUpgrade}>Upgrade to Pro ✦</DarkButton>
+          <DarkButton onClick={() => handleCheckout('pro')} disabled={loading === 'pro'}>
+            {loading === 'pro' ? 'Redirecting…' : 'Upgrade to Pro ✦'}
+          </DarkButton>
         </Card>
       </div>
 
+      {checkoutError && (
+        <p style={{ marginTop: '1rem', fontSize: 13, color: '#ef4444' }}>{checkoutError}</p>
+      )}
       <p style={{ marginTop: '1.5rem', fontSize: 12, color: '#555' }}>
         Cancel anytime. No questions asked.
       </p>
@@ -331,10 +368,11 @@ function FeatureList({ features, disabled }: { features: string[]; disabled: str
   );
 }
 
-function DarkButton({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+function DarkButton({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       style={{
         width: '100%',
         marginTop: 'auto',
@@ -345,7 +383,8 @@ function DarkButton({ children, onClick }: { children: React.ReactNode; onClick?
         color: '#f0f0f5',
         fontSize: 14,
         fontWeight: 500,
-        cursor: 'pointer',
+        cursor: disabled ? 'default' : 'pointer',
+        opacity: disabled ? 0.6 : 1,
         fontFamily: '"DM Sans", system-ui, sans-serif',
         transition: 'border-color .2s, color .2s',
       }}
@@ -365,10 +404,11 @@ function DarkButton({ children, onClick }: { children: React.ReactNode; onClick?
   );
 }
 
-function GradientButton({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+function GradientButton({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       style={{
         width: '100%',
         marginTop: 'auto',
@@ -379,7 +419,8 @@ function GradientButton({ children, onClick }: { children: React.ReactNode; onCl
         color: '#fff',
         fontSize: 14,
         fontWeight: 500,
-        cursor: 'pointer',
+        cursor: disabled ? 'default' : 'pointer',
+        opacity: disabled ? 0.6 : 1,
         fontFamily: '"DM Sans", system-ui, sans-serif',
         transition: 'opacity .2s',
       }}

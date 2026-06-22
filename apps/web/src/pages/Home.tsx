@@ -148,7 +148,7 @@ export function Home() {
         )}
       </main>
 
-      <PricingSection onUpgrade={scrollToPricing} />
+      <PricingSection onUpgrade={scrollToPricing} onNeedAuth={() => setShowAuth(true)} />
 
       {selectedTemplate && (
         <TemplateModal
