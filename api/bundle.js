@@ -5,6 +5,9 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __commonJS = (cb, mod) => function __require() {
+  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -27,13 +30,1573 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/error.js
+var require_error = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/error.js"(exports2, module2) {
+    var ApiError = class extends Error {
+      /**
+       * Creates a representation of an API error.
+       *
+       * @param {string} message - Error message
+       * @param {Request} request - HTTP request
+       * @param {Response} response - HTTP response
+       * @returns {ApiError} - An instance of ApiError
+       */
+      constructor(message, request, response) {
+        super(message);
+        this.name = "ApiError";
+        this.request = request;
+        this.response = response;
+      }
+    };
+    module2.exports = ApiError;
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/identifier.js
+var require_identifier = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/identifier.js"(exports2, module2) {
+    var ModelVersionIdentifier = class _ModelVersionIdentifier {
+      /*
+       * @param {string} Required. The model owner.
+       * @param {string} Required. The model name.
+       * @param {string} The model version.
+       */
+      constructor(owner, name, version = null) {
+        this.owner = owner;
+        this.name = name;
+        this.version = version;
+      }
+      /*
+       * Parse a reference to a model version
+       *
+       * @param {string}
+       * @returns {ModelVersionIdentifier}
+       * @throws {Error} If the reference is invalid.
+       */
+      static parse(ref) {
+        const match = ref.match(
+          /^(?<owner>[^/]+)\/(?<name>[^/:]+)(:(?<version>.+))?$/
+        );
+        if (!match) {
+          throw new Error(
+            `Invalid reference to model version: ${ref}. Expected format: owner/name or owner/name:version`
+          );
+        }
+        const { owner, name, version } = match.groups;
+        return new _ModelVersionIdentifier(owner, name, version);
+      }
+    };
+    module2.exports = ModelVersionIdentifier;
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/files.js
+var require_files = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/files.js"(exports2, module2) {
+    async function createFile(file, metadata = {}, { signal } = {}) {
+      const form = new FormData();
+      let filename;
+      let blob;
+      if (file instanceof Blob) {
+        filename = file.name || `blob_${Date.now()}`;
+        blob = file;
+      } else if (Buffer.isBuffer(file)) {
+        filename = `buffer_${Date.now()}`;
+        const bytes = new Uint8Array(file);
+        blob = new Blob([bytes], {
+          type: "application/octet-stream",
+          name: filename
+        });
+      } else {
+        throw new Error("Invalid file argument, must be a Blob, File or Buffer");
+      }
+      form.append("content", blob, filename);
+      form.append(
+        "metadata",
+        new Blob([JSON.stringify(metadata)], { type: "application/json" })
+      );
+      const response = await this.request("/files", {
+        method: "POST",
+        data: form,
+        headers: {
+          "Content-Type": "multipart/form-data"
+        },
+        signal
+      });
+      return response.json();
+    }
+    async function listFiles({ signal } = {}) {
+      const response = await this.request("/files", {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    async function getFile(file_id, { signal } = {}) {
+      const response = await this.request(`/files/${file_id}`, {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    async function deleteFile(file_id, { signal } = {}) {
+      const response = await this.request(`/files/${file_id}`, {
+        method: "DELETE",
+        signal
+      });
+      return response.status === 204;
+    }
+    module2.exports = {
+      create: createFile,
+      list: listFiles,
+      get: getFile,
+      delete: deleteFile
+    };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/util.js
+var require_util = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/util.js"(exports2, module2) {
+    var ApiError = require_error();
+    var { create: createFile } = require_files();
+    async function validateWebhook(requestData, secretOrCrypto, customCrypto) {
+      let id;
+      let body;
+      let timestamp;
+      let signature;
+      let secret;
+      let crypto = globalThis.crypto;
+      if (requestData && requestData.headers && requestData.body) {
+        if (typeof requestData.headers.get === "function") {
+          id = requestData.headers.get("webhook-id");
+          timestamp = requestData.headers.get("webhook-timestamp");
+          signature = requestData.headers.get("webhook-signature");
+        } else {
+          id = requestData.headers["webhook-id"];
+          timestamp = requestData.headers["webhook-timestamp"];
+          signature = requestData.headers["webhook-signature"];
+        }
+        body = requestData.body;
+        if (typeof secretOrCrypto !== "string") {
+          throw new Error(
+            "Unexpected value for secret passed to validateWebhook, expected a string"
+          );
+        }
+        secret = secretOrCrypto;
+        if (customCrypto) {
+          crypto = customCrypto;
+        }
+      } else {
+        id = requestData.id;
+        body = requestData.body;
+        timestamp = requestData.timestamp;
+        signature = requestData.signature;
+        secret = requestData.secret;
+        if (secretOrCrypto) {
+          crypto = secretOrCrypto;
+        }
+      }
+      if (body instanceof ReadableStream || body.readable) {
+        try {
+          body = await new Response(body).text();
+        } catch (err) {
+          throw new Error(`Error reading body: ${err.message}`);
+        }
+      } else if (isTypedArray(body)) {
+        body = await new Blob([body]).text();
+      } else if (typeof body === "object") {
+        body = JSON.stringify(body);
+      } else if (typeof body !== "string") {
+        throw new Error("Invalid body type");
+      }
+      if (!id || !timestamp || !signature) {
+        throw new Error("Missing required webhook headers");
+      }
+      if (!body) {
+        throw new Error("Missing required body");
+      }
+      if (!secret) {
+        throw new Error("Missing required secret");
+      }
+      if (!crypto) {
+        throw new Error(
+          'Missing `crypto` implementation. If using Node 18 pass in require("node:crypto").webcrypto'
+        );
+      }
+      const signedContent = `${id}.${timestamp}.${body}`;
+      const computedSignature = await createHMACSHA256(
+        secret.split("_").pop(),
+        signedContent,
+        crypto
+      );
+      const expectedSignatures = signature.split(" ").map((sig) => sig.split(",")[1]);
+      return expectedSignatures.some(
+        (expectedSignature) => expectedSignature === computedSignature
+      );
+    }
+    async function createHMACSHA256(secret, data, crypto) {
+      const encoder = new TextEncoder();
+      const key = await crypto.subtle.importKey(
+        "raw",
+        base64ToBytes(secret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
+      return bytesToBase64(signature);
+    }
+    function base64ToBytes(base64) {
+      return Uint8Array.from(atob(base64), (m) => m.codePointAt(0));
+    }
+    function bytesToBase64(bytes) {
+      return btoa(String.fromCharCode.apply(null, new Uint8Array(bytes)));
+    }
+    async function withAutomaticRetries(request, options = {}) {
+      const shouldRetry = options.shouldRetry || (() => false);
+      const maxRetries = options.maxRetries || 5;
+      const interval = options.interval || 500;
+      const jitter = options.jitter || 100;
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      let attempts = 0;
+      do {
+        let delay = interval * 2 ** attempts + Math.random() * jitter;
+        try {
+          const response = await request();
+          if (response.ok || !shouldRetry(response)) {
+            return response;
+          }
+        } catch (error) {
+          if (error instanceof ApiError) {
+            const retryAfter = error.response.headers.get("Retry-After");
+            if (retryAfter) {
+              if (!Number.isInteger(retryAfter)) {
+                const date = new Date(retryAfter);
+                if (!Number.isNaN(date.getTime())) {
+                  delay = date.getTime() - (/* @__PURE__ */ new Date()).getTime();
+                }
+              } else {
+                delay = retryAfter * 1e3;
+              }
+            }
+          }
+        }
+        if (Number.isInteger(maxRetries) && maxRetries > 0) {
+          if (Number.isInteger(delay) && delay > 0) {
+            await sleep(interval * 2 ** (options.maxRetries - maxRetries));
+          }
+          attempts += 1;
+        }
+      } while (attempts < maxRetries);
+      return request();
+    }
+    async function transformFileInputs(client, inputs, strategy) {
+      switch (strategy) {
+        case "data-uri":
+          return await transformFileInputsToBase64EncodedDataURIs(client, inputs);
+        case "upload":
+          return await transformFileInputsToReplicateFileURLs(client, inputs);
+        case "default":
+          try {
+            return await transformFileInputsToReplicateFileURLs(client, inputs);
+          } catch (error) {
+            if (error instanceof ApiError && error.response.status >= 400 && error.response.status < 500) {
+              throw error;
+            }
+            return await transformFileInputsToBase64EncodedDataURIs(inputs);
+          }
+        default:
+          throw new Error(`Unexpected file upload strategy: ${strategy}`);
+      }
+    }
+    async function transformFileInputsToReplicateFileURLs(client, inputs) {
+      return await transform(inputs, async (value) => {
+        if (value instanceof Blob || value instanceof Buffer) {
+          const file = await createFile.call(client, value);
+          return file.urls.get;
+        }
+        return value;
+      });
+    }
+    var MAX_DATA_URI_SIZE = 1e7;
+    async function transformFileInputsToBase64EncodedDataURIs(inputs) {
+      let totalBytes = 0;
+      return await transform(inputs, async (value) => {
+        let buffer;
+        let mime;
+        if (value instanceof Blob) {
+          buffer = await value.arrayBuffer();
+          mime = value.type;
+        } else if (isTypedArray(value)) {
+          buffer = value;
+        } else {
+          return value;
+        }
+        totalBytes += buffer.byteLength;
+        if (totalBytes > MAX_DATA_URI_SIZE) {
+          throw new Error(
+            `Combined filesize of prediction ${totalBytes} bytes exceeds 10mb limit for inline encoding, please provide URLs instead`
+          );
+        }
+        const data = bytesToBase64(buffer);
+        mime = mime || "application/octet-stream";
+        return `data:${mime};base64,${data}`;
+      });
+    }
+    async function transform(value, mapper) {
+      if (Array.isArray(value)) {
+        const copy = [];
+        for (const val of value) {
+          const transformed = await transform(val, mapper);
+          copy.push(transformed);
+        }
+        return copy;
+      }
+      if (isPlainObject(value)) {
+        const copy = {};
+        for (const key of Object.keys(value)) {
+          copy[key] = await transform(value[key], mapper);
+        }
+        return copy;
+      }
+      return await mapper(value);
+    }
+    function isTypedArray(arr) {
+      return arr instanceof Int8Array || arr instanceof Int16Array || arr instanceof Int32Array || arr instanceof Uint8Array || arr instanceof Uint8ClampedArray || arr instanceof Uint16Array || arr instanceof Uint32Array || arr instanceof Float32Array || arr instanceof Float64Array;
+    }
+    function isPlainObject(value) {
+      const isObjectLike = typeof value === "object" && value !== null;
+      if (!isObjectLike || String(value) !== "[object Object]") {
+        return false;
+      }
+      const proto = Object.getPrototypeOf(value);
+      if (proto === null) {
+        return true;
+      }
+      const Ctor = Object.prototype.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+      return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.toString.call(Ctor) === Function.prototype.toString.call(Object);
+    }
+    function parseProgressFromLogs(input) {
+      const logs = typeof input === "object" && input.logs ? input.logs : input;
+      if (!logs || typeof logs !== "string") {
+        return null;
+      }
+      const pattern = /^\s*(\d+)%\s*\|.+?\|\s*(\d+)\/(\d+)/;
+      const lines = logs.split("\n").reverse();
+      for (const line of lines) {
+        const matches = line.match(pattern);
+        if (matches && matches.length === 4) {
+          return {
+            percentage: parseInt(matches[1], 10) / 100,
+            current: parseInt(matches[2], 10),
+            total: parseInt(matches[3], 10)
+          };
+        }
+      }
+      return null;
+    }
+    async function* streamAsyncIterator(stream) {
+      const reader = stream.getReader();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) return;
+          yield value;
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    }
+    module2.exports = {
+      transform,
+      transformFileInputs,
+      validateWebhook,
+      withAutomaticRetries,
+      parseProgressFromLogs,
+      streamAsyncIterator
+    };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/vendor/eventsource-parser/stream.js
+var require_stream = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/vendor/eventsource-parser/stream.js"(exports2, module2) {
+    var __defProp2 = Object.defineProperty;
+    var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __hasOwnProp2 = Object.prototype.hasOwnProperty;
+    var __export2 = (target, all) => {
+      for (var name in all)
+        __defProp2(target, name, { get: all[name], enumerable: true });
+    };
+    var __copyProps2 = (to, from, except, desc) => {
+      if (from && typeof from === "object" || typeof from === "function") {
+        for (let key of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key) && key !== except)
+            __defProp2(to, key, {
+              get: () => from[key],
+              enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable
+            });
+      }
+      return to;
+    };
+    var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
+    var input_exports = {};
+    __export2(input_exports, {
+      EventSourceParserStream: () => EventSourceParserStream
+    });
+    module2.exports = __toCommonJS2(input_exports);
+    function createParser(onParse) {
+      let isFirstChunk;
+      let buffer;
+      let startingPosition;
+      let startingFieldLength;
+      let eventId;
+      let eventName;
+      let data;
+      reset();
+      return {
+        feed,
+        reset
+      };
+      function reset() {
+        isFirstChunk = true;
+        buffer = "";
+        startingPosition = 0;
+        startingFieldLength = -1;
+        eventId = void 0;
+        eventName = void 0;
+        data = "";
+      }
+      function feed(chunk) {
+        buffer = buffer ? buffer + chunk : chunk;
+        if (isFirstChunk && hasBom(buffer)) {
+          buffer = buffer.slice(BOM.length);
+        }
+        isFirstChunk = false;
+        const length = buffer.length;
+        let position = 0;
+        let discardTrailingNewline = false;
+        while (position < length) {
+          if (discardTrailingNewline) {
+            if (buffer[position] === "\n") {
+              ++position;
+            }
+            discardTrailingNewline = false;
+          }
+          let lineLength = -1;
+          let fieldLength = startingFieldLength;
+          let character;
+          for (let index = startingPosition; lineLength < 0 && index < length; ++index) {
+            character = buffer[index];
+            if (character === ":" && fieldLength < 0) {
+              fieldLength = index - position;
+            } else if (character === "\r") {
+              discardTrailingNewline = true;
+              lineLength = index - position;
+            } else if (character === "\n") {
+              lineLength = index - position;
+            }
+          }
+          if (lineLength < 0) {
+            startingPosition = length - position;
+            startingFieldLength = fieldLength;
+            break;
+          } else {
+            startingPosition = 0;
+            startingFieldLength = -1;
+          }
+          parseEventStreamLine(buffer, position, fieldLength, lineLength);
+          position += lineLength + 1;
+        }
+        if (position === length) {
+          buffer = "";
+        } else if (position > 0) {
+          buffer = buffer.slice(position);
+        }
+      }
+      function parseEventStreamLine(lineBuffer, index, fieldLength, lineLength) {
+        if (lineLength === 0) {
+          if (data.length > 0) {
+            onParse({
+              type: "event",
+              id: eventId,
+              event: eventName || void 0,
+              data: data.slice(0, -1)
+              // remove trailing newline
+            });
+            data = "";
+            eventId = void 0;
+          }
+          eventName = void 0;
+          return;
+        }
+        const noValue = fieldLength < 0;
+        const field = lineBuffer.slice(
+          index,
+          index + (noValue ? lineLength : fieldLength)
+        );
+        let step = 0;
+        if (noValue) {
+          step = lineLength;
+        } else if (lineBuffer[index + fieldLength + 1] === " ") {
+          step = fieldLength + 2;
+        } else {
+          step = fieldLength + 1;
+        }
+        const position = index + step;
+        const valueLength = lineLength - step;
+        const value = lineBuffer.slice(position, position + valueLength).toString();
+        if (field === "data") {
+          data += value ? "".concat(value, "\n") : "\n";
+        } else if (field === "event") {
+          eventName = value;
+        } else if (field === "id" && !value.includes("\0")) {
+          eventId = value;
+        } else if (field === "retry") {
+          const retry = parseInt(value, 10);
+          if (!Number.isNaN(retry)) {
+            onParse({
+              type: "reconnect-interval",
+              value: retry
+            });
+          }
+        }
+      }
+    }
+    var BOM = [239, 187, 191];
+    function hasBom(buffer) {
+      return BOM.every((charCode, index) => buffer.charCodeAt(index) === charCode);
+    }
+    var EventSourceParserStream = class extends TransformStream {
+      constructor() {
+        let parser;
+        super({
+          start(controller) {
+            parser = createParser((event) => {
+              if (event.type === "event") {
+                controller.enqueue(event);
+              }
+            });
+          },
+          transform(chunk) {
+            parser.feed(chunk);
+          }
+        });
+      }
+    };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/vendor/streams-text-encoding/text-decoder-stream.js
+var require_text_decoder_stream = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/vendor/streams-text-encoding/text-decoder-stream.js"(exports2, module2) {
+    var __defProp2 = Object.defineProperty;
+    var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
+    var __getOwnPropNames2 = Object.getOwnPropertyNames;
+    var __hasOwnProp2 = Object.prototype.hasOwnProperty;
+    var __export2 = (target, all) => {
+      for (var name in all)
+        __defProp2(target, name, { get: all[name], enumerable: true });
+    };
+    var __copyProps2 = (to, from, except, desc) => {
+      if (from && typeof from === "object" || typeof from === "function") {
+        for (let key of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key) && key !== except)
+            __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+      }
+      return to;
+    };
+    var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
+    var input_exports = {};
+    __export2(input_exports, {
+      TextDecoderStream: () => TextDecoderStream
+    });
+    module2.exports = __toCommonJS2(input_exports);
+    var decDecoder = Symbol("decDecoder");
+    var decTransform = Symbol("decTransform");
+    var TextDecodeTransformer = class {
+      constructor(decoder) {
+        this.decoder_ = decoder;
+      }
+      transform(chunk, controller) {
+        if (!(chunk instanceof ArrayBuffer || ArrayBuffer.isView(chunk))) {
+          throw new TypeError("Input data must be a BufferSource");
+        }
+        const text = this.decoder_.decode(chunk, { stream: true });
+        if (text.length !== 0) {
+          controller.enqueue(text);
+        }
+      }
+      flush(controller) {
+        const text = this.decoder_.decode();
+        if (text.length !== 0) {
+          controller.enqueue(text);
+        }
+      }
+    };
+    var TextDecoderStream = class {
+      constructor(label, options) {
+        const decoder = new TextDecoder(label || "utf-8", options || {});
+        this[decDecoder] = decoder;
+        this[decTransform] = new TransformStream(new TextDecodeTransformer(decoder));
+      }
+      get encoding() {
+        return this[decDecoder].encoding;
+      }
+      get fatal() {
+        return this[decDecoder].fatal;
+      }
+      get ignoreBOM() {
+        return this[decDecoder].ignoreBOM;
+      }
+      get readable() {
+        return this[decTransform].readable;
+      }
+      get writable() {
+        return this[decTransform].writable;
+      }
+    };
+    var encEncoder = Symbol("encEncoder");
+    var encTransform = Symbol("encTransform");
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/stream.js
+var require_stream2 = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/stream.js"(exports2, module2) {
+    var ApiError = require_error();
+    var { streamAsyncIterator } = require_util();
+    var {
+      EventSourceParserStream
+    } = require_stream();
+    var { TextDecoderStream } = typeof globalThis.TextDecoderStream === "undefined" ? require_text_decoder_stream() : globalThis;
+    var ServerSentEvent = class {
+      /**
+       * Create a new server-sent event.
+       *
+       * @param {string} event The event name.
+       * @param {string} data The event data.
+       * @param {string} id The event ID.
+       * @param {number} retry The retry time.
+       */
+      constructor(event, data, id, retry) {
+        this.event = event;
+        this.data = data;
+        this.id = id;
+        this.retry = retry;
+      }
+      /**
+       * Convert the event to a string.
+       */
+      toString() {
+        if (this.event === "output") {
+          return this.data;
+        }
+        return "";
+      }
+    };
+    function createReadableStream({ url, fetch: fetch2, options = {} }) {
+      const { useFileOutput = true, headers = {}, ...initOptions } = options;
+      const shouldProcessFileOutput = useFileOutput && isFileStream(url);
+      return new ReadableStream({
+        async start(controller) {
+          const init2 = {
+            ...initOptions,
+            headers: {
+              ...headers,
+              Accept: "text/event-stream"
+            }
+          };
+          const response = await fetch2(url, init2);
+          if (!response.ok) {
+            const text = await response.text();
+            const request = new Request(url, init2);
+            controller.error(
+              new ApiError(
+                `Request to ${url} failed with status ${response.status}: ${text}`,
+                request,
+                response
+              )
+            );
+          }
+          const stream = response.body.pipeThrough(new TextDecoderStream()).pipeThrough(new EventSourceParserStream());
+          for await (const event of streamAsyncIterator(stream)) {
+            if (event.event === "error") {
+              controller.error(new Error(event.data));
+              break;
+            }
+            let data = event.data;
+            if (event.event === "output" && shouldProcessFileOutput && typeof data === "string") {
+              data = createFileOutput({ url: data, fetch: fetch2 });
+            }
+            controller.enqueue(new ServerSentEvent(event.event, data, event.id));
+            if (event.event === "done") {
+              break;
+            }
+          }
+          controller.close();
+        }
+      });
+    }
+    function createFileOutput({ url, fetch: fetch2 }) {
+      let type = "application/octet-stream";
+      class FileOutput extends ReadableStream {
+        async blob() {
+          const chunks = [];
+          for await (const chunk of this) {
+            chunks.push(chunk);
+          }
+          return new Blob(chunks, { type });
+        }
+        url() {
+          return new URL(url);
+        }
+        toString() {
+          return url;
+        }
+      }
+      return new FileOutput({
+        async start(controller) {
+          const response = await fetch2(url);
+          if (!response.ok) {
+            const text = await response.text();
+            const request = new Request(url, init);
+            controller.error(
+              new ApiError(
+                `Request to ${url} failed with status ${response.status}: ${text}`,
+                request,
+                response
+              )
+            );
+          }
+          if (response.headers.get("Content-Type")) {
+            type = response.headers.get("Content-Type");
+          }
+          try {
+            for await (const chunk of streamAsyncIterator(response.body)) {
+              controller.enqueue(chunk);
+            }
+            controller.close();
+          } catch (err) {
+            controller.error(err);
+          }
+        }
+      });
+    }
+    function isFileStream(url) {
+      try {
+        return new URL(url).pathname.startsWith("/v1/files/");
+      } catch {
+      }
+      return false;
+    }
+    module2.exports = {
+      createFileOutput,
+      createReadableStream,
+      ServerSentEvent
+    };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/accounts.js
+var require_accounts = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/accounts.js"(exports2, module2) {
+    async function getCurrentAccount({ signal } = {}) {
+      const response = await this.request("/account", {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    module2.exports = {
+      current: getCurrentAccount
+    };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/collections.js
+var require_collections = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/collections.js"(exports2, module2) {
+    async function getCollection(collection_slug, { signal } = {}) {
+      const response = await this.request(`/collections/${collection_slug}`, {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    async function listCollections({ signal } = {}) {
+      const response = await this.request("/collections", {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    module2.exports = { get: getCollection, list: listCollections };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/deployments.js
+var require_deployments = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/deployments.js"(exports2, module2) {
+    var { transformFileInputs } = require_util();
+    async function createPrediction(deployment_owner, deployment_name, options) {
+      const { input, wait, signal, ...data } = options;
+      if (data.webhook) {
+        try {
+          new URL(data.webhook);
+        } catch (err) {
+          throw new Error("Invalid webhook URL");
+        }
+      }
+      const headers = {};
+      if (wait) {
+        if (typeof wait === "number") {
+          const n = Math.max(1, Math.ceil(Number(wait)) || 1);
+          headers["Prefer"] = `wait=${n}`;
+        } else {
+          headers["Prefer"] = "wait";
+        }
+      }
+      const response = await this.request(
+        `/deployments/${deployment_owner}/${deployment_name}/predictions`,
+        {
+          method: "POST",
+          headers,
+          data: {
+            ...data,
+            input: await transformFileInputs(
+              this,
+              input,
+              this.fileEncodingStrategy
+            )
+          },
+          signal
+        }
+      );
+      return response.json();
+    }
+    async function getDeployment(deployment_owner, deployment_name, { signal } = {}) {
+      const response = await this.request(
+        `/deployments/${deployment_owner}/${deployment_name}`,
+        {
+          method: "GET",
+          signal
+        }
+      );
+      return response.json();
+    }
+    async function createDeployment(deployment_config, { signal } = {}) {
+      const response = await this.request("/deployments", {
+        method: "POST",
+        data: deployment_config,
+        signal
+      });
+      return response.json();
+    }
+    async function updateDeployment(deployment_owner, deployment_name, deployment_config, { signal } = {}) {
+      const response = await this.request(
+        `/deployments/${deployment_owner}/${deployment_name}`,
+        {
+          method: "PATCH",
+          data: deployment_config,
+          signal
+        }
+      );
+      return response.json();
+    }
+    async function deleteDeployment(deployment_owner, deployment_name, { signal } = {}) {
+      const response = await this.request(
+        `/deployments/${deployment_owner}/${deployment_name}`,
+        {
+          method: "DELETE",
+          signal
+        }
+      );
+      return response.status === 204;
+    }
+    async function listDeployments({ signal } = {}) {
+      const response = await this.request("/deployments", {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    module2.exports = {
+      predictions: {
+        create: createPrediction
+      },
+      get: getDeployment,
+      create: createDeployment,
+      update: updateDeployment,
+      list: listDeployments,
+      delete: deleteDeployment
+    };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/hardware.js
+var require_hardware = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/hardware.js"(exports2, module2) {
+    async function listHardware({ signal } = {}) {
+      const response = await this.request("/hardware", {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    module2.exports = {
+      list: listHardware
+    };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/models.js
+var require_models = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/models.js"(exports2, module2) {
+    async function getModel(model_owner, model_name, { signal } = {}) {
+      const response = await this.request(`/models/${model_owner}/${model_name}`, {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    async function listModelVersions(model_owner, model_name, { signal } = {}) {
+      const response = await this.request(
+        `/models/${model_owner}/${model_name}/versions`,
+        {
+          method: "GET",
+          signal
+        }
+      );
+      return response.json();
+    }
+    async function getModelVersion(model_owner, model_name, version_id, { signal } = {}) {
+      const response = await this.request(
+        `/models/${model_owner}/${model_name}/versions/${version_id}`,
+        {
+          method: "GET",
+          signal
+        }
+      );
+      return response.json();
+    }
+    async function listModels({ signal } = {}) {
+      const response = await this.request("/models", {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    async function createModel(model_owner, model_name, options) {
+      const { signal, ...rest } = options;
+      const data = { owner: model_owner, name: model_name, ...rest };
+      const response = await this.request("/models", {
+        method: "POST",
+        data,
+        signal
+      });
+      return response.json();
+    }
+    async function search(query, { signal } = {}) {
+      const response = await this.request("/models", {
+        method: "QUERY",
+        headers: {
+          "Content-Type": "text/plain"
+        },
+        data: query,
+        signal
+      });
+      return response.json();
+    }
+    module2.exports = {
+      get: getModel,
+      list: listModels,
+      create: createModel,
+      versions: { list: listModelVersions, get: getModelVersion },
+      search
+    };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/predictions.js
+var require_predictions = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/predictions.js"(exports2, module2) {
+    var { transformFileInputs } = require_util();
+    async function createPrediction(options) {
+      const { model, version, input, wait, signal, ...data } = options;
+      if (data.webhook) {
+        try {
+          new URL(data.webhook);
+        } catch (err) {
+          throw new Error("Invalid webhook URL");
+        }
+      }
+      const headers = {};
+      if (wait) {
+        if (typeof wait === "number") {
+          const n = Math.max(1, Math.ceil(Number(wait)) || 1);
+          headers["Prefer"] = `wait=${n}`;
+        } else {
+          headers["Prefer"] = "wait";
+        }
+      }
+      let response;
+      if (version) {
+        response = await this.request("/predictions", {
+          method: "POST",
+          headers,
+          data: {
+            ...data,
+            input: await transformFileInputs(
+              this,
+              input,
+              this.fileEncodingStrategy
+            ),
+            version
+          },
+          signal
+        });
+      } else if (model) {
+        response = await this.request(`/models/${model}/predictions`, {
+          method: "POST",
+          headers,
+          data: {
+            ...data,
+            input: await transformFileInputs(
+              this,
+              input,
+              this.fileEncodingStrategy
+            )
+          },
+          signal
+        });
+      } else {
+        throw new Error("Either model or version must be specified");
+      }
+      return response.json();
+    }
+    async function getPrediction(prediction_id, { signal } = {}) {
+      const response = await this.request(`/predictions/${prediction_id}`, {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    async function cancelPrediction(prediction_id, { signal } = {}) {
+      const response = await this.request(`/predictions/${prediction_id}/cancel`, {
+        method: "POST",
+        signal
+      });
+      return response.json();
+    }
+    async function listPredictions({ signal } = {}) {
+      const response = await this.request("/predictions", {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    module2.exports = {
+      create: createPrediction,
+      get: getPrediction,
+      cancel: cancelPrediction,
+      list: listPredictions
+    };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/trainings.js
+var require_trainings = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/trainings.js"(exports2, module2) {
+    async function createTraining(model_owner, model_name, version_id, options) {
+      const { signal, ...data } = options;
+      if (data.webhook) {
+        try {
+          new URL(data.webhook);
+        } catch (err) {
+          throw new Error("Invalid webhook URL");
+        }
+      }
+      const response = await this.request(
+        `/models/${model_owner}/${model_name}/versions/${version_id}/trainings`,
+        {
+          method: "POST",
+          data,
+          signal
+        }
+      );
+      return response.json();
+    }
+    async function getTraining(training_id, { signal } = {}) {
+      const response = await this.request(`/trainings/${training_id}`, {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    async function cancelTraining(training_id, { signal } = {}) {
+      const response = await this.request(`/trainings/${training_id}/cancel`, {
+        method: "POST",
+        signal
+      });
+      return response.json();
+    }
+    async function listTrainings({ signal } = {}) {
+      const response = await this.request("/trainings", {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    module2.exports = {
+      create: createTraining,
+      get: getTraining,
+      cancel: cancelTraining,
+      list: listTrainings
+    };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/webhooks.js
+var require_webhooks = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/lib/webhooks.js"(exports2, module2) {
+    async function getDefaultWebhookSecret({ signal } = {}) {
+      const response = await this.request("/webhooks/default/secret", {
+        method: "GET",
+        signal
+      });
+      return response.json();
+    }
+    module2.exports = {
+      default: {
+        secret: {
+          get: getDefaultWebhookSecret
+        }
+      }
+    };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/package.json
+var require_package = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/package.json"(exports2, module2) {
+    module2.exports = {
+      name: "replicate",
+      version: "1.4.0",
+      description: "JavaScript client for Replicate",
+      repository: "github:replicate/replicate-javascript",
+      homepage: "https://github.com/replicate/replicate-javascript#readme",
+      bugs: "https://github.com/replicate/replicate-javascript/issues",
+      license: "Apache-2.0",
+      main: "index.js",
+      type: "commonjs",
+      types: "index.d.ts",
+      files: [
+        "CONTRIBUTING.md",
+        "LICENSE",
+        "README.md",
+        "index.d.ts",
+        "index.js",
+        "lib/**/*.js",
+        "vendor/**/*",
+        "package.json"
+      ],
+      engines: {
+        node: ">=18.0.0",
+        npm: ">=7.19.0",
+        git: ">=2.11.0",
+        yarn: ">=1.7.0"
+      },
+      scripts: {
+        check: "tsc",
+        format: "biome format . --write",
+        "lint-biome": "biome lint .",
+        "lint-publint": "publint",
+        lint: "npm run lint-biome && npm run lint-publint",
+        test: "jest"
+      },
+      optionalDependencies: {
+        "readable-stream": ">=4.0.0"
+      },
+      devDependencies: {
+        "@biomejs/biome": "^1.4.1",
+        "@types/jest": "^29.5.3",
+        "@typescript-eslint/eslint-plugin": "^5.56.0",
+        "cross-fetch": "^3.1.5",
+        jest: "^29.7.0",
+        nock: "^14.0.0-beta.6",
+        publint: "^0.2.7",
+        "ts-jest": "^29.1.0",
+        typescript: "^5.0.2"
+      }
+    };
+  }
+});
+
+// node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/index.js
+var require_replicate = __commonJS({
+  "node_modules/.pnpm/replicate@1.4.0/node_modules/replicate/index.js"(exports2, module2) {
+    var ApiError = require_error();
+    var ModelVersionIdentifier = require_identifier();
+    var { createReadableStream, createFileOutput } = require_stream2();
+    var {
+      transform,
+      withAutomaticRetries,
+      validateWebhook,
+      parseProgressFromLogs,
+      streamAsyncIterator
+    } = require_util();
+    var accounts = require_accounts();
+    var collections = require_collections();
+    var deployments = require_deployments();
+    var files = require_files();
+    var hardware = require_hardware();
+    var models = require_models();
+    var predictions = require_predictions();
+    var trainings = require_trainings();
+    var webhooks = require_webhooks();
+    var packageJSON = require_package();
+    var Replicate2 = class {
+      /**
+       * Create a new Replicate API client instance.
+       *
+       * @param {object} options - Configuration options for the client
+       * @param {string} options.auth - API access token. Defaults to the `REPLICATE_API_TOKEN` environment variable.
+       * @param {string} options.userAgent - Identifier of your app
+       * @param {string} [options.baseUrl] - Defaults to https://api.replicate.com/v1
+       * @param {Function} [options.fetch] - Fetch function to use. Defaults to `globalThis.fetch`
+       * @param {boolean} [options.useFileOutput] - Set to `false` to disable `FileOutput` objects from `run` instead of URLs, defaults to true.
+       * @param {"default" | "upload" | "data-uri"} [options.fileEncodingStrategy] - Determines the file encoding strategy to use
+       */
+      constructor(options = {}) {
+        this.auth = options.auth || (typeof process !== "undefined" ? process.env.REPLICATE_API_TOKEN : null);
+        this.userAgent = options.userAgent || `replicate-javascript/${packageJSON.version}`;
+        this.baseUrl = options.baseUrl || "https://api.replicate.com/v1";
+        this.fetch = options.fetch || globalThis.fetch;
+        this.fileEncodingStrategy = options.fileEncodingStrategy || "default";
+        this.useFileOutput = options.useFileOutput === false ? false : true;
+        this.accounts = {
+          current: accounts.current.bind(this)
+        };
+        this.collections = {
+          list: collections.list.bind(this),
+          get: collections.get.bind(this)
+        };
+        this.deployments = {
+          get: deployments.get.bind(this),
+          create: deployments.create.bind(this),
+          update: deployments.update.bind(this),
+          delete: deployments.delete.bind(this),
+          list: deployments.list.bind(this),
+          predictions: {
+            create: deployments.predictions.create.bind(this)
+          }
+        };
+        this.files = {
+          create: files.create.bind(this),
+          get: files.get.bind(this),
+          list: files.list.bind(this),
+          delete: files.delete.bind(this)
+        };
+        this.hardware = {
+          list: hardware.list.bind(this)
+        };
+        this.models = {
+          get: models.get.bind(this),
+          list: models.list.bind(this),
+          create: models.create.bind(this),
+          versions: {
+            list: models.versions.list.bind(this),
+            get: models.versions.get.bind(this)
+          },
+          search: models.search.bind(this)
+        };
+        this.predictions = {
+          create: predictions.create.bind(this),
+          get: predictions.get.bind(this),
+          cancel: predictions.cancel.bind(this),
+          list: predictions.list.bind(this)
+        };
+        this.trainings = {
+          create: trainings.create.bind(this),
+          get: trainings.get.bind(this),
+          cancel: trainings.cancel.bind(this),
+          list: trainings.list.bind(this)
+        };
+        this.webhooks = {
+          default: {
+            secret: {
+              get: webhooks.default.secret.get.bind(this)
+            }
+          }
+        };
+      }
+      /**
+       * Run a model and wait for its output.
+       *
+       * @param {string} ref - Required. The model version identifier in the format "owner/name" or "owner/name:version"
+       * @param {object} options
+       * @param {object} options.input - Required. An object with the model inputs
+       * @param {{mode: "block", timeout?: number, interval?: number} | {mode: "poll", interval?: number }} [options.wait] - Options for waiting for the prediction to finish. If `wait` is explicitly true, the function will block and wait for the prediction to finish.
+       * @param {string} [options.webhook] - An HTTPS URL for receiving a webhook when the prediction has new output
+       * @param {string[]} [options.webhook_events_filter] - You can change which events trigger webhook requests by specifying webhook events (`start`|`output`|`logs`|`completed`)
+       * @param {AbortSignal} [options.signal] - AbortSignal to cancel the prediction
+       * @param {Function} [progress] - Callback function that receives the prediction object as it's updated. The function is called when the prediction is created, each time its updated while polling for completion, and when it's completed.
+       * @throws {Error} If the reference is invalid
+       * @throws {Error} If the prediction failed
+       * @returns {Promise<object>} - Resolves with the output of running the model
+       */
+      async run(ref, options, progress) {
+        const { wait = { mode: "block" }, signal, ...data } = options;
+        const identifier = ModelVersionIdentifier.parse(ref);
+        let prediction;
+        if (identifier.version) {
+          prediction = await this.predictions.create({
+            ...data,
+            version: identifier.version,
+            wait: wait.mode === "block" ? wait.timeout ?? true : false
+          });
+        } else if (identifier.owner && identifier.name) {
+          prediction = await this.predictions.create({
+            ...data,
+            model: `${identifier.owner}/${identifier.name}`,
+            wait: wait.mode === "block" ? wait.timeout ?? true : false
+          });
+        } else {
+          throw new Error("Invalid model version identifier");
+        }
+        if (progress) {
+          progress(prediction);
+        }
+        const isDone = wait.mode === "block" && prediction.status !== "starting";
+        if (!isDone) {
+          prediction = await this.wait(
+            prediction,
+            { interval: wait.mode === "poll" ? wait.interval : void 0 },
+            async (updatedPrediction) => {
+              if (progress) {
+                progress(updatedPrediction);
+              }
+              if (signal && signal.aborted) {
+                return true;
+              }
+              return false;
+            }
+          );
+        }
+        if (signal && signal.aborted) {
+          prediction = await this.predictions.cancel(prediction.id);
+        }
+        if (progress) {
+          progress(prediction);
+        }
+        if (prediction.status === "failed") {
+          throw new Error(`Prediction failed: ${prediction.error}`);
+        }
+        return transform(prediction.output, (value) => {
+          if (typeof value === "string" && (value.startsWith("https:") || value.startsWith("data:"))) {
+            return this.useFileOutput ? createFileOutput({ url: value, fetch: this.fetch }) : value;
+          }
+          return value;
+        });
+      }
+      /**
+       * Make a request to the Replicate API.
+       *
+       * @param {string} route - REST API endpoint path
+       * @param {object} options - Request parameters
+       * @param {string} [options.method] - HTTP method. Defaults to GET
+       * @param {object} [options.params] - Query parameters
+       * @param {object|Headers} [options.headers] - HTTP headers
+       * @param {object} [options.data] - Body parameters
+       * @param {AbortSignal} [options.signal] - AbortSignal to cancel the request
+       * @returns {Promise<Response>} - Resolves with the response object
+       * @throws {ApiError} If the request failed
+       */
+      async request(route, options) {
+        const { auth, baseUrl, userAgent } = this;
+        let url;
+        if (route instanceof URL) {
+          url = route;
+        } else {
+          url = new URL(
+            route.startsWith("/") ? route.slice(1) : route,
+            baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`
+          );
+        }
+        const { method = "GET", params = {}, data, signal } = options;
+        for (const [key, value] of Object.entries(params)) {
+          url.searchParams.append(key, value);
+        }
+        const headers = {
+          "Content-Type": "application/json",
+          "User-Agent": userAgent
+        };
+        if (auth) {
+          headers["Authorization"] = `Bearer ${auth}`;
+        }
+        if (options.headers) {
+          for (const [key, value] of Object.entries(options.headers)) {
+            headers[key] = value;
+          }
+        }
+        let body = void 0;
+        if (data instanceof FormData) {
+          body = data;
+          delete headers["Content-Type"];
+        } else if (data) {
+          body = JSON.stringify(data);
+        }
+        const init2 = {
+          method,
+          headers,
+          body,
+          signal
+        };
+        const shouldRetry = method === "GET" ? (response2) => response2.status === 429 || response2.status >= 500 : (response2) => response2.status === 429;
+        const _fetch = this.fetch;
+        const response = await withAutomaticRetries(async () => _fetch(url, init2), {
+          shouldRetry
+        });
+        if (!response.ok) {
+          const request = new Request(url, init2);
+          const responseText = await response.text();
+          throw new ApiError(
+            `Request to ${url} failed with status ${response.status} ${response.statusText}: ${responseText}.`,
+            request,
+            response
+          );
+        }
+        return response;
+      }
+      /**
+       * Stream a model and wait for its output.
+       *
+       * @param {string} identifier - Required. The model version identifier in the format "{owner}/{name}:{version}"
+       * @param {object} options
+       * @param {object} options.input - Required. An object with the model inputs
+       * @param {string} [options.webhook] - An HTTPS URL for receiving a webhook when the prediction has new output
+       * @param {string[]} [options.webhook_events_filter] - You can change which events trigger webhook requests by specifying webhook events (`start`|`output`|`logs`|`completed`)
+       * @param {AbortSignal} [options.signal] - AbortSignal to cancel the prediction
+       * @throws {Error} If the prediction failed
+       * @yields {ServerSentEvent} Each streamed event from the prediction
+       */
+      async *stream(ref, options) {
+        const {
+          wait,
+          signal,
+          useFileOutput = this.useFileOutput,
+          ...data
+        } = options;
+        const identifier = ModelVersionIdentifier.parse(ref);
+        let prediction;
+        if (identifier.version) {
+          prediction = await this.predictions.create({
+            ...data,
+            version: identifier.version
+          });
+        } else if (identifier.owner && identifier.name) {
+          prediction = await this.predictions.create({
+            ...data,
+            model: `${identifier.owner}/${identifier.name}`
+          });
+        } else {
+          throw new Error("Invalid model version identifier");
+        }
+        if (prediction.urls && prediction.urls.stream) {
+          const stream = createReadableStream({
+            url: prediction.urls.stream,
+            fetch: this.fetch,
+            options: {
+              useFileOutput,
+              ...signal ? { signal } : {}
+            }
+          });
+          yield* streamAsyncIterator(stream);
+        } else {
+          throw new Error("Prediction does not support streaming");
+        }
+      }
+      /**
+       * Paginate through a list of results.
+       *
+       * @generator
+       * @example
+       * for await (const page of replicate.paginate(replicate.predictions.list) {
+       *    console.log(page);
+       * }
+       * @param {Function} endpoint - Function that returns a promise for the next page of results
+       * @param {object} [options]
+       * @param {AbortSignal} [options.signal] - AbortSignal to cancel the request.
+       * @yields {object[]} Each page of results
+       */
+      async *paginate(endpoint, options = {}) {
+        const response = await endpoint();
+        yield response.results;
+        if (response.next && !(options.signal && options.signal.aborted)) {
+          const nextPage = () => this.request(response.next, {
+            method: "GET",
+            signal: options.signal
+          }).then((r) => r.json());
+          yield* this.paginate(nextPage, options);
+        }
+      }
+      /**
+       * Wait for a prediction to finish.
+       *
+       * If the prediction has already finished,
+       * this function returns immediately.
+       * Otherwise, it polls the API until the prediction finishes.
+       *
+       * @async
+       * @param {object} prediction - Prediction object
+       * @param {object} options - Options
+       * @param {number} [options.interval] - Polling interval in milliseconds. Defaults to 500
+       * @param {Function} [stop] - Async callback function that is called after each polling attempt. Receives the prediction object as an argument. Return false to cancel polling.
+       * @throws {Error} If the prediction doesn't complete within the maximum number of attempts
+       * @throws {Error} If the prediction failed
+       * @returns {Promise<object>} Resolves with the completed prediction object
+       */
+      async wait(prediction, options, stop) {
+        const { id } = prediction;
+        if (!id) {
+          throw new Error("Invalid prediction");
+        }
+        if (prediction.status === "succeeded" || prediction.status === "failed" || prediction.status === "canceled") {
+          return prediction;
+        }
+        const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        const interval = options && options.interval || 500;
+        let updatedPrediction = await this.predictions.get(id);
+        while (updatedPrediction.status !== "succeeded" && updatedPrediction.status !== "failed" && updatedPrediction.status !== "canceled") {
+          if (stop && await stop(updatedPrediction) === true) {
+            break;
+          }
+          await sleep(interval);
+          updatedPrediction = await this.predictions.get(prediction.id);
+        }
+        if (updatedPrediction.status === "failed") {
+          throw new Error(`Prediction failed: ${updatedPrediction.error}`);
+        }
+        return updatedPrediction;
+      }
+    };
+    module2.exports = Replicate2;
+    module2.exports.validateWebhook = validateWebhook;
+    module2.exports.parseProgressFromLogs = parseProgressFromLogs;
+  }
+});
+
 // apps/api/src/index.ts
 var index_exports = {};
 __export(index_exports, {
   default: () => index_default
 });
 module.exports = __toCommonJS(index_exports);
-var import_express8 = __toESM(require("express"));
+var import_express9 = __toESM(require("express"));
 var import_pino_http = __toESM(require("pino-http"));
 
 // apps/api/src/lib/logger.ts
@@ -54,8 +1617,8 @@ var PLANS = {
     id: "free",
     label: "Free",
     price: 0,
-    monthlyLimit: 5,
-    features: ["5 generations / month", "Limited template library", "Standard quality"]
+    monthlyLimit: 2,
+    features: ["2 generations / month", "Limited template library", "Standard quality"]
   },
   pro: {
     id: "pro",
@@ -126,11 +1689,13 @@ var CheckoutRequestSchema = import_zod.z.object({
 var GenerateRequestSchema = import_zod.z.object({
   prompt: import_zod.z.string().min(1).max(2e3),
   imageBase64: import_zod.z.string().optional(),
-  templateBase64: import_zod.z.string().optional()
+  templateBase64: import_zod.z.string().optional(),
+  templateId: import_zod.z.string().optional(),
+  templateImageSrc: import_zod.z.string().optional()
 });
 
 // packages/shared/src/errors.ts
-var AppError = class extends Error {
+var AppError2 = class extends Error {
   constructor(code, message, statusCode = 500) {
     super(message);
     this.code = code;
@@ -138,27 +1703,27 @@ var AppError = class extends Error {
     this.name = "AppError";
   }
 };
-var UnauthorizedError = class extends AppError {
+var UnauthorizedError = class extends AppError2 {
   constructor(msg = "Unauthorized") {
     super("UNAUTHORIZED", msg, 401);
   }
 };
-var NotFoundError = class extends AppError {
+var NotFoundError = class extends AppError2 {
   constructor(resource) {
     super("NOT_FOUND", `${resource} not found`, 404);
   }
 };
-var ValidationError = class extends AppError {
+var ValidationError = class extends AppError2 {
   constructor(msg) {
     super("VALIDATION_ERROR", msg, 400);
   }
 };
-var QuotaExceededError = class extends AppError {
+var QuotaExceededError = class extends AppError2 {
   constructor() {
     super("QUOTA_EXCEEDED", "Monthly generation limit reached. Upgrade your plan to continue.", 429);
   }
 };
-var RateLimitError = class extends AppError {
+var RateLimitError = class extends AppError2 {
   constructor() {
     super("RATE_LIMITED", "Too many requests. Please slow down.", 429);
   }
@@ -166,7 +1731,7 @@ var RateLimitError = class extends AppError {
 
 // apps/api/src/middleware/errorHandler.ts
 function errorHandler(err, _req, res, _next) {
-  if (err instanceof AppError) {
+  if (err instanceof AppError2) {
     return res.status(err.statusCode).json({
       error: { code: err.code, message: err.message }
     });
@@ -648,7 +2213,7 @@ router4.post("/portal", ensureAuth, async (req, res, next) => {
     const snap = await db.collection("users").doc(req.uid).get();
     const polarCustomerId = snap.data()?.["polarCustomerId"];
     if (!polarCustomerId) {
-      return next(new AppError("NO_BILLING_ACCOUNT", "No billing account found", 400));
+      return next(new AppError2("NO_BILLING_ACCOUNT", "No billing account found", 400));
     }
     const portalUrl = await createCustomerPortalSession(polarCustomerId);
     res.json({ portalUrl });
@@ -663,6 +2228,7 @@ var import_express6 = require("express");
 var import_firestore2 = require("firebase-admin/firestore");
 
 // apps/api/src/middleware/quota.ts
+var OWNER_EMAIL = "araiakhylbek78@gmail.com";
 async function checkQuota(req, _res, next) {
   try {
     const snap = await db.collection("users").doc(req.uid).get();
@@ -670,6 +2236,9 @@ async function checkQuota(req, _res, next) {
       return next(new NotFoundError("User"));
     }
     const user = snap.data();
+    if (user["email"]?.toLowerCase() === OWNER_EMAIL) {
+      return next();
+    }
     const tier = user["tier"] ?? "free";
     const plan = PLANS[tier] ?? PLANS.free;
     if (plan.monthlyLimit === Infinity) {
@@ -744,7 +2313,7 @@ ${basePrompt}`
 // apps/api/src/ai/GeminiProvider.ts
 async function geminiPost(endpoint, body) {
   const apiKey = process.env["GEMINI_API_KEY"];
-  if (!apiKey) throw new AppError("MISSING_CONFIG", "GEMINI_API_KEY not configured", 500);
+  if (!apiKey) throw new AppError2("MISSING_CONFIG", "GEMINI_API_KEY not configured", 500);
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${endpoint}?key=${apiKey}`,
     {
@@ -756,7 +2325,7 @@ async function geminiPost(endpoint, body) {
   );
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new AppError("GEMINI_ERROR", `Gemini API error ${res.status}: ${detail}`, 502);
+    throw new AppError2("GEMINI_ERROR", `Gemini API error ${res.status}: ${detail}`, 502);
   }
   return res.json();
 }
@@ -790,7 +2359,7 @@ Return ONLY valid JSON with these fields:
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new AppError("GEMINI_PARSE_ERROR", "Failed to parse concept response", 502);
+      throw new AppError2("GEMINI_PARSE_ERROR", "Failed to parse concept response", 502);
     }
     const parsed = JSON.parse(jsonMatch[0]);
     return {
@@ -834,7 +2403,33 @@ Requirements:
     const parts = result.candidates?.[0]?.content?.parts ?? [];
     const imagePart = parts.find((p) => p.inlineData);
     if (!imagePart?.inlineData) {
-      throw new AppError("GEMINI_NO_IMAGE", "No image returned from Gemini", 502);
+      throw new AppError2("GEMINI_NO_IMAGE", "No image returned from Gemini", 502);
+    }
+    const { mimeType, data } = imagePart.inlineData;
+    return `data:${mimeType};base64,${data}`;
+  }
+  // Generates a styled template image (with a person, no user face) for face-swap
+  async generateTemplateOnly(prompt) {
+    const result = await geminiPost("gemini-2.5-flash-image:generateContent", {
+      contents: [{
+        parts: [{
+          text: `Generate a photorealistic styled portrait photo of a person:
+
+${prompt}
+
+Requirements:
+- A person must be clearly visible with a well-lit face
+- Professional photography, cinematic quality
+- The face should be prominent in the frame
+- Photorealistic, high detail`
+        }]
+      }],
+      generationConfig: { responseModalities: ["IMAGE", "TEXT"] }
+    });
+    const parts = result.candidates?.[0]?.content?.parts ?? [];
+    const imagePart = parts.find((p) => p.inlineData);
+    if (!imagePart?.inlineData) {
+      throw new AppError2("GEMINI_NO_IMAGE", "No template image returned from Gemini", 502);
     }
     const { mimeType, data } = imagePart.inlineData;
     return `data:${mimeType};base64,${data}`;
@@ -856,7 +2451,7 @@ Requirements:
         }
       });
       parts.push({
-        text: "Take the first image as the base template. Replace ONLY the face in the first image with the face from the second image. Keep absolutely everything else exactly the same — same background, same clothes, same pose, same lighting, same composition. Only the face should change. The result must look natural and photorealistic."
+        text: "Take the first image as the base template. Replace ONLY the face in the first image with the face from the second image. Keep absolutely everything else exactly the same \u2014 same background, same clothes, same pose, same lighting, same composition. Only the face should change. The result must look natural and photorealistic."
       });
     } else if (userImageBase64) {
       const base64Data = userImageBase64.replace(/^data:[^;]+;base64,/, "");
@@ -867,11 +2462,25 @@ Requirements:
         }
       });
       parts.push({
-        text: `You have the user's photo above. Apply this visual style template to them:\n\n${templatePrompt}\n\nInstructions:\n- Preserve the person's facial features, skin tone, and likeness\n- Apply the template's background, lighting, color grade, and artistic style\n- Blend the person naturally into the scene\n- Output a high-quality, photorealistic, portrait-format image\n- Make it look like a professional styled photo shoot`
+        text: `You have the user's photo above. Apply this visual style template to them:
+
+${templatePrompt}
+
+Instructions:
+- Preserve the person's facial features, skin tone, and likeness
+- Apply the template's background, lighting, color grade, and artistic style
+- Blend the person naturally into the scene
+- Output a high-quality, photorealistic, portrait-format image
+- Make it look like a professional styled photo shoot`
       });
     } else {
       parts.push({
-        text: `Generate a high-quality, photorealistic styled portrait image:\n\n${templatePrompt}\n\nCreate a beautiful, magazine-quality photo that would go viral on TikTok and Instagram.\nPortrait orientation, cinematic lighting, ultra-detailed.`
+        text: `Generate a high-quality, photorealistic styled portrait image:
+
+${templatePrompt}
+
+Create a beautiful, magazine-quality photo that would go viral on TikTok and Instagram.
+Portrait orientation, cinematic lighting, ultra-detailed.`
       });
     }
     const result = await geminiPost(
@@ -884,26 +2493,92 @@ Requirements:
     const responseParts = result.candidates?.[0]?.content?.parts ?? [];
     const imagePart = responseParts.find((p) => p.inlineData);
     if (!imagePart?.inlineData) {
-      throw new AppError("GEMINI_NO_IMAGE", "No image returned from Gemini", 502);
+      throw new AppError2("GEMINI_NO_IMAGE", "No image returned from Gemini", 502);
     }
     const { mimeType, data } = imagePart.inlineData;
     return `data:${mimeType};base64,${data}`;
   }
 };
 
+// apps/api/src/services/replicateService.ts
+var import_replicate = __toESM(require_replicate());
+var FACE_SWAP_VERSION = "cdingram/face-swap:d1d6ea8c8be89d664a07a457526f7128109dee7030fdac424788d762c71ed111";
+function getClient() {
+  const token = process.env["REPLICATE_API_TOKEN"];
+  if (!token) throw new AppError2("MISSING_CONFIG", "REPLICATE_API_TOKEN not configured", 500);
+  return new import_replicate.default({ auth: token });
+}
+function dataUriToBlob(dataUri) {
+  const [header, data] = dataUri.split(",");
+  const mimeType = header?.match(/:(.*?);/)?.[1] ?? "image/jpeg";
+  const bytes = Buffer.from(data ?? "", "base64");
+  return new Blob([bytes], { type: mimeType });
+}
+async function toReplicateUrl(replicate, input) {
+  if (input.startsWith("http")) {
+    return input;
+  }
+  const file = await replicate.files.create(dataUriToBlob(input), {
+    filename: "image.jpg"
+  });
+  return file.urls.get;
+}
+async function faceSwap(templateInput, userPhotoBase64) {
+  const replicate = getClient();
+  const [templateUrl, userUrl] = await Promise.all([
+    toReplicateUrl(replicate, templateInput),
+    toReplicateUrl(replicate, `data:image/jpeg;base64,${userPhotoBase64}`)
+  ]);
+  const output = await replicate.run(FACE_SWAP_VERSION, {
+    input: {
+      input_image: templateUrl,
+      swap_image: userUrl
+    }
+  });
+  const resultUrl = typeof output === "string" ? output : output.url().href;
+  const response = await fetch(resultUrl, { signal: AbortSignal.timeout(3e4) });
+  if (!response.ok) {
+    throw new AppError2("REPLICATE_FETCH", `Failed to fetch result: ${response.status}`, 502);
+  }
+  const buffer = await response.arrayBuffer();
+  const base64 = Buffer.from(buffer).toString("base64");
+  return `data:image/jpeg;base64,${base64}`;
+}
+
 // apps/api/src/routes/generate.ts
 var router5 = (0, import_express6.Router)();
+var useReplicate = !!process.env["REPLICATE_API_TOKEN"];
 router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) => {
   try {
     const parsed = GenerateRequestSchema.safeParse(req.body);
     if (!parsed.success) {
       return next(new ValidationError(parsed.error.message));
     }
-    const { prompt, imageBase64, templateBase64 } = parsed.data;
-    const enhancer = new ClaudePromptEnhancer();
-    const enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
-    const gemini = new GeminiProvider();
-    const imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, templateBase64);
+    const { prompt, imageBase64, templateBase64, templateId, templateImageSrc } = parsed.data;
+    const appBaseUrl = process.env["APP_BASE_URL"] ?? "https://mytrendy.app";
+    let imageDataUri;
+    if (imageBase64 && useReplicate) {
+      let templateInput;
+      if (templateBase64) {
+        templateInput = templateBase64;
+      } else if (templateImageSrc?.startsWith("data:")) {
+        templateInput = templateImageSrc;
+      } else if (templateImageSrc && (templateImageSrc.startsWith("/") || templateImageSrc.startsWith("http"))) {
+        templateInput = templateImageSrc.startsWith("http") ? templateImageSrc : `${appBaseUrl}${templateImageSrc}`;
+      } else if (templateId) {
+        const snap = await db.collection("templates").doc(templateId).get();
+        templateInput = snap.data()?.["image"] ?? void 0;
+      }
+      if (!templateInput) {
+        throw new AppError("NO_TEMPLATE", "Could not resolve template image", 400);
+      }
+      imageDataUri = await faceSwap(templateInput, imageBase64);
+    } else {
+      const enhancer = new ClaudePromptEnhancer();
+      const enhancedPrompt2 = await enhancer.enhance(prompt, imageBase64);
+      const gemini = new GeminiProvider();
+      imageDataUri = await gemini.generateUserImage(enhancedPrompt2, imageBase64, templateBase64);
+    }
     await db.collection("users").doc(req.uid).update({
       generationsUsed: import_firestore2.FieldValue.increment(1),
       updatedAt: (/* @__PURE__ */ new Date()).toISOString()
@@ -915,8 +2590,69 @@ router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) 
 });
 var generate_default = router5;
 
-// apps/api/src/routes/cron.ts
+// apps/api/src/routes/generateTemplate.ts
 var import_express7 = require("express");
+var ADMIN_EMAIL = "araiakhylbek78@gmail.com";
+var THEMES = [
+  "stadium cam",
+  "magazine cover",
+  "fashion doll",
+  "golden hour portrait",
+  "caf\xE9 scene",
+  "airport lounge",
+  "rooftop party",
+  "beach sunset",
+  "ski resort",
+  "red carpet",
+  "concert VIP",
+  "flower field",
+  "rainy day aesthetic",
+  "bookstore cozy",
+  "gym mirror selfie"
+];
+var router6 = (0, import_express7.Router)();
+router6.post("/", ensureAuth, async (req, res, next) => {
+  try {
+    const userRecord = await adminAuth.getUser(req.uid);
+    if (userRecord.email !== ADMIN_EMAIL) {
+      return next(new AppError2("FORBIDDEN", "Admin only", 403));
+    }
+    const theme = THEMES[Math.floor(Math.random() * THEMES.length)];
+    const gemini = new GeminiProvider();
+    const concept = await gemini.generateTemplateConcept({
+      topic: theme,
+      category: "aesthetic",
+      keywords: [],
+      score: 1,
+      source: "admin",
+      trendContext: `Create a photorealistic template for "${theme}" theme. The image should have a clearly visible face area for future face swapping. Viral TikTok aesthetic, 4K quality, professional photography.`
+    });
+    const imageDataUri = await gemini.generateTemplateImage(concept);
+    const templateData = {
+      emoji: concept.emoji,
+      label: concept.label,
+      style: concept.style,
+      styleName: concept.style,
+      cat: concept.cat,
+      isTrending: true,
+      isNew: true,
+      isPro: false,
+      likes: 0,
+      uses: 0,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      image: imageDataUri,
+      prompt: concept.prompt
+    };
+    const docRef = await db.collection("templates").add(templateData);
+    res.json({ template: { id: docRef.id, ...templateData } });
+  } catch (e) {
+    next(e);
+  }
+});
+var generateTemplate_default = router6;
+
+// apps/api/src/routes/cron.ts
+var import_express8 = require("express");
 
 // apps/api/src/ai/TikTokTrendSource.ts
 async function fetchTikTokTrends() {
@@ -999,7 +2735,7 @@ async function fetchPinterestTrends() {
 // apps/api/src/ai/GeminiTrendSource.ts
 async function geminiGroundedSearch(prompt) {
   const apiKey = process.env["GEMINI_API_KEY"];
-  if (!apiKey) throw new AppError("MISSING_CONFIG", "GEMINI_API_KEY not configured", 500);
+  if (!apiKey) throw new AppError2("MISSING_CONFIG", "GEMINI_API_KEY not configured", 500);
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
     {
@@ -1014,7 +2750,7 @@ async function geminiGroundedSearch(prompt) {
   );
   if (!res.ok) {
     const err = await res.text().catch(() => "");
-    throw new AppError("GEMINI_ERROR", `Gemini grounded search error ${res.status}: ${err}`, 502);
+    throw new AppError2("GEMINI_ERROR", `Gemini grounded search error ${res.status}: ${err}`, 502);
   }
   const data = await res.json();
   return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
@@ -1077,7 +2813,7 @@ Return ONLY the JSON array.`;
     }
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
-      throw new AppError("GEMINI_PARSE_ERROR", "Failed to parse Gemini trends response", 502);
+      throw new AppError2("GEMINI_PARSE_ERROR", "Failed to parse Gemini trends response", 502);
     }
     const trends = JSON.parse(jsonMatch[0]);
     return trends.map((t) => ({
@@ -1092,9 +2828,9 @@ Return ONLY the JSON array.`;
 };
 
 // apps/api/src/routes/cron.ts
-var router6 = (0, import_express7.Router)();
+var router7 = (0, import_express8.Router)();
 var TEMPLATES_PER_RUN = 6;
-router6.post("/generate-daily", async (req, res) => {
+router7.post("/generate-daily", async (req, res) => {
   if (req.headers["authorization"] !== `Bearer ${process.env["CRON_SECRET"]}`) {
     res.status(401).json({ error: { code: "UNAUTHORIZED", message: "Invalid cron secret" } });
     return;
@@ -1176,10 +2912,10 @@ async function runGeneration(date, runRef) {
     });
   }
 }
-var cron_default = router6;
+var cron_default = router7;
 
 // apps/api/src/index.ts
-var app = (0, import_express8.default)();
+var app = (0, import_express9.default)();
 var allowedOrigins = [
   process.env["APP_BASE_URL"] ?? "http://localhost:5173",
   "http://localhost:5173"
@@ -1199,7 +2935,7 @@ app.use((req, res, next) => {
 });
 app.use((0, import_pino_http.default)({ logger }));
 app.use("/api/webhooks", webhooks_default);
-app.use(import_express8.default.json({ limit: "20mb" }));
+app.use(import_express9.default.json({ limit: "20mb" }));
 app.use("/api/users", users_default);
 app.use("/api/me", (req, res, next) => {
   req.url = "/me" + req.url;
@@ -1208,6 +2944,7 @@ app.use("/api/me", (req, res, next) => {
 app.use("/api/templates", templates_default);
 app.use("/api/billing", billing_default);
 app.use("/api/generate", generate_default);
+app.use("/api/generate-template", generateTemplate_default);
 app.use("/api/cron", cron_default);
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use(errorHandler);

@@ -58,6 +58,7 @@ export function Home() {
           prompt: template.prompt,
           imageBase64,
           templateId: template.id,
+          templateImageSrc: template.image,
         }),
       });
       setResultImage(result.image);

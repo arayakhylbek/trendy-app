@@ -19,31 +19,42 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     if (!parsed.success) {
       return next(new ValidationError(parsed.error.message));
     }
-    const { prompt, imageBase64, templateBase64, templateId } = parsed.data;
+    const { prompt, imageBase64, templateBase64, templateId, templateImageSrc } = parsed.data;
 
-    const enhancer = new ClaudePromptEnhancer();
-    const enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
-
-    const gemini = new GeminiProvider();
+    const appBaseUrl = process.env['APP_BASE_URL'] ?? 'https://mytrendy.app';
     let imageDataUri: string;
 
-    // Resolve template image: prefer ID lookup (avoids sending large base64 in request)
-    let resolvedTemplateBase64 = templateBase64;
-    if (!resolvedTemplateBase64 && templateId && useReplicate) {
-      const snap = await db.collection('templates').doc(templateId).get();
-      resolvedTemplateBase64 = (snap.data()?.['image'] as string | undefined) ?? undefined;
-    }
+    if (imageBase64 && useReplicate) {
+      // Resolve template image without calling Gemini
+      let templateInput: string | undefined;
 
-    if (imageBase64 && resolvedTemplateBase64 && useReplicate) {
-      // Fast path: template image from Firestore → face-swap only, no Gemini
-      imageDataUri = await faceSwap(resolvedTemplateBase64, imageBase64);
-    } else if (imageBase64 && useReplicate) {
-      // No template image: generate with Gemini first, then face-swap
-      const templateImage = await gemini.generateTemplateOnly(enhancedPrompt);
-      imageDataUri = await faceSwap(templateImage, imageBase64);
+      if (templateBase64) {
+        templateInput = templateBase64;
+      } else if (templateImageSrc?.startsWith('data:')) {
+        // base64 sent inline — use it
+        templateInput = templateImageSrc;
+      } else if (templateImageSrc && (templateImageSrc.startsWith('/') || templateImageSrc.startsWith('http'))) {
+        // Static file path → make absolute URL for Replicate
+        templateInput = templateImageSrc.startsWith('http')
+          ? templateImageSrc
+          : `${appBaseUrl}${templateImageSrc}`;
+      } else if (templateId) {
+        // Firestore template — fetch stored base64 image
+        const snap = await db.collection('templates').doc(templateId).get();
+        templateInput = (snap.data()?.['image'] as string | undefined) ?? undefined;
+      }
+
+      if (!templateInput) {
+        throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
+      }
+
+      imageDataUri = await faceSwap(templateInput, imageBase64);
     } else {
-      // Fallback: original Gemini image-to-image flow
-      imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, resolvedTemplateBase64);
+      // No Replicate token or no user photo → Gemini fallback
+      const enhancer = new ClaudePromptEnhancer();
+      const enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
+      const gemini = new GeminiProvider();
+      imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, templateBase64);
     }
 
     await db

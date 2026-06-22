@@ -10,22 +10,49 @@ function getClient(): Replicate {
   return new Replicate({ auth: token });
 }
 
+function dataUriToBlob(dataUri: string): Blob {
+  const [header, data] = dataUri.split(',');
+  const mimeType = header?.match(/:(.*?);/)?.[1] ?? 'image/jpeg';
+  const bytes = Buffer.from(data ?? '', 'base64');
+  return new Blob([bytes], { type: mimeType });
+}
+
+async function toReplicateUrl(replicate: Replicate, input: string): Promise<string> {
+  if (input.startsWith('http')) {
+    // Already a URL — Replicate can fetch directly
+    return input;
+  }
+  // base64 data URI — upload to Replicate
+  const file = await replicate.files.create(dataUriToBlob(input), {
+    filename: 'image.jpg',
+  });
+  return file.urls.get;
+}
+
 export async function faceSwap(
-  templateBase64: string,
+  templateInput: string,
   userPhotoBase64: string,
 ): Promise<string> {
   const replicate = getClient();
 
+  const [templateUrl, userUrl] = await Promise.all([
+    toReplicateUrl(replicate, templateInput),
+    toReplicateUrl(replicate, `data:image/jpeg;base64,${userPhotoBase64}`),
+  ]);
+
   const output = await replicate.run(FACE_SWAP_VERSION, {
     input: {
-      input_image: templateBase64,
-      swap_image: userPhotoBase64,
+      input_image: templateUrl,
+      swap_image: userUrl,
     },
-  }) as { url(): URL };
+  }) as { url(): URL } | string;
 
-  const resultUrl = output.url().href;
-  const response = await fetch(resultUrl);
-  if (!response.ok) throw new AppError('REPLICATE_FETCH', 'Failed to fetch result image', 502);
+  const resultUrl = typeof output === 'string' ? output : output.url().href;
+
+  const response = await fetch(resultUrl, { signal: AbortSignal.timeout(30000) });
+  if (!response.ok) {
+    throw new AppError('REPLICATE_FETCH', `Failed to fetch result: ${response.status}`, 502);
+  }
 
   const buffer = await response.arrayBuffer();
   const base64 = Buffer.from(buffer).toString('base64');
