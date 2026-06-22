@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import type { Template } from '@trendy/shared';
+import { compressImage } from '../../lib/compressImage';
 
 interface Props {
   template: Template | null;
@@ -9,6 +10,7 @@ interface Props {
 
 export function TemplateModal({ template, onClose, onGenerate }: Props) {
   const [previewSrc, setPreviewSrc] = useState<string | undefined>();
+  const [compressedBase64, setCompressedBase64] = useState<string | undefined>();
   const [hasPhoto, setHasPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -18,18 +20,20 @@ export function TemplateModal({ template, onClose, onGenerate }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const src = ev.target?.result as string;
       setPreviewSrc(src);
       setHasPhoto(true);
+      // Compress to max 1024px JPEG before sending to API (keeps payload under 1MB)
+      const compressed = await compressImage(src, 1024, 0.85);
+      setCompressedBase64(compressed.split(',')[1]);
     };
     reader.readAsDataURL(file);
   }
 
   function handleGenerate() {
     if (!hasPhoto) return;
-    const base64 = previewSrc?.split(',')[1];
-    onGenerate(template!, base64);
+    onGenerate(template!, compressedBase64);
     onClose();
   }
 
