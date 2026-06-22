@@ -174,7 +174,7 @@ Requirements:
     }
 
     const result = await geminiPost(
-      'gemini-2.5-flash-image:generateContent',
+      'gemini-2.0-flash-preview-image-generation:generateContent',
       {
         contents: [{ parts }],
         generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
