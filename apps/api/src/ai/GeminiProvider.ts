@@ -115,6 +115,26 @@ Requirements:
     return `data:${mimeType};base64,${data}`;
   }
 
+  // Generates a styled template image (with a person, no user face) for face-swap
+  async generateTemplateOnly(prompt: string): Promise<string> {
+    const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
+      contents: [{
+        parts: [{
+          text: `Generate a photorealistic styled portrait photo of a person:\n\n${prompt}\n\nRequirements:\n- A person must be clearly visible with a well-lit face\n- Professional photography, cinematic quality\n- The face should be prominent in the frame\n- Photorealistic, high detail`,
+        }],
+      }],
+      generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
+    });
+
+    const parts = result.candidates?.[0]?.content?.parts ?? [];
+    const imagePart = parts.find((p) => p.inlineData);
+    if (!imagePart?.inlineData) {
+      throw new AppError('GEMINI_NO_IMAGE', 'No template image returned from Gemini', 502);
+    }
+    const { mimeType, data } = imagePart.inlineData;
+    return `data:${mimeType};base64,${data}`;
+  }
+
   // Generates a personalized image using both the template image and the user's face photo
   async generateUserImage(templatePrompt: string, userImageBase64?: string, templateImageBase64?: string): Promise<string> {
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];

@@ -7,8 +7,11 @@ import { db } from '../lib/firebase.js';
 import { GenerateRequestSchema, ValidationError } from '@trendy/shared';
 import { ClaudePromptEnhancer } from '../ai/ClaudePromptEnhancer.js';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
+import { faceSwap } from '../services/replicateService.js';
 
 const router: ReturnType<typeof Router> = Router();
+
+const useReplicate = !!process.env['REPLICATE_API_TOKEN'];
 
 router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) => {
   try {
@@ -18,16 +21,20 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     }
     const { prompt, imageBase64, templateBase64 } = parsed.data;
 
-    // Step 1: Claude enhances the template prompt (skip if ANTHROPIC_API_KEY not set)
     const enhancer = new ClaudePromptEnhancer();
     const enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
 
-    // Step 2: Gemini generates the personalized image
-    // If both template and user photo provided → face-swap mode
-    // If only user photo → style-transfer generation
-    // If no photo → pure text-to-image
     const gemini = new GeminiProvider();
-    const imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, templateBase64);
+    let imageDataUri: string;
+
+    if (imageBase64 && useReplicate) {
+      // New flow: Gemini generates styled template → Replicate swaps user's face in
+      const templateImage = await gemini.generateTemplateOnly(enhancedPrompt);
+      imageDataUri = await faceSwap(templateImage, imageBase64);
+    } else {
+      // Fallback: original Gemini image-to-image flow
+      imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, templateBase64);
+    }
 
     await db
       .collection('users')
