@@ -3,7 +3,8 @@
   "buildCommand": "pnpm run build",
   "outputDirectory": "apps/web/dist",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/bundle" }
+    { "source": "/api/(.*)", "destination": "/api/bundle" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/bundle.js": {

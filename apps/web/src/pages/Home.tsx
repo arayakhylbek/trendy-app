@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CategoryPills } from '../components/templates/CategoryPills';
 import { TemplateGrid } from '../components/templates/TemplateGrid';
@@ -29,6 +29,8 @@ export function Home() {
   const { data: currentUser, refetch: refetchUser } = useCurrentUser();
   const { data: templates = [], isLoading, error } = useTemplates(activeCategory);
   const saveGen = useSaveGeneration(user?.uid);
+  // holds the in-flight Firestore save promise so "View Gallery" can await it
+  const savingRef = useRef<Promise<void> | null>(null);
 
   const tier = currentUser?.tier ?? 'free';
   const plan = PLANS[tier];
@@ -55,13 +57,13 @@ export function Home() {
       setResultImage(result.image);
       refetchUser();
 
-      // Save to gallery (fire-and-forget — never blocks the UI)
-      saveGen.mutate({
+      // Save to gallery in the background; track the promise so View Gallery can await it
+      savingRef.current = saveGen.mutateAsync({
         imageBase64: result.image,
         templateLabel: template.label,
         templateEmoji: template.emoji,
         createdAt: new Date().toISOString(),
-      });
+      }).catch(() => { /* ignore save errors, don't block UI */ });
     } catch (e) {
       if (e instanceof ApiError && e.status === 429) {
         setShowUpgrade(true);
@@ -167,7 +169,12 @@ export function Home() {
           imageUrl={resultImage}
           onClose={() => setResultImage(null)}
           onNew={() => setResultImage(null)}
-          onViewGallery={() => { setResultImage(null); navigate('/gallery'); }}
+          onViewGallery={async () => {
+            setResultImage(null);
+            // wait for the Firestore write to complete before showing gallery
+            await savingRef.current;
+            navigate('/gallery');
+          }}
         />
       )}
 
