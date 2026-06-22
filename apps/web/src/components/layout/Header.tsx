@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
@@ -14,6 +14,17 @@ const PLAN_COLORS = {
 export function Header() {
   const { user } = useAuth();
   const { data: currentUser } = useCurrentUser();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  function scrollToPricing() {
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } else {
+      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
   const tier = currentUser?.tier ?? 'free';
   const plan = PLANS[tier];
   const used = currentUser?.generationsUsed ?? 0;
@@ -26,9 +37,12 @@ export function Header() {
       </Link>
 
       <nav className="flex items-center gap-4 text-sm">
-        <Link to="/pricing" className="text-text-muted hover:text-white transition-colors">
+        <button
+          onClick={scrollToPricing}
+          className="text-text-muted hover:text-white transition-colors bg-transparent border-none cursor-pointer text-sm font-sans"
+        >
           Pricing
-        </Link>
+        </button>
 
         {user && (
           <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-surface border border-surface-border">

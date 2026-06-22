@@ -12,6 +12,7 @@ import { useAuth } from '../hooks/useAuth';
 import { apiFetch, ApiError } from '../lib/api';
 import { PLANS } from '@trendy/shared';
 import type { Template } from '@trendy/shared';
+import { PricingSection } from '../components/PricingSection';
 
 export function Home() {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -95,14 +96,18 @@ export function Home() {
         )}
 
         {!isLoading && !error && (
-          <TemplateGrid
-            templates={templates}
-            onSelect={(t) => {
-              setSelectedTemplate(t);
-            }}
-          />
+          <div id="section-all">
+            <TemplateGrid
+              templates={templates}
+              onSelect={(t) => {
+                setSelectedTemplate(t);
+              }}
+            />
+          </div>
         )}
       </main>
+
+      <PricingSection onUpgrade={() => setShowUpgrade(true)} />
 
       {selectedTemplate && (
         <TemplateModal
