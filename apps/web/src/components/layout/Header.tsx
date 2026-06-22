@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
@@ -53,27 +54,7 @@ export function Header() {
         {user && <GenBadge remaining={remaining} limit={limit} tier={tier} atLimit={atLimit} onUpgrade={scrollToPricing} />}
 
         {user ? (
-          <button
-            onClick={() => signOut(auth)}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #ff6b9d, #c084fc)',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-            title={user.email ?? 'Account'}
-          >
-            {(user.email?.[0] ?? 'U').toUpperCase()}
-          </button>
+          <AvatarMenu email={user.email ?? ''} />
         ) : (
           <Link
             to="/auth"
@@ -84,6 +65,78 @@ export function Header() {
         )}
       </nav>
     </header>
+  );
+}
+
+/* ── Avatar dropdown ── */
+
+function AvatarMenu({ email }: { email: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
+      {/* Avatar button */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: 32, height: 32, borderRadius: '50%',
+          background: 'linear-gradient(135deg, #ff6b9d, #c084fc)',
+          border: 'none', cursor: 'pointer', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#fff', fontSize: 13, fontWeight: 600,
+          boxShadow: open ? '0 0 0 2px #ff6b9d' : 'none',
+          transition: 'box-shadow .15s',
+        }}
+      >
+        {(email[0] ?? 'U').toUpperCase()}
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div
+          style={{
+            position: 'absolute', right: 0, top: 'calc(100% + 8px)',
+            background: '#16161a', border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 14, padding: 6, minWidth: 190,
+            boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+            zIndex: 999,
+          }}
+        >
+          {/* Email */}
+          <div style={{ padding: '8px 10px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 4 }}>
+            <div style={{ fontSize: 11, color: '#555', marginBottom: 2 }}>Signed in as</div>
+            <div style={{ fontSize: 12, color: '#888', wordBreak: 'break-all' }}>{email}</div>
+          </div>
+
+          {/* Sign out */}
+          <button
+            onClick={() => { setOpen(false); signOut(auth); }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              width: '100%', padding: '9px 10px', borderRadius: 10,
+              border: 'none', background: 'none', cursor: 'pointer',
+              color: '#ef4444', fontSize: 13, fontWeight: 500,
+              fontFamily: '"DM Sans", sans-serif', textAlign: 'left',
+              transition: 'background .15s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+          >
+            <span style={{ fontSize: 15 }}>→</span>
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
