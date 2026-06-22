@@ -33,7 +33,17 @@ export function Header() {
     <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-bg/90 backdrop-blur border-b border-surface-border">
       <Link
         to="/"
-        className="font-display text-2xl font-bold bg-gradient-accent bg-clip-text text-transparent"
+        style={{
+          fontFamily: '"Playfair Display", Georgia, serif',
+          fontSize: '1.6rem',
+          fontWeight: 800,
+          fontStyle: 'italic',
+          background: 'linear-gradient(to right, #f472b6, #a78bfa, #93c5fd)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          textDecoration: 'none',
+        }}
       >
         Trendy
       </Link>
