@@ -173,7 +173,9 @@ router.get('/', async (req, res, next) => {
     }
 
     const snap = await query.get();
-    const templates = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const templates = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .filter((t: Record<string, unknown>) => t['status'] !== 'pending');
     res.json({ templates });
   } catch (e) {
     if (isFirebaseUnconfigured(e)) {

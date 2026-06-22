@@ -74,7 +74,7 @@ async function runGeneration(
           style: concept.style,
           cat: concept.cat,
           prompt: concept.prompt,
-          image: imageDataUri,       // matches TemplateSchema
+          image: imageDataUri,
           trendTopic: trend.topic,
           trendSource: trend.source,
           trendKeywords: trend.keywords,
@@ -84,6 +84,7 @@ async function runGeneration(
           isPro: false,
           likes: 0,
           uses: 0,
+          status: 'pending',
           generatedDate: date,
           createdAt: new Date().toISOString(),
         });

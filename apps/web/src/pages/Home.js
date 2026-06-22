@@ -14,6 +14,7 @@ import { useSaveGeneration } from '../hooks/useGallery';
 import { apiFetch, ApiError } from '../lib/api';
 import { PLANS } from '@trendy/shared';
 import { PricingSection } from '../components/PricingSection';
+import { UpgradeModal } from '../components/billing/UpgradeModal';
 function scrollToPricing() {
     document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
 }
@@ -24,6 +25,7 @@ export function Home() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [resultImage, setResultImage] = useState(null);
     const [showAuth, setShowAuth] = useState(false);
+    const [showUpgrade, setShowUpgrade] = useState(false);
     const navigate = useNavigate();
     const { user } = useAuth();
     const { data: currentUser, refetch: refetchUser } = useCurrentUser();
@@ -93,12 +95,22 @@ export function Home() {
                                     alignItems: 'center',
                                     gap: 7,
                                     transition: 'border-color .2s, color .2s',
-                                }, onMouseEnter: (e) => { e.currentTarget.style.borderColor = '#ff6b9d'; e.currentTarget.style.color = '#ff6b9d'; }, onMouseLeave: (e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#888'; }, children: "\uD83D\uDDBC My Gallery" }))] }), _jsx("div", { className: "mb-6", children: _jsx(CategoryPills, { active: activeCategory, onChange: setActiveCategory }) }), isLoading && (_jsx("div", { className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4", children: Array.from({ length: 8 }).map((_, i) => (_jsx("div", { className: "rounded-2xl bg-surface animate-pulse", style: { aspectRatio: '3/4' } }, i))) })), error && (_jsx("div", { className: "text-center py-20 text-text-muted", children: _jsx("p", { children: "Failed to load templates. Please try again." }) })), !isLoading && !error && (_jsx("div", { id: "section-all", children: _jsx(TemplateGrid, { templates: templates, onSelect: (t) => setSelectedTemplate(t) }) }))] }), _jsx(PricingSection, { onUpgrade: scrollToPricing, onNeedAuth: () => setShowAuth(true) }), selectedTemplate && (_jsx(TemplateModal, { template: selectedTemplate, onClose: () => setSelectedTemplate(null), onGenerate: (t, img) => {
+                                }, onMouseEnter: (e) => { e.currentTarget.style.borderColor = '#ff6b9d'; e.currentTarget.style.color = '#ff6b9d'; }, onMouseLeave: (e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#888'; }, children: "\uD83D\uDDBC My Gallery" }))] }), _jsx("div", { className: "mb-6", children: _jsx(CategoryPills, { active: activeCategory, onChange: setActiveCategory }) }), isLoading && (_jsx("div", { className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4", children: Array.from({ length: 8 }).map((_, i) => (_jsx("div", { className: "rounded-2xl bg-surface animate-pulse", style: { aspectRatio: '3/4' } }, i))) })), error && (_jsx("div", { className: "text-center py-20 text-text-muted", children: _jsx("p", { children: "Failed to load templates. Please try again." }) })), !isLoading && !error && (_jsx("div", { id: "section-all", children: _jsx(TemplateGrid, { templates: templates, onSelect: (t) => {
+                                if (!user) {
+                                    setShowAuth(true);
+                                    return;
+                                }
+                                if (atLimit) {
+                                    setShowUpgrade(true);
+                                    return;
+                                }
+                                setSelectedTemplate(t);
+                            } }) }))] }), _jsx(PricingSection, { onUpgrade: scrollToPricing, onNeedAuth: () => setShowAuth(true) }), selectedTemplate && (_jsx(TemplateModal, { template: selectedTemplate, onClose: () => setSelectedTemplate(null), onGenerate: (t, img) => {
                     setSelectedTemplate(null);
                     handleGenerate(t, img);
                 } })), _jsx(CatLoadingScreen, { visible: isGenerating }), resultImage && (_jsx(ResultModal, { imageUrl: resultImage, onClose: () => setResultImage(null), onNew: () => setResultImage(null), onViewGallery: async () => {
                     setResultImage(null);
                     await savingRef.current;
                     navigate('/gallery');
-                } })), showAuth && _jsx(AuthModal, { onClose: () => setShowAuth(false) })] }));
+                } })), showAuth && _jsx(AuthModal, { onClose: () => setShowAuth(false) }), showUpgrade && _jsx(UpgradeModal, { onClose: () => setShowUpgrade(false) })] }));
 }

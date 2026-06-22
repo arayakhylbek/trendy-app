@@ -27,7 +27,17 @@ export function Header() {
     const limit = isOwner || plan.monthlyLimit === Infinity ? null : plan.monthlyLimit;
     const remaining = limit !== null ? Math.max(0, limit - used) : null;
     const atLimit = !isOwner && remaining === 0;
-    return (_jsxs("header", { className: "sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-bg/90 backdrop-blur border-b border-surface-border", children: [_jsx(Link, { to: "/", className: "font-display text-2xl font-bold bg-gradient-accent bg-clip-text text-transparent", children: "Trendy" }), _jsxs("nav", { className: "flex items-center gap-3 text-sm", children: [_jsx("button", { onClick: scrollToPricing, className: "text-text-muted hover:text-white transition-colors bg-transparent border-none cursor-pointer text-sm font-sans", children: "Pricing" }), user && (_jsx(Link, { to: "/gallery", className: "text-text-muted hover:text-white transition-colors text-sm", children: "Gallery" })), user && _jsx(GenBadge, { remaining: remaining, limit: limit, tier: tier, atLimit: atLimit, onUpgrade: scrollToPricing }), user ? (_jsx(AvatarMenu, { email: user.email ?? '' })) : (_jsx(Link, { to: "/auth", className: "px-4 py-2 rounded-lg bg-gradient-accent text-black font-medium text-xs hover:opacity-90 transition-opacity", children: "Sign in" }))] })] }));
+    return (_jsxs("header", { className: "sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-bg/90 backdrop-blur border-b border-surface-border", children: [_jsx(Link, { to: "/", style: {
+                    fontFamily: '"Playfair Display", Georgia, serif',
+                    fontSize: '1.6rem',
+                    fontWeight: 800,
+                    fontStyle: 'italic',
+                    background: 'linear-gradient(to right, #f472b6, #a78bfa, #93c5fd)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textDecoration: 'none',
+                }, children: "Trendy" }), _jsxs("nav", { className: "flex items-center gap-3 text-sm", children: [_jsx("button", { onClick: scrollToPricing, className: "text-text-muted hover:text-white transition-colors bg-transparent border-none cursor-pointer text-sm font-sans", children: "Pricing" }), user && (_jsx(Link, { to: "/gallery", className: "text-text-muted hover:text-white transition-colors text-sm", children: "Gallery" })), user && _jsx(GenBadge, { remaining: remaining, limit: limit, tier: tier, atLimit: atLimit, onUpgrade: scrollToPricing }), user ? (_jsx(AvatarMenu, { email: user.email ?? '' })) : (_jsx(Link, { to: "/auth", className: "px-4 py-2 rounded-lg bg-gradient-accent text-black font-medium text-xs hover:opacity-90 transition-opacity", children: "Sign in" }))] })] }));
 }
 /* ── Avatar dropdown ── */
 function AvatarMenu({ email }) {

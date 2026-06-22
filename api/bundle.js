@@ -1596,7 +1596,7 @@ __export(index_exports, {
   default: () => index_default
 });
 module.exports = __toCommonJS(index_exports);
-var import_express9 = __toESM(require("express"));
+var import_express10 = __toESM(require("express"));
 var import_pino_http = __toESM(require("pino-http"));
 
 // apps/api/src/lib/logger.ts
@@ -1695,7 +1695,7 @@ var GenerateRequestSchema = import_zod.z.object({
 });
 
 // packages/shared/src/errors.ts
-var AppError2 = class extends Error {
+var AppError = class extends Error {
   constructor(code, message, statusCode = 500) {
     super(message);
     this.code = code;
@@ -1703,27 +1703,27 @@ var AppError2 = class extends Error {
     this.name = "AppError";
   }
 };
-var UnauthorizedError = class extends AppError2 {
+var UnauthorizedError = class extends AppError {
   constructor(msg = "Unauthorized") {
     super("UNAUTHORIZED", msg, 401);
   }
 };
-var NotFoundError = class extends AppError2 {
+var NotFoundError = class extends AppError {
   constructor(resource) {
     super("NOT_FOUND", `${resource} not found`, 404);
   }
 };
-var ValidationError = class extends AppError2 {
+var ValidationError = class extends AppError {
   constructor(msg) {
     super("VALIDATION_ERROR", msg, 400);
   }
 };
-var QuotaExceededError = class extends AppError2 {
+var QuotaExceededError = class extends AppError {
   constructor() {
     super("QUOTA_EXCEEDED", "Monthly generation limit reached. Upgrade your plan to continue.", 429);
   }
 };
-var RateLimitError = class extends AppError2 {
+var RateLimitError = class extends AppError {
   constructor() {
     super("RATE_LIMITED", "Too many requests. Please slow down.", 429);
   }
@@ -1731,7 +1731,7 @@ var RateLimitError = class extends AppError2 {
 
 // apps/api/src/middleware/errorHandler.ts
 function errorHandler(err, _req, res, _next) {
-  if (err instanceof AppError2) {
+  if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       error: { code: err.code, message: err.message }
     });
@@ -2098,7 +2098,7 @@ router3.get("/", async (req, res, next) => {
       }
     }
     const snap = await query.get();
-    const templates = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const templates = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((t) => t["status"] !== "pending");
     res.json({ templates });
   } catch (e) {
     if (isFirebaseUnconfigured(e)) {
@@ -2213,7 +2213,7 @@ router4.post("/portal", ensureAuth, async (req, res, next) => {
     const snap = await db.collection("users").doc(req.uid).get();
     const polarCustomerId = snap.data()?.["polarCustomerId"];
     if (!polarCustomerId) {
-      return next(new AppError2("NO_BILLING_ACCOUNT", "No billing account found", 400));
+      return next(new AppError("NO_BILLING_ACCOUNT", "No billing account found", 400));
     }
     const portalUrl = await createCustomerPortalSession(polarCustomerId);
     res.json({ portalUrl });
@@ -2313,7 +2313,7 @@ ${basePrompt}`
 // apps/api/src/ai/GeminiProvider.ts
 async function geminiPost(endpoint, body) {
   const apiKey = process.env["GEMINI_API_KEY"];
-  if (!apiKey) throw new AppError2("MISSING_CONFIG", "GEMINI_API_KEY not configured", 500);
+  if (!apiKey) throw new AppError("MISSING_CONFIG", "GEMINI_API_KEY not configured", 500);
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${endpoint}?key=${apiKey}`,
     {
@@ -2325,7 +2325,7 @@ async function geminiPost(endpoint, body) {
   );
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new AppError2("GEMINI_ERROR", `Gemini API error ${res.status}: ${detail}`, 502);
+    throw new AppError("GEMINI_ERROR", `Gemini API error ${res.status}: ${detail}`, 502);
   }
   return res.json();
 }
@@ -2359,7 +2359,7 @@ Return ONLY valid JSON with these fields:
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new AppError2("GEMINI_PARSE_ERROR", "Failed to parse concept response", 502);
+      throw new AppError("GEMINI_PARSE_ERROR", "Failed to parse concept response", 502);
     }
     const parsed = JSON.parse(jsonMatch[0]);
     return {
@@ -2403,7 +2403,7 @@ Requirements:
     const parts = result.candidates?.[0]?.content?.parts ?? [];
     const imagePart = parts.find((p) => p.inlineData);
     if (!imagePart?.inlineData) {
-      throw new AppError2("GEMINI_NO_IMAGE", "No image returned from Gemini", 502);
+      throw new AppError("GEMINI_NO_IMAGE", "No image returned from Gemini", 502);
     }
     const { mimeType, data } = imagePart.inlineData;
     return `data:${mimeType};base64,${data}`;
@@ -2429,7 +2429,7 @@ Requirements:
     const parts = result.candidates?.[0]?.content?.parts ?? [];
     const imagePart = parts.find((p) => p.inlineData);
     if (!imagePart?.inlineData) {
-      throw new AppError2("GEMINI_NO_IMAGE", "No template image returned from Gemini", 502);
+      throw new AppError("GEMINI_NO_IMAGE", "No template image returned from Gemini", 502);
     }
     const { mimeType, data } = imagePart.inlineData;
     return `data:${mimeType};base64,${data}`;
@@ -2493,7 +2493,7 @@ Portrait orientation, cinematic lighting, ultra-detailed.`
     const responseParts = result.candidates?.[0]?.content?.parts ?? [];
     const imagePart = responseParts.find((p) => p.inlineData);
     if (!imagePart?.inlineData) {
-      throw new AppError2("GEMINI_NO_IMAGE", "No image returned from Gemini", 502);
+      throw new AppError("GEMINI_NO_IMAGE", "No image returned from Gemini", 502);
     }
     const { mimeType, data } = imagePart.inlineData;
     return `data:${mimeType};base64,${data}`;
@@ -2505,7 +2505,7 @@ var import_replicate = __toESM(require_replicate());
 var FACE_SWAP_VERSION = "cdingram/face-swap:d1d6ea8c8be89d664a07a457526f7128109dee7030fdac424788d762c71ed111";
 function getClient() {
   const token = process.env["REPLICATE_API_TOKEN"];
-  if (!token) throw new AppError2("MISSING_CONFIG", "REPLICATE_API_TOKEN not configured", 500);
+  if (!token) throw new AppError("MISSING_CONFIG", "REPLICATE_API_TOKEN not configured", 500);
   return new import_replicate.default({ auth: token });
 }
 function dataUriToBlob(dataUri) {
@@ -2538,7 +2538,7 @@ async function faceSwap(templateInput, userPhotoBase64) {
   const resultUrl = typeof output === "string" ? output : output.url().href;
   const response = await fetch(resultUrl, { signal: AbortSignal.timeout(3e4) });
   if (!response.ok) {
-    throw new AppError2("REPLICATE_FETCH", `Failed to fetch result: ${response.status}`, 502);
+    throw new AppError("REPLICATE_FETCH", `Failed to fetch result: ${response.status}`, 502);
   }
   const buffer = await response.arrayBuffer();
   const base64 = Buffer.from(buffer).toString("base64");
@@ -2557,6 +2557,7 @@ router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) 
     const { prompt, imageBase64, templateBase64, templateId, templateImageSrc } = parsed.data;
     const appBaseUrl = process.env["APP_BASE_URL"] ?? "https://mytrendy.app";
     let imageDataUri;
+    let enhancedPrompt = prompt;
     if (imageBase64 && useReplicate) {
       let templateInput;
       if (templateBase64) {
@@ -2575,9 +2576,9 @@ router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) 
       imageDataUri = await faceSwap(templateInput, imageBase64);
     } else {
       const enhancer = new ClaudePromptEnhancer();
-      const enhancedPrompt2 = await enhancer.enhance(prompt, imageBase64);
+      enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
       const gemini = new GeminiProvider();
-      imageDataUri = await gemini.generateUserImage(enhancedPrompt2, imageBase64, templateBase64);
+      imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, templateBase64);
     }
     await db.collection("users").doc(req.uid).update({
       generationsUsed: import_firestore2.FieldValue.increment(1),
@@ -2615,7 +2616,7 @@ router6.post("/", ensureAuth, async (req, res, next) => {
   try {
     const userRecord = await adminAuth.getUser(req.uid);
     if (userRecord.email !== ADMIN_EMAIL) {
-      return next(new AppError2("FORBIDDEN", "Admin only", 403));
+      return next(new AppError("FORBIDDEN", "Admin only", 403));
     }
     const theme = THEMES[Math.floor(Math.random() * THEMES.length)];
     const gemini = new GeminiProvider();
@@ -2735,7 +2736,7 @@ async function fetchPinterestTrends() {
 // apps/api/src/ai/GeminiTrendSource.ts
 async function geminiGroundedSearch(prompt) {
   const apiKey = process.env["GEMINI_API_KEY"];
-  if (!apiKey) throw new AppError2("MISSING_CONFIG", "GEMINI_API_KEY not configured", 500);
+  if (!apiKey) throw new AppError("MISSING_CONFIG", "GEMINI_API_KEY not configured", 500);
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
     {
@@ -2750,7 +2751,7 @@ async function geminiGroundedSearch(prompt) {
   );
   if (!res.ok) {
     const err = await res.text().catch(() => "");
-    throw new AppError2("GEMINI_ERROR", `Gemini grounded search error ${res.status}: ${err}`, 502);
+    throw new AppError("GEMINI_ERROR", `Gemini grounded search error ${res.status}: ${err}`, 502);
   }
   const data = await res.json();
   return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
@@ -2813,7 +2814,7 @@ Return ONLY the JSON array.`;
     }
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
-      throw new AppError2("GEMINI_PARSE_ERROR", "Failed to parse Gemini trends response", 502);
+      throw new AppError("GEMINI_PARSE_ERROR", "Failed to parse Gemini trends response", 502);
     }
     const trends = JSON.parse(jsonMatch[0]);
     return trends.map((t) => ({
@@ -2875,7 +2876,6 @@ async function runGeneration(date, runRef) {
           cat: concept.cat,
           prompt: concept.prompt,
           image: imageDataUri,
-          // matches TemplateSchema
           trendTopic: trend.topic,
           trendSource: trend.source,
           trendKeywords: trend.keywords,
@@ -2885,6 +2885,7 @@ async function runGeneration(date, runRef) {
           isPro: false,
           likes: 0,
           uses: 0,
+          status: "pending",
           generatedDate: date,
           createdAt: (/* @__PURE__ */ new Date()).toISOString()
         });
@@ -2914,8 +2915,84 @@ async function runGeneration(date, runRef) {
 }
 var cron_default = router7;
 
+// apps/api/src/routes/admin.ts
+var import_express9 = require("express");
+
+// apps/api/src/middleware/ensureOwner.ts
+var OWNER_EMAIL2 = "araiakhylbek78@gmail.com";
+async function ensureOwner(req, _res, next) {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) return next(new UnauthorizedError("Missing token"));
+  try {
+    const decoded = await adminAuth.verifyIdToken(header.slice(7));
+    if (decoded.email?.toLowerCase() !== OWNER_EMAIL2) {
+      return next(new UnauthorizedError("Owner only"));
+    }
+    req.uid = decoded.uid;
+    next();
+  } catch {
+    next(new UnauthorizedError("Invalid token"));
+  }
+}
+
+// apps/api/src/routes/admin.ts
+var router8 = (0, import_express9.Router)();
+router8.use(ensureOwner);
+router8.get("/templates", async (req, res, next) => {
+  try {
+    const status = req.query["status"] || "pending";
+    let query = db.collection("templates").orderBy("createdAt", "desc").limit(100);
+    if (status !== "all") {
+      query = db.collection("templates").where("status", "==", status).orderBy("createdAt", "desc").limit(100);
+    }
+    const snap = await query.get();
+    const templates = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    res.json({ templates, total: templates.length });
+  } catch (e) {
+    next(e);
+  }
+});
+router8.patch("/templates/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    if (!status || !["published", "pending", "rejected"].includes(status)) {
+      throw new AppError("BAD_REQUEST", "Invalid status", 400);
+    }
+    await db.collection("templates").doc(id).update({ status });
+    res.json({ ok: true, id, status });
+  } catch (e) {
+    next(e);
+  }
+});
+router8.delete("/templates/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await db.collection("templates").doc(id).delete();
+    res.json({ ok: true, id });
+  } catch (e) {
+    next(e);
+  }
+});
+router8.post("/generate", async (req, res, next) => {
+  try {
+    const secret = process.env["CRON_SECRET"];
+    const host = req.headers["host"] ?? "localhost:3001";
+    const proto = host.includes("localhost") ? "http" : "https";
+    const resp = await fetch(`${proto}://${host}/api/cron/generate-daily`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${secret}` }
+    });
+    const json = await resp.json();
+    res.json({ ok: true, cron: json });
+  } catch (e) {
+    next(e);
+  }
+});
+var admin_default = router8;
+
 // apps/api/src/index.ts
-var app = (0, import_express9.default)();
+var app = (0, import_express10.default)();
 var allowedOrigins = [
   process.env["APP_BASE_URL"] ?? "http://localhost:5173",
   "http://localhost:5173"
@@ -2935,7 +3012,7 @@ app.use((req, res, next) => {
 });
 app.use((0, import_pino_http.default)({ logger }));
 app.use("/api/webhooks", webhooks_default);
-app.use(import_express9.default.json({ limit: "20mb" }));
+app.use(import_express10.default.json({ limit: "20mb" }));
 app.use("/api/users", users_default);
 app.use("/api/me", (req, res, next) => {
   req.url = "/me" + req.url;
@@ -2946,6 +3023,7 @@ app.use("/api/billing", billing_default);
 app.use("/api/generate", generate_default);
 app.use("/api/generate-template", generateTemplate_default);
 app.use("/api/cron", cron_default);
+app.use("/api/admin", admin_default);
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use(errorHandler);
 var PORT = process.env["PORT"] ?? 3001;

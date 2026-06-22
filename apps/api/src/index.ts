@@ -9,6 +9,7 @@ import billingRouter from './routes/billing.js';
 import generateRouter from './routes/generate.js';
 import generateTemplateRouter from './routes/generateTemplate.js';
 import cronRouter from './routes/cron.js';
+import adminRouter from './routes/admin.js';
 
 const app: ReturnType<typeof express> = express();
 
@@ -48,6 +49,7 @@ app.use('/api/billing', billingRouter);
 app.use('/api/generate', generateRouter);
 app.use('/api/generate-template', generateTemplateRouter);
 app.use('/api/cron', cronRouter);
+app.use('/api/admin', adminRouter);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
