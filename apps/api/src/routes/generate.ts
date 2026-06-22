@@ -4,7 +4,7 @@ import { ensureAuth } from '../middleware/auth.js';
 import { checkQuota } from '../middleware/quota.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 import { db } from '../lib/firebase.js';
-import { GenerateRequestSchema, ValidationError } from '@trendy/shared';
+import { GenerateRequestSchema, ValidationError, AppError } from '@trendy/shared';
 import { ClaudePromptEnhancer } from '../ai/ClaudePromptEnhancer.js';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
 import { faceSwap } from '../services/replicateService.js';
@@ -23,6 +23,7 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
 
     const appBaseUrl = process.env['APP_BASE_URL'] ?? 'https://mytrendy.app';
     let imageDataUri: string;
+    let enhancedPrompt = prompt;
 
     if (imageBase64 && useReplicate) {
       // Resolve template image without calling Gemini
@@ -52,7 +53,7 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     } else {
       // No Replicate token or no user photo → Gemini fallback
       const enhancer = new ClaudePromptEnhancer();
-      const enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
+      enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, templateBase64);
     }
