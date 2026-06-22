@@ -19,7 +19,7 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     if (!parsed.success) {
       return next(new ValidationError(parsed.error.message));
     }
-    const { prompt, imageBase64, templateBase64 } = parsed.data;
+    const { prompt, imageBase64, templateBase64, templateId } = parsed.data;
 
     const enhancer = new ClaudePromptEnhancer();
     const enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
@@ -27,16 +27,23 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     const gemini = new GeminiProvider();
     let imageDataUri: string;
 
-    if (imageBase64 && templateBase64 && useReplicate) {
-      // Fast path: template image already exists → just face-swap, no Gemini needed
-      imageDataUri = await faceSwap(templateBase64, imageBase64);
+    // Resolve template image: prefer ID lookup (avoids sending large base64 in request)
+    let resolvedTemplateBase64 = templateBase64;
+    if (!resolvedTemplateBase64 && templateId && useReplicate) {
+      const snap = await db.collection('templates').doc(templateId).get();
+      resolvedTemplateBase64 = (snap.data()?.['image'] as string | undefined) ?? undefined;
+    }
+
+    if (imageBase64 && resolvedTemplateBase64 && useReplicate) {
+      // Fast path: template image from Firestore → face-swap only, no Gemini
+      imageDataUri = await faceSwap(resolvedTemplateBase64, imageBase64);
     } else if (imageBase64 && useReplicate) {
-      // No template image: generate one with Gemini first, then face-swap
+      // No template image: generate with Gemini first, then face-swap
       const templateImage = await gemini.generateTemplateOnly(enhancedPrompt);
       imageDataUri = await faceSwap(templateImage, imageBase64);
     } else {
       // Fallback: original Gemini image-to-image flow
-      imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, templateBase64);
+      imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, resolvedTemplateBase64);
     }
 
     await db

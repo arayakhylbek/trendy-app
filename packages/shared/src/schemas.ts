@@ -54,6 +54,7 @@ export const GenerateRequestSchema = z.object({
   prompt: z.string().min(1).max(2000),
   imageBase64: z.string().optional(),
   templateBase64: z.string().optional(),
+  templateId: z.string().optional(),
 });
 
 export type UserDoc = z.infer<typeof UserDocSchema>;

@@ -57,7 +57,7 @@ export function Home() {
         body: JSON.stringify({
           prompt: template.prompt,
           imageBase64,
-          templateBase64: template.image,
+          templateId: template.id,
         }),
       });
       setResultImage(result.image);
