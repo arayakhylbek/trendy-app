@@ -64,7 +64,7 @@ export function Home() {
         templateLabel: template.label,
         templateEmoji: template.emoji,
         createdAt: new Date().toISOString(),
-      }).catch(() => { /* ignore save errors, don't block UI */ });
+      }).catch((err) => { console.error('[gallery] save error:', err); });
     } catch (e) {
       if (e instanceof ApiError && e.status === 429) {
         setShowUpgrade(true);

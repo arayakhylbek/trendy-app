@@ -10,6 +10,7 @@ import {
   doc,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { compressImage } from '../lib/compressImage';
 
 export interface GalleryItem {
   id: string;
@@ -41,10 +42,18 @@ export function useSaveGeneration(uid: string | undefined) {
   return useMutation({
     mutationFn: async (item: Omit<GalleryItem, 'id'>) => {
       if (!uid) throw new Error('Not authenticated');
-      await addDoc(collection(db, 'users', uid, 'generations'), item);
+      // Compress before saving to stay under Firestore's 1 MB document limit
+      const compressed = await compressImage(item.imageBase64, 800, 0.82);
+      await addDoc(collection(db, 'users', uid, 'generations'), {
+        ...item,
+        imageBase64: compressed,
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['gallery', uid] });
+    },
+    onError: (err) => {
+      console.error('[gallery] save failed:', err);
     },
   });
 }
