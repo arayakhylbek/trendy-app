@@ -56,7 +56,7 @@ router.delete('/templates/:id', async (req, res, next) => {
   }
 });
 
-// POST /api/admin/generate — trigger manual generation run
+// POST /api/admin/generate — trigger manual generation run (synchronous, waits for completion)
 router.post('/generate', async (req, res, next) => {
   try {
     const date = new Date().toISOString().slice(0, 10);
@@ -69,10 +69,17 @@ router.post('/generate', async (req, res, next) => {
       triggeredBy: 'admin',
     });
 
-    // Respond immediately, run in background
-    res.json({ ok: true, date, status: 'running' });
+    // Run synchronously so Vercel doesn't kill the background task
+    await runGeneration(date, runRef);
 
-    runGeneration(date, runRef).catch(() => {});
+    const snap = await runRef.get();
+    const runData = snap.data() as Record<string, unknown>;
+    res.json({
+      ok: true,
+      date,
+      templatesGenerated: runData['templatesGenerated'] ?? 0,
+      errors: runData['errors'] ?? null,
+    });
   } catch (e) {
     next(e);
   }

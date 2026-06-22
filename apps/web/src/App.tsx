@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { Header } from './components/layout/Header';
 import { Home } from './pages/Home';
 import { Pricing } from './pages/Pricing';
@@ -42,6 +43,7 @@ export function App() {
           }
         />
       </Routes>
+      <Analytics />
     </div>
   );
 }

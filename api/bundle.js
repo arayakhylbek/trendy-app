@@ -2986,8 +2986,14 @@ router8.post("/generate", async (req, res, next) => {
       startedAt: (/* @__PURE__ */ new Date()).toISOString(),
       triggeredBy: "admin"
     });
-    res.json({ ok: true, date, status: "running" });
-    runGeneration(date, runRef).catch(() => {
+    await runGeneration(date, runRef);
+    const snap = await runRef.get();
+    const runData = snap.data();
+    res.json({
+      ok: true,
+      date,
+      templatesGenerated: runData["templatesGenerated"] ?? 0,
+      errors: runData["errors"] ?? null
     });
   } catch (e) {
     next(e);

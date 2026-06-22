@@ -54,21 +54,21 @@ function AdminInner({
 
   async function triggerGenerate() {
     setGenerating(true);
-    setGenerateMsg(null);
+    setGenerateMsg('⏳ Generating templates… this takes 2–4 min, please wait.');
     try {
-      await apiFetch('/api/admin/generate', { method: 'POST' });
-      setGenerateMsg('⏳ Generating templates (2-4 min)… Refresh Pending in a bit.');
-      // Poll every 30s for new pending templates
-      const poll = setInterval(() => {
-        qc.invalidateQueries({ queryKey: ['admin-templates'] });
-      }, 30000);
-      setTimeout(() => {
-        clearInterval(poll);
-        setGenerateMsg('✅ Done! Check Pending tab.');
-        setGenerating(false);
-      }, 4 * 60 * 1000);
+      const result = await apiFetch<{ templatesGenerated: number; errors: string[] | null }>(
+        '/api/admin/generate',
+        { method: 'POST' },
+      );
+      const count = result.templatesGenerated ?? 0;
+      setGenerateMsg(count > 0
+        ? `✅ Generated ${count} template${count !== 1 ? 's' : ''}! Check Pending tab.`
+        : `⚠️ Generation finished but 0 templates created. Check Vercel logs.`
+      );
+      qc.invalidateQueries({ queryKey: ['admin-templates'] });
     } catch (e) {
-      setGenerateMsg(`❌ ${(e as Error).message}`);
+      setGenerateMsg(`❌ Error: ${(e as Error).message}`);
+    } finally {
       setGenerating(false);
     }
   }

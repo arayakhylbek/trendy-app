@@ -11,6 +11,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.51.21",
     "@trendy/shared": "workspace:*",
+    "@vercel/analytics": "^2.0.1",
     "firebase": "^10.12.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
