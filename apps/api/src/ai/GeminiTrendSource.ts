@@ -41,8 +41,26 @@ async function geminiGroundedSearch(prompt: string): Promise<string> {
   return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 }
 
+const FALLBACK_TRENDS: Trend[] = [
+  { topic: 'Dark Academia Library', category: 'aesthetic', keywords: ['darkacademia', 'aesthetic', 'vintage', 'moody'], score: 9, source: 'google' },
+  { topic: 'Y2K Fashion Doll', category: 'fashion', keywords: ['y2k', 'fashiondoll', 'barbie', 'aesthetic'], score: 9, source: 'google' },
+  { topic: 'Cinematic KDrama Lead', category: 'kdrama', keywords: ['kdrama', 'cinematic', 'korean', 'aesthetic'], score: 8, source: 'google' },
+  { topic: 'Golden Hour Portrait', category: 'nature', keywords: ['goldenhour', 'portrait', 'sunset', 'glow'], score: 8, source: 'google' },
+  { topic: 'Soft Cottagecore Morning', category: 'aesthetic', keywords: ['cottagecore', 'softgirl', 'morning', 'cozy'], score: 7, source: 'google' },
+  { topic: 'Editorial Vogue Cover', category: 'fashion', keywords: ['editorial', 'vogue', 'magazine', 'fashion'], score: 7, source: 'google' },
+];
+
 export class GeminiTrendSource implements TrendSource {
   async getTrendingTopics(): Promise<Trend[]> {
+    try {
+      return await this._fetchFromGemini();
+    } catch (e) {
+      logger.warn({ err: e }, 'Gemini trend fetch failed, using fallback trends');
+      return FALLBACK_TRENDS;
+    }
+  }
+
+  private async _fetchFromGemini(): Promise<Trend[]> {
     const today = new Date().toISOString().slice(0, 10);
 
     // Fetch real data from TikTok and Pinterest in parallel
@@ -103,12 +121,23 @@ Return ONLY the JSON array.`;
       text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
     }
 
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    // Strip markdown code fences if present
+    const cleaned = text.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '').trim();
+    const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
-      throw new AppError('GEMINI_PARSE_ERROR', 'Failed to parse Gemini trends response', 502);
+      throw new AppError(
+        'GEMINI_PARSE_ERROR',
+        `Failed to parse Gemini trends response. Got: ${cleaned.slice(0, 200)}`,
+        502,
+      );
     }
 
-    const trends = JSON.parse(jsonMatch[0]) as Array<Partial<Trend> & { trendContext?: string }>;
+    let trends: Array<Partial<Trend> & { trendContext?: string }>;
+    try {
+      trends = JSON.parse(jsonMatch[0]) as Array<Partial<Trend> & { trendContext?: string }>;
+    } catch {
+      throw new AppError('GEMINI_PARSE_ERROR', `Invalid JSON from Gemini: ${jsonMatch[0].slice(0, 200)}`, 502);
+    }
 
     return trends
       .map((t) => ({
@@ -120,5 +149,5 @@ Return ONLY the JSON array.`;
         trendContext: t.trendContext,
       }))
       .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-  }
+  } // end _fetchFromGemini
 }

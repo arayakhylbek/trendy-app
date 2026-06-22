@@ -2756,8 +2756,24 @@ async function geminiGroundedSearch(prompt) {
   const data = await res.json();
   return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 }
+var FALLBACK_TRENDS = [
+  { topic: "Dark Academia Library", category: "aesthetic", keywords: ["darkacademia", "aesthetic", "vintage", "moody"], score: 9, source: "google" },
+  { topic: "Y2K Fashion Doll", category: "fashion", keywords: ["y2k", "fashiondoll", "barbie", "aesthetic"], score: 9, source: "google" },
+  { topic: "Cinematic KDrama Lead", category: "kdrama", keywords: ["kdrama", "cinematic", "korean", "aesthetic"], score: 8, source: "google" },
+  { topic: "Golden Hour Portrait", category: "nature", keywords: ["goldenhour", "portrait", "sunset", "glow"], score: 8, source: "google" },
+  { topic: "Soft Cottagecore Morning", category: "aesthetic", keywords: ["cottagecore", "softgirl", "morning", "cozy"], score: 7, source: "google" },
+  { topic: "Editorial Vogue Cover", category: "fashion", keywords: ["editorial", "vogue", "magazine", "fashion"], score: 7, source: "google" }
+];
 var GeminiTrendSource = class {
   async getTrendingTopics() {
+    try {
+      return await this._fetchFromGemini();
+    } catch (e) {
+      logger.warn({ err: e }, "Gemini trend fetch failed, using fallback trends");
+      return FALLBACK_TRENDS;
+    }
+  }
+  async _fetchFromGemini() {
     const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     const [tikTokRaw, pinterestRaw] = await Promise.all([
       fetchTikTokTrends().catch(() => []),
@@ -2812,11 +2828,21 @@ Return ONLY the JSON array.`;
       const data = await res.json();
       text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     }
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    const cleaned = text.replace(/```(?:json)?\s*/gi, "").replace(/```/g, "").trim();
+    const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
-      throw new AppError("GEMINI_PARSE_ERROR", "Failed to parse Gemini trends response", 502);
+      throw new AppError(
+        "GEMINI_PARSE_ERROR",
+        `Failed to parse Gemini trends response. Got: ${cleaned.slice(0, 200)}`,
+        502
+      );
     }
-    const trends = JSON.parse(jsonMatch[0]);
+    let trends;
+    try {
+      trends = JSON.parse(jsonMatch[0]);
+    } catch {
+      throw new AppError("GEMINI_PARSE_ERROR", `Invalid JSON from Gemini: ${jsonMatch[0].slice(0, 200)}`, 502);
+    }
     return trends.map((t) => ({
       topic: t.topic ?? "Trending Aesthetic",
       category: t.category ?? "aesthetic",
@@ -2826,6 +2852,7 @@ Return ONLY the JSON array.`;
       trendContext: t.trendContext
     })).sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
   }
+  // end _fetchFromGemini
 };
 
 // apps/api/src/routes/cron.ts
