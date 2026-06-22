@@ -2941,12 +2941,13 @@ router8.use(ensureOwner);
 router8.get("/templates", async (req, res, next) => {
   try {
     const status = req.query["status"] || "pending";
-    let query = db.collection("templates").orderBy("createdAt", "desc").limit(100);
-    if (status !== "all") {
-      query = db.collection("templates").where("status", "==", status).orderBy("createdAt", "desc").limit(100);
+    const snap = await db.collection("templates").orderBy("createdAt", "desc").limit(200).get();
+    let templates = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    if (status === "pending") {
+      templates = templates.filter((t) => t["status"] === "pending");
+    } else if (status === "published") {
+      templates = templates.filter((t) => !t["status"] || t["status"] === "published");
     }
-    const snap = await query.get();
-    const templates = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     res.json({ templates, total: templates.length });
   } catch (e) {
     next(e);
@@ -2976,15 +2977,18 @@ router8.delete("/templates/:id", async (req, res, next) => {
 });
 router8.post("/generate", async (req, res, next) => {
   try {
-    const secret = process.env["CRON_SECRET"];
-    const host = req.headers["host"] ?? "localhost:3001";
-    const proto = host.includes("localhost") ? "http" : "https";
-    const resp = await fetch(`${proto}://${host}/api/cron/generate-daily`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${secret}` }
+    const date = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    const runRef = db.collection("generationRuns").doc(`${date}-manual-${Date.now()}`);
+    await runRef.set({
+      date,
+      status: "pending",
+      templatesGenerated: 0,
+      startedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      triggeredBy: "admin"
     });
-    const json = await resp.json();
-    res.json({ ok: true, cron: json });
+    res.json({ ok: true, date, status: "running" });
+    runGeneration(date, runRef).catch(() => {
+    });
   } catch (e) {
     next(e);
   }

@@ -15,21 +15,24 @@ export function Admin() {
   const { user, loading } = useAuth();
   const [tab, setTab] = useState<TabStatus>('pending');
   const [generating, setGenerating] = useState(false);
+  const [generateMsg, setGenerateMsg] = useState<string | null>(null);
   const qc = useQueryClient();
 
   if (loading) return null;
   if (!user || user.email?.toLowerCase() !== OWNER_EMAIL) return <Navigate to="/" replace />;
 
-  return <AdminInner tab={tab} setTab={setTab} generating={generating} setGenerating={setGenerating} qc={qc} />;
+  return <AdminInner tab={tab} setTab={setTab} generating={generating} setGenerating={setGenerating} generateMsg={generateMsg} setGenerateMsg={setGenerateMsg} qc={qc} />;
 }
 
 function AdminInner({
-  tab, setTab, generating, setGenerating, qc,
+  tab, setTab, generating, setGenerating, generateMsg, setGenerateMsg, qc,
 }: {
   tab: TabStatus;
   setTab: (t: TabStatus) => void;
   generating: boolean;
   setGenerating: (v: boolean) => void;
+  generateMsg: string | null;
+  setGenerateMsg: (v: string | null) => void;
   qc: ReturnType<typeof useQueryClient>;
 }) {
   const { data, isLoading } = useQuery({
@@ -51,12 +54,21 @@ function AdminInner({
 
   async function triggerGenerate() {
     setGenerating(true);
+    setGenerateMsg(null);
     try {
       await apiFetch('/api/admin/generate', { method: 'POST' });
-      setTimeout(() => { qc.invalidateQueries({ queryKey: ['admin-templates'] }); }, 3000);
+      setGenerateMsg('⏳ Generating templates (2-4 min)… Refresh Pending in a bit.');
+      // Poll every 30s for new pending templates
+      const poll = setInterval(() => {
+        qc.invalidateQueries({ queryKey: ['admin-templates'] });
+      }, 30000);
+      setTimeout(() => {
+        clearInterval(poll);
+        setGenerateMsg('✅ Done! Check Pending tab.');
+        setGenerating(false);
+      }, 4 * 60 * 1000);
     } catch (e) {
-      alert((e as Error).message);
-    } finally {
+      setGenerateMsg(`❌ ${(e as Error).message}`);
       setGenerating(false);
     }
   }
@@ -86,6 +98,12 @@ function AdminInner({
           {generating ? '⏳ Generating…' : '⚡ Generate Now'}
         </button>
       </div>
+
+      {generateMsg && (
+        <div style={{ marginBottom: '1.5rem', padding: '12px 16px', borderRadius: 12, background: 'rgba(192,132,252,0.1)', border: '1px solid rgba(192,132,252,0.2)', color: '#c084fc', fontSize: 13 }}>
+          {generateMsg}
+        </div>
+      )}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: '1.5rem' }}>

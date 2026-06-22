@@ -9,14 +9,15 @@ export function Admin() {
     const { user, loading } = useAuth();
     const [tab, setTab] = useState('pending');
     const [generating, setGenerating] = useState(false);
+    const [generateMsg, setGenerateMsg] = useState(null);
     const qc = useQueryClient();
     if (loading)
         return null;
     if (!user || user.email?.toLowerCase() !== OWNER_EMAIL)
         return _jsx(Navigate, { to: "/", replace: true });
-    return _jsx(AdminInner, { tab: tab, setTab: setTab, generating: generating, setGenerating: setGenerating, qc: qc });
+    return _jsx(AdminInner, { tab: tab, setTab: setTab, generating: generating, setGenerating: setGenerating, generateMsg: generateMsg, setGenerateMsg: setGenerateMsg, qc: qc });
 }
-function AdminInner({ tab, setTab, generating, setGenerating, qc, }) {
+function AdminInner({ tab, setTab, generating, setGenerating, generateMsg, setGenerateMsg, qc, }) {
     const { data, isLoading } = useQuery({
         queryKey: ['admin-templates', tab],
         queryFn: () => apiFetch(`/api/admin/templates?status=${tab}`),
@@ -31,14 +32,22 @@ function AdminInner({ tab, setTab, generating, setGenerating, qc, }) {
     });
     async function triggerGenerate() {
         setGenerating(true);
+        setGenerateMsg(null);
         try {
             await apiFetch('/api/admin/generate', { method: 'POST' });
-            setTimeout(() => { qc.invalidateQueries({ queryKey: ['admin-templates'] }); }, 3000);
+            setGenerateMsg('⏳ Generating templates (2-4 min)… Refresh Pending in a bit.');
+            // Poll every 30s for new pending templates
+            const poll = setInterval(() => {
+                qc.invalidateQueries({ queryKey: ['admin-templates'] });
+            }, 30000);
+            setTimeout(() => {
+                clearInterval(poll);
+                setGenerateMsg('✅ Done! Check Pending tab.');
+                setGenerating(false);
+            }, 4 * 60 * 1000);
         }
         catch (e) {
-            alert(e.message);
-        }
-        finally {
+            setGenerateMsg(`❌ ${e.message}`);
             setGenerating(false);
         }
     }
@@ -48,7 +57,7 @@ function AdminInner({ tab, setTab, generating, setGenerating, qc, }) {
                             background: generating ? '#333' : 'linear-gradient(135deg, #ff6b9d, #c084fc)',
                             color: generating ? '#888' : '#fff', fontSize: 13, fontWeight: 600,
                             cursor: generating ? 'default' : 'pointer', fontFamily: '"DM Sans", sans-serif',
-                        }, children: generating ? '⏳ Generating…' : '⚡ Generate Now' })] }), _jsx("div", { style: { display: 'flex', gap: 8, marginBottom: '1.5rem' }, children: ['pending', 'published'].map((t) => (_jsxs("button", { onClick: () => setTab(t), style: {
+                        }, children: generating ? '⏳ Generating…' : '⚡ Generate Now' })] }), generateMsg && (_jsx("div", { style: { marginBottom: '1.5rem', padding: '12px 16px', borderRadius: 12, background: 'rgba(192,132,252,0.1)', border: '1px solid rgba(192,132,252,0.2)', color: '#c084fc', fontSize: 13 }, children: generateMsg })), _jsx("div", { style: { display: 'flex', gap: 8, marginBottom: '1.5rem' }, children: ['pending', 'published'].map((t) => (_jsxs("button", { onClick: () => setTab(t), style: {
                         padding: '7px 18px', borderRadius: 20, border: '1px solid',
                         borderColor: tab === t ? 'rgba(255,107,157,0.5)' : 'rgba(255,255,255,0.08)',
                         background: tab === t ? 'rgba(255,107,157,0.1)' : 'transparent',

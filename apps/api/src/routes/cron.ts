@@ -40,7 +40,7 @@ router.post('/generate-daily', async (req, res) => {
   });
 });
 
-async function runGeneration(
+export async function runGeneration(
   date: string,
   runRef: DocumentReference
 ) {

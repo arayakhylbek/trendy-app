@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../lib/firebase.js';
 import { ensureOwner } from '../middleware/ensureOwner.js';
 import { AppError } from '@trendy/shared';
+import { runGeneration } from './cron.js';
 
 const router: ReturnType<typeof Router> = Router();
 
@@ -55,18 +56,23 @@ router.delete('/templates/:id', async (req, res, next) => {
   }
 });
 
-// POST /api/admin/templates/generate — trigger manual generation run
+// POST /api/admin/generate — trigger manual generation run
 router.post('/generate', async (req, res, next) => {
   try {
-    const secret = process.env['CRON_SECRET'];
-    const host = req.headers['host'] ?? 'localhost:3001';
-    const proto = host.includes('localhost') ? 'http' : 'https';
-    const resp = await fetch(`${proto}://${host}/api/cron/generate-daily`, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${secret}` },
+    const date = new Date().toISOString().slice(0, 10);
+    const runRef = db.collection('generationRuns').doc(`${date}-manual-${Date.now()}`);
+    await runRef.set({
+      date,
+      status: 'pending',
+      templatesGenerated: 0,
+      startedAt: new Date().toISOString(),
+      triggeredBy: 'admin',
     });
-    const json = await resp.json() as Record<string, unknown>;
-    res.json({ ok: true, cron: json });
+
+    // Respond immediately, run in background
+    res.json({ ok: true, date, status: 'running' });
+
+    runGeneration(date, runRef).catch(() => {});
   } catch (e) {
     next(e);
   }
