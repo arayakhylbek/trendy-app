@@ -87,4 +87,28 @@ router.post('/generate', async (req, res, next) => {
   }
 });
 
+// POST /api/admin/users/grant-credits { email, credits }
+router.post('/users/grant-credits', async (req, res, next) => {
+  try {
+    const { email, credits } = req.body as { email?: string; credits?: number };
+    if (!email || !credits || credits < 1) {
+      throw new AppError('BAD_REQUEST', 'email and credits (>0) required', 400);
+    }
+
+    const snap = await db.collection('users').where('email', '==', email.toLowerCase().trim()).limit(1).get();
+    if (snap.empty) {
+      throw new AppError('NOT_FOUND', `User not found: ${email}`, 404);
+    }
+
+    const doc = snap.docs[0];
+    const current = (doc.data()['generationsUsed'] as number) ?? 0;
+    const newUsed = Math.max(0, current - credits);
+    await doc.ref.update({ generationsUsed: newUsed, updatedAt: new Date().toISOString() });
+
+    res.json({ ok: true, email, before: current, after: newUsed, granted: credits });
+  } catch (e) {
+    next(e);
+  }
+});
+
 export default router;

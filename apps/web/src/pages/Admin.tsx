@@ -16,16 +16,35 @@ export function Admin() {
   const [tab, setTab] = useState<TabStatus>('pending');
   const [generating, setGenerating] = useState(false);
   const [generateMsg, setGenerateMsg] = useState<string | null>(null);
+  const [creditEmail, setCreditEmail] = useState('');
+  const [creditAmount, setCreditAmount] = useState('3');
+  const [creditMsg, setCreditMsg] = useState<string | null>(null);
   const qc = useQueryClient();
 
   if (loading) return null;
   if (!user || user.email?.toLowerCase() !== OWNER_EMAIL) return <Navigate to="/" replace />;
 
-  return <AdminInner tab={tab} setTab={setTab} generating={generating} setGenerating={setGenerating} generateMsg={generateMsg} setGenerateMsg={setGenerateMsg} qc={qc} />;
+  async function grantCredits() {
+    if (!creditEmail.trim()) return;
+    setCreditMsg(null);
+    try {
+      const result = await apiFetch<{ granted: number; before: number; after: number }>(
+        '/api/admin/users/grant-credits',
+        { method: 'POST', body: JSON.stringify({ email: creditEmail.trim(), credits: Number(creditAmount) }) },
+      );
+      setCreditMsg(`✅ Granted ${result.granted} credits to ${creditEmail}. Used: ${result.before} → ${result.after}`);
+      setCreditEmail('');
+    } catch (e) {
+      setCreditMsg(`❌ ${(e as Error).message}`);
+    }
+  }
+
+  return <AdminInner tab={tab} setTab={setTab} generating={generating} setGenerating={setGenerating} generateMsg={generateMsg} setGenerateMsg={setGenerateMsg} qc={qc} creditEmail={creditEmail} setCreditEmail={setCreditEmail} creditAmount={creditAmount} setCreditAmount={setCreditAmount} creditMsg={creditMsg} grantCredits={grantCredits} />;
 }
 
 function AdminInner({
   tab, setTab, generating, setGenerating, generateMsg, setGenerateMsg, qc,
+  creditEmail, setCreditEmail, creditAmount, setCreditAmount, creditMsg, grantCredits,
 }: {
   tab: TabStatus;
   setTab: (t: TabStatus) => void;
@@ -33,6 +52,12 @@ function AdminInner({
   setGenerating: (v: boolean) => void;
   generateMsg: string | null;
   setGenerateMsg: (v: string | null) => void;
+  creditEmail: string;
+  setCreditEmail: (v: string) => void;
+  creditAmount: string;
+  setCreditAmount: (v: string) => void;
+  creditMsg: string | null;
+  grantCredits: () => void;
   qc: ReturnType<typeof useQueryClient>;
 }) {
   const { data, isLoading } = useQuery({
@@ -193,6 +218,36 @@ function AdminInner({
           ))}
         </div>
       )}
+
+      {/* Grant credits */}
+      <div style={{ marginTop: '3rem', padding: '1.5rem', background: '#16161a', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+        <h3 style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Grant Credits</h3>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <input
+            type="email"
+            placeholder="user@email.com"
+            value={creditEmail}
+            onChange={(e) => setCreditEmail(e.target.value)}
+            style={{ flex: 1, minWidth: 220, padding: '9px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: '#0e0e12', color: '#fff', fontSize: 13, outline: 'none' }}
+          />
+          <input
+            type="number"
+            min={1}
+            max={100}
+            value={creditAmount}
+            onChange={(e) => setCreditAmount(e.target.value)}
+            style={{ width: 70, padding: '9px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: '#0e0e12', color: '#fff', fontSize: 13, outline: 'none' }}
+          />
+          <button
+            onClick={grantCredits}
+            disabled={!creditEmail.trim()}
+            style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #ff6b9d, #c084fc)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+          >
+            Grant
+          </button>
+        </div>
+        {creditMsg && <p style={{ marginTop: 10, fontSize: 12, color: creditMsg.startsWith('✅') ? '#4ade80' : '#ef4444' }}>{creditMsg}</p>}
+      </div>
     </div>
   );
 }

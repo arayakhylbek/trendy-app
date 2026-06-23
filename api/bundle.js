@@ -2356,12 +2356,18 @@ Return ONLY valid JSON with these fields:
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: { temperature: 0.9, maxOutputTokens: 1024 }
     });
-    const text = result.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const raw = result.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const cleaned = raw.replace(/```(?:json)?\s*/gi, "").replace(/```/g, "").trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new AppError("GEMINI_PARSE_ERROR", "Failed to parse concept response", 502);
+      throw new AppError("GEMINI_PARSE_ERROR", `No JSON in concept response: ${cleaned.slice(0, 300)}`, 502);
     }
-    const parsed = JSON.parse(jsonMatch[0]);
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch {
+      throw new AppError("GEMINI_PARSE_ERROR", `Invalid concept JSON: ${jsonMatch[0].slice(0, 200)}`, 502);
+    }
     return {
       emoji: parsed.emoji ?? "\u2728",
       label: parsed.label ?? trend.topic,
@@ -3024,6 +3030,25 @@ router8.post("/generate", async (req, res, next) => {
       errors: runData["errors"] ?? null,
       error: runData["error"] ?? null
     });
+  } catch (e) {
+    next(e);
+  }
+});
+router8.post("/users/grant-credits", async (req, res, next) => {
+  try {
+    const { email, credits } = req.body;
+    if (!email || !credits || credits < 1) {
+      throw new AppError("BAD_REQUEST", "email and credits (>0) required", 400);
+    }
+    const snap = await db.collection("users").where("email", "==", email.toLowerCase().trim()).limit(1).get();
+    if (snap.empty) {
+      throw new AppError("NOT_FOUND", `User not found: ${email}`, 404);
+    }
+    const doc = snap.docs[0];
+    const current = doc.data()["generationsUsed"] ?? 0;
+    const newUsed = Math.max(0, current - credits);
+    await doc.ref.update({ generationsUsed: newUsed, updatedAt: (/* @__PURE__ */ new Date()).toISOString() });
+    res.json({ ok: true, email, before: current, after: newUsed, granted: credits });
   } catch (e) {
     next(e);
   }
