@@ -2080,6 +2080,54 @@ var STATIC_TEMPLATES = [
     createdAt: NOW,
     image: "/templates/Gemini_Generated_Image_a3rcpta3rcpta3rc.png",
     prompt: "Cinematic horror movie still inspired by classic slasher films. Subject styled as the iconic final girl \u2014 wide frightened eyes, disheveled hair, torn or blood-splattered clothing. Scene set at night in a dark suburban street, haunted house, or dimly lit corridor. Dramatic chiaroscuro lighting with harsh shadows and a single flickering light source. Color grade is desaturated with deep blues and harsh white highlights \u2014 classic horror film look. The overall atmosphere is terrifying, suspenseful, and cinematic \u2014 like a frame from a 90s horror blockbuster. Hyper-realistic, 4K, horror film cinematography."
+  },
+  {
+    id: "32",
+    emoji: "\u{1F33A}",
+    label: "Maldives Lunch",
+    style: "Luxury",
+    styleName: "Luxury",
+    cat: "aesthetic",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/maldives-lunch.jpg",
+    prompt: "Luxury resort lifestyle photo. Subject seated at an outdoor beachside restaurant table with a plate of fresh sushi, turquoise Maldives ocean and palm trees in the background. Wearing a sleek black swimsuit top and white linen skirt. Warm tropical sunlight, natural glowing skin, effortless beauty. Shot on a bright sunny day with crystal clear water behind. Editorial travel photography, cinematic, 4K."
+  },
+  {
+    id: "33",
+    emoji: "\u{1FAA9}",
+    label: "Pearl Glow",
+    style: "Editorial",
+    styleName: "Editorial",
+    cat: "aesthetic",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/pearl-glow.jpg",
+    prompt: "Elegant editorial portrait. Subject wearing a classic white off-shoulder blouse with layered pearl and gold chain necklaces and a delicate bracelet. Hair loosely pinned up with soft strands falling across the face. Clean light grey studio background, soft diffused lighting that emphasizes skin texture and natural beauty. Intimate, timeless, luxury jewelry campaign aesthetic. High fashion photography, 4K, film grain."
+  },
+  {
+    id: "34",
+    emoji: "\u{1F338}",
+    label: "Flower Field",
+    style: "Romantic",
+    styleName: "Romantic",
+    cat: "aesthetic",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/flower-field.jpg",
+    prompt: "Dreamy romantic portrait of a person lying in a lush green flower field surrounded by blooming pink daisies. Wearing a pink floral ruffled sundress. Flowers tucked into hair, flower-shaped earrings. Close-up face shot looking directly into camera with soft natural expression. Warm golden sunlight filtering through greenery. Soft bokeh background, freckled dewy skin, vibrant yet tender mood. Editorial nature photography, 4K, cinematic."
   }
 ];
 function isFirebaseUnconfigured(e) {
