@@ -4,6 +4,9 @@ import { AppError } from '@trendy/shared';
 const FACE_SWAP_VERSION =
   'cdingram/face-swap:d1d6ea8c8be89d664a07a457526f7128109dee7030fdac424788d762c71ed111';
 
+const CODEFORMER_VERSION =
+  'sczhou/codeformer:27778a621403be737f3b7dc4f1e355f9cc8e856e733b1900a587015f400d0b17';
+
 function getClient(): Replicate {
   const token = process.env['REPLICATE_API_TOKEN'];
   if (!token) throw new AppError('MISSING_CONFIG', 'REPLICATE_API_TOKEN not configured', 500);
@@ -40,16 +43,25 @@ export async function faceSwap(
     toReplicateUrl(replicate, `data:image/jpeg;base64,${userPhotoBase64}`),
   ]);
 
-  const output = await replicate.run(FACE_SWAP_VERSION, {
-    input: {
-      input_image: templateUrl,
-      swap_image: userUrl,
-    },
+  // Step 1: face swap
+  const swapOutput = await replicate.run(FACE_SWAP_VERSION, {
+    input: { input_image: templateUrl, swap_image: userUrl },
   }) as { url(): URL } | string;
+  const swapUrl = typeof swapOutput === 'string' ? swapOutput : swapOutput.url().href;
 
-  const resultUrl = typeof output === 'string' ? output : output.url().href;
+  // Step 2: CodeFormer face restoration — fixes blurry eyes, artifacts, sharpens face
+  const restoredOutput = await replicate.run(CODEFORMER_VERSION, {
+    input: {
+      image: swapUrl,
+      codeformer_fidelity: 0.7,
+      background_enhance: true,
+      face_upsample: true,
+      upscale: 2,
+    },
+  }) as string | { url(): URL };
+  const restoredUrl = typeof restoredOutput === 'string' ? restoredOutput : restoredOutput.url().href;
 
-  const response = await fetch(resultUrl, { signal: AbortSignal.timeout(30000) });
+  const response = await fetch(restoredUrl, { signal: AbortSignal.timeout(30000) });
   if (!response.ok) {
     throw new AppError('REPLICATE_FETCH', `Failed to fetch result: ${response.status}`, 502);
   }
