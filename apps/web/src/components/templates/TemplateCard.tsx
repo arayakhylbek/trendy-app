@@ -41,9 +41,29 @@ export function TemplateCard({ template, onSelect }: Props) {
         </div>
       )}
 
+      {/* Trendy watermark — always visible, subtle */}
+      <div style={{
+        position: 'absolute', bottom: 40, right: 10,
+        fontFamily: '"Playfair Display", Georgia, serif',
+        fontStyle: 'italic', fontWeight: 700, fontSize: 13,
+        background: 'linear-gradient(to right, #f472b6, #a78bfa, #93c5fd)',
+        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text', opacity: 0.45, pointerEvents: 'none',
+        userSelect: 'none',
+      }}>
+        Trendy
+      </div>
+
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
-        <button className="px-4 py-2 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-colors">
-          Try this ✦
+        <button className="px-4 py-2 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-colors flex items-center gap-1.5">
+          Try this
+          <span style={{
+            fontFamily: '"Playfair Display", Georgia, serif',
+            fontStyle: 'italic', fontWeight: 700,
+            background: 'linear-gradient(to right, #f472b6, #a78bfa, #93c5fd)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>Trendy</span>
         </button>
       </div>
 
