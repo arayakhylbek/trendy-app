@@ -50,18 +50,23 @@ export async function faceSwap(
   const swapUrl = typeof swapOutput === 'string' ? swapOutput : swapOutput.url().href;
 
   // Step 2: CodeFormer face restoration — fixes blurry eyes, artifacts, sharpens face
-  const restoredOutput = await replicate.run(CODEFORMER_VERSION, {
-    input: {
-      image: swapUrl,
-      codeformer_fidelity: 0.7,
-      background_enhance: true,
-      face_upsample: true,
-      upscale: 2,
-    },
-  }) as string | { url(): URL };
-  const restoredUrl = typeof restoredOutput === 'string' ? restoredOutput : restoredOutput.url().href;
+  let finalUrl = swapUrl;
+  try {
+    const restoredOutput = await replicate.run(CODEFORMER_VERSION, {
+      input: {
+        image: swapUrl,
+        codeformer_fidelity: 0.7,
+        background_enhance: true,
+        face_upsample: true,
+        upscale: 2,
+      },
+    }) as string | { url(): URL };
+    finalUrl = typeof restoredOutput === 'string' ? restoredOutput : restoredOutput.url().href;
+  } catch {
+    // CodeFormer failed — fall back to raw face-swap result
+  }
 
-  const response = await fetch(restoredUrl, { signal: AbortSignal.timeout(30000) });
+  const response = await fetch(finalUrl, { signal: AbortSignal.timeout(30000) });
   if (!response.ok) {
     throw new AppError('REPLICATE_FETCH', `Failed to fetch result: ${response.status}`, 502);
   }
