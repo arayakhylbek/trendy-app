@@ -2146,8 +2146,17 @@ router3.get("/", async (req, res, next) => {
       }
     }
     const snap = await query.get();
-    const templates = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((t) => t["status"] !== "pending");
-    res.json({ templates });
+    const firestoreTemplates = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((t) => t["status"] !== "pending");
+    const firestoreIds = new Set(firestoreTemplates.map((t) => t.id));
+    let statics = STATIC_TEMPLATES.filter((t) => !firestoreIds.has(t.id));
+    if (typeof cat === "string" && cat !== "all") {
+      if (cat === "trending") {
+        statics = statics.filter((t) => t.isTrending);
+      } else {
+        statics = statics.filter((t) => t.cat === cat);
+      }
+    }
+    return res.json({ templates: [...firestoreTemplates, ...statics] });
   } catch (e) {
     if (isFirebaseUnconfigured(e)) {
       let templates = STATIC_TEMPLATES;
@@ -2161,7 +2170,7 @@ router3.get("/", async (req, res, next) => {
       }
       return res.json({ templates });
     }
-    next(e);
+    return next(e);
   }
 });
 router3.get("/:id", async (req, res, next) => {
@@ -3056,7 +3065,7 @@ router8.delete("/templates/:id", async (req, res, next) => {
     next(e);
   }
 });
-router8.post("/generate", async (req, res, next) => {
+router8.post("/generate", async (_req, res, next) => {
   try {
     const date = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     const runRef = db.collection("generationRuns").doc(`${date}-manual-${Date.now()}`);

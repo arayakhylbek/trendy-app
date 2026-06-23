@@ -15,12 +15,11 @@ router.get('/templates', async (req, res, next) => {
 
     // Fetch all and filter in code — avoids composite index requirement
     const snap = await db.collection('templates').orderBy('createdAt', 'desc').limit(200).get();
-    let templates = snap.docs.map((d) => ({ id: d.id, ...d.data() as Record<string, unknown> }));
+    let templates: Record<string, unknown>[] = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
     if (status === 'pending') {
       templates = templates.filter((t) => t['status'] === 'pending');
     } else if (status === 'published') {
-      // Old templates (no status field) are treated as published
       templates = templates.filter((t) => !t['status'] || t['status'] === 'published');
     }
 
@@ -57,7 +56,7 @@ router.delete('/templates/:id', async (req, res, next) => {
 });
 
 // POST /api/admin/generate — trigger manual generation run (synchronous, waits for completion)
-router.post('/generate', async (req, res, next) => {
+router.post('/generate', async (_req, res, next) => {
   try {
     const date = new Date().toISOString().slice(0, 10);
     const runRef = db.collection('generationRuns').doc(`${date}-manual-${Date.now()}`);

@@ -231,7 +231,6 @@ router.get('/', async (req, res, next) => {
     // Merge: Firestore first (AI-generated), then STATIC_TEMPLATES not already in Firestore
     const firestoreIds = new Set(firestoreTemplates.map((t) => t.id));
     let statics = STATIC_TEMPLATES.filter((t) => !firestoreIds.has(t.id));
-    const { cat } = req.query;
     if (typeof cat === 'string' && cat !== 'all') {
       if (cat === 'trending') {
         statics = statics.filter((t) => t.isTrending);
@@ -240,7 +239,7 @@ router.get('/', async (req, res, next) => {
       }
     }
 
-    res.json({ templates: [...firestoreTemplates, ...statics] });
+    return res.json({ templates: [...firestoreTemplates, ...statics] });
   } catch (e) {
     if (isFirebaseUnconfigured(e)) {
       let templates = STATIC_TEMPLATES;
@@ -254,7 +253,7 @@ router.get('/', async (req, res, next) => {
       }
       return res.json({ templates });
     }
-    next(e);
+    return next(e);
   }
 });
 
