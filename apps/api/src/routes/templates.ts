@@ -224,10 +224,23 @@ router.get('/', async (req, res, next) => {
     }
 
     const snap = await query.get();
-    const templates = snap.docs
+    const firestoreTemplates = snap.docs
       .map((d) => ({ id: d.id, ...d.data() }))
       .filter((t: Record<string, unknown>) => t['status'] !== 'pending');
-    res.json({ templates });
+
+    // Merge: Firestore first (AI-generated), then STATIC_TEMPLATES not already in Firestore
+    const firestoreIds = new Set(firestoreTemplates.map((t) => t.id));
+    let statics = STATIC_TEMPLATES.filter((t) => !firestoreIds.has(t.id));
+    const { cat } = req.query;
+    if (typeof cat === 'string' && cat !== 'all') {
+      if (cat === 'trending') {
+        statics = statics.filter((t) => t.isTrending);
+      } else {
+        statics = statics.filter((t) => t.cat === cat);
+      }
+    }
+
+    res.json({ templates: [...firestoreTemplates, ...statics] });
   } catch (e) {
     if (isFirebaseUnconfigured(e)) {
       let templates = STATIC_TEMPLATES;
