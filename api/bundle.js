@@ -2499,6 +2499,71 @@ var STATIC_TEMPLATES = [
     createdAt: NOW,
     image: "/templates/car-hood.jpg",
     prompt: "Young woman leaning confidently on the hood of a matte dark gray McLaren supercar in a dimly lit underground parking lot at night. Tight black cropped baby tee, loose gray wide-leg cargo pants, hand resting on the car hood. Long dark wavy hair, striking eyes, subtle smirk. Dramatic low-key lighting, deep shadows, car headlights glowing softly. Dark moody color grade, film grain, underground car meet, 4K."
+  },
+  // Backrooms / Liminal Spaces
+  {
+    id: "59",
+    emoji: "\u{1F7E1}",
+    label: "Level 0",
+    style: "Backrooms",
+    styleName: "Backrooms",
+    cat: "backrooms",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/backrooms-level0.jpg",
+    prompt: "Young person standing alone in the iconic Backrooms Level 0 \u2014 infinite corridor of stained yellow wallpaper walls, damp beige carpet floor, endless flickering fluorescent ceiling panels. Casual hoodie and jeans. Uncanny liminal atmosphere, film grain, analog VHS texture, muted yellow-green tones, found-footage style, 4K portrait."
+  },
+  {
+    id: "60",
+    emoji: "\u{1F338}",
+    label: "Flower Hall",
+    style: "Backrooms",
+    styleName: "Backrooms",
+    cat: "backrooms",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/backrooms-flowers.jpg",
+    prompt: "Young woman standing in an abandoned school hallway labeled Room 3-C, floor completely covered in blue and purple wildflowers growing indoors. White windows with curtains, blinding white light at the end of the corridor. White dress, calm expression. Dreamy surreal liminal atmosphere, soft overexposed lighting, film grain, photorealistic, 4K."
+  },
+  {
+    id: "61",
+    emoji: "\u{1F3EC}",
+    label: "Pastel Mall",
+    style: "Backrooms",
+    styleName: "Backrooms",
+    cat: "backrooms",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/backrooms-mall.jpg",
+    prompt: "Young woman standing in a surreal empty retro 90s mall \u2014 arched pink ceramic ceiling, tall blue columns, colorful pastel checkerboard floor tiles, fluorescent dome ceiling lights. Mall stretches endlessly through arches. Y2K outfit, black crop tee, wide-leg jeans. Uncanny valley empty mall, liminal space, analog grain, photorealistic, 4K."
+  },
+  {
+    id: "62",
+    emoji: "\u{1F3D8}\uFE0F",
+    label: "Infinite Suburb",
+    style: "Backrooms",
+    styleName: "Backrooms",
+    cat: "backrooms",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/backrooms-suburb.jpg",
+    prompt: "Young person standing in the middle of an endless suburban street lined with identical colorful pastel houses \u2014 red, pink, green, yellow, blue siding \u2014 stretching to the horizon. Perfectly manicured lawns, no people. Deep blue cloudless sky. Uncanny too-perfect empty neighborhood. Liminal space, digital film grain, photorealistic, 4K."
   }
 ];
 function isFirebaseUnconfigured(e) {

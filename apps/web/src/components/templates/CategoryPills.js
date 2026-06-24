@@ -4,6 +4,7 @@ const CATEGORIES = [
     { id: 'trending', label: '🔥 Trending' },
     { id: 'couple', label: '💑 Couples' },
     { id: 'carfit', label: '🚗 Car Fit' },
+    { id: 'backrooms', label: '🟡 Backrooms' },
     { id: 'kdrama', label: 'K-Drama' },
     { id: 'gossipgirl', label: 'Gossip Girl' },
     { id: 'anime', label: 'Anime' },
