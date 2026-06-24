@@ -162,16 +162,20 @@ Requirements:
         },
       });
       parts.push({
-        text: `Insert the face from the first photo into the second photo (the template scene).
+        text: `You have two images.
+Image 1: a selfie of a real person (their face, skin tone, eye shape, hair).
+Image 2: a styled photo template (background, outfit, lighting, pose, scene).
 
-CRITICAL:
-- The OUTPUT must look like the second photo (same background, same outfit, same pose, same lighting)
-- But the FACE must be replaced with the face from the first photo
-- Match the exact skin tone, eye shape, facial structure, and likeness from the first photo
-- The result should look like the person from photo 1 is posing in the exact scene from photo 2
-- Photorealistic, seamless, professional photo quality
+Generate a single photorealistic portrait of the SAME PERSON from Image 1 placed into the SCENE from Image 2.
 
-Scene context: ${templatePrompt}`,
+Rules:
+- Face: reproduce the person's face from Image 1 as closely as possible — same eye shape, skin tone, facial bone structure, hair color and texture
+- Scene: use the background, lighting, color palette, outfit and pose from Image 2
+- The result must look like a real professional photo of that specific person in that setting
+- Do NOT generate a random or generic face
+- Photorealistic, cinematic, editorial quality
+
+Scene: ${templatePrompt}`,
       });
     } else if (userImageBase64) {
       const base64Data = userImageBase64.replace(/^data:[^;]+;base64,/, '');
