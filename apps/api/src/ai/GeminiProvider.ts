@@ -140,8 +140,7 @@ Requirements:
     return `data:${mimeType};base64,${data}`;
   }
 
-  // Enhances quality of a face-swapped image — fixes seams, improves skin/lighting.
-  // CRITICAL: must not change the face, hair, pose, or composition at all.
+  // Photo retouching after face-swap: improves realism/quality without touching faces.
   async enhanceImage(imageBase64: string): Promise<string> {
     const data = imageBase64.replace(/^data:[^;]+;base64,/, '');
     const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
@@ -149,23 +148,25 @@ Requirements:
         parts: [
           { inlineData: { mimeType: 'image/jpeg', data } },
           {
-            text: `This is a face-swapped portrait photo. Your task is ONLY to improve technical image quality.
+            text: `You are a professional photo retoucher. This image has a face-swap applied to it — the face is already correct and must not be touched.
 
-DO:
-- Fix face-swap seams and blending artifacts around the edges of the face
-- Match the face lighting to the scene's light direction and color temperature
-- Improve skin texture realism (remove plastic/AI look)
-- Sharpen overall image details
-- Improve color grading to cinematic quality
+TASK: Apply post-processing to make the image look more realistic and high quality. Think of this as Lightroom/Photoshop retouching, not image generation.
 
-DO NOT:
-- Change the person's face shape, features, or identity in any way
-- Change the hair color, style, length, or texture
-- Change the pose, composition, framing, or background
-- Add or remove any elements
-- Change who the person is
+WHAT TO IMPROVE:
+- Blend the face edges into the background more naturally (fix face-swap seams)
+- Match the color temperature and lighting of the face to the scene lighting
+- Reduce any "AI look" — make skin texture, hair, and clothing look like a real photo
+- Sharpen details, reduce noise, improve dynamic range
+- Apply subtle cinematic color grading that matches the scene mood
 
-Output the same image, technically improved. Photorealistic, professional photography quality.`,
+ABSOLUTE RULES — DO NOT VIOLATE:
+- Do NOT change the face features, shape, or identity — the face is already correct
+- Do NOT change the hairstyle, hair color, or hair length
+- Do NOT alter the body, clothing, or pose
+- Do NOT move, replace, or modify the background
+- Do NOT regenerate or reimagine anything — only retouch what is there
+
+Output: the same photo, retouched to look like a professional cinematic photograph.`,
           },
         ],
       }],
