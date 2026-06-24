@@ -23,10 +23,10 @@ export function TemplateModal({ template, onClose, onGenerate }: Props) {
     reader.onload = async (ev) => {
       const src = ev.target?.result as string;
       setPreviewSrc(src);
-      setHasPhoto(true);
-      // Compress to max 1024px JPEG before sending to API (keeps payload under 1MB)
+      // Compress first, then mark ready — avoids race condition where Generate is clicked before compression finishes
       const compressed = await compressImage(src, 1024, 0.85);
       setCompressedBase64(compressed.split(',')[1]);
+      setHasPhoto(true);
     };
     reader.readAsDataURL(file);
   }

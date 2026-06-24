@@ -25,6 +25,9 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     let imageDataUri: string;
     let enhancedPrompt = prompt;
 
+    console.log('[generate] imageBase64 present:', !!imageBase64, '| length:', imageBase64?.length ?? 0);
+    console.log('[generate] templateImageSrc:', templateImageSrc, '| templateId:', templateId);
+
     if (imageBase64) {
       // Resolve template image to base64 for Gemini
       let resolvedTemplateBase64: string | undefined = templateBase64;
@@ -57,6 +60,7 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
         ? imageBase64
         : `data:image/jpeg;base64,${imageBase64}`;
 
+      console.log('[generate] templateResolved:', !!resolvedTemplateBase64, '| userPhoto prefix:', userPhotoUri.slice(0, 30));
       // Use Gemini for high-quality face-in-template generation
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, userPhotoUri, resolvedTemplateBase64);
