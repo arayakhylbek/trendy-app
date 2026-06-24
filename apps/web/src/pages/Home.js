@@ -10,6 +10,7 @@ import { AuthModal } from '../components/auth/AuthModal';
 import { useTemplates } from '../hooks/useTemplates';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useAuth } from '../hooks/useAuth';
+import { useSaveGeneration } from '../hooks/useGallery';
 import { apiFetch, ApiError } from '../lib/api';
 import { PLANS } from '@trendy/shared';
 import { PricingSection } from '../components/PricingSection';
@@ -28,6 +29,7 @@ export function Home() {
     const { user } = useAuth();
     const { data: currentUser, refetch: refetchUser } = useCurrentUser();
     const { data: templates = [], isLoading, error } = useTemplates(activeCategory);
+    const saveGen = useSaveGeneration(user?.uid);
     const isOwner = user?.email?.toLowerCase() === 'araiakhylbek78@gmail.com';
     const tier = currentUser?.tier ?? 'free';
     const plan = PLANS[tier];
@@ -52,12 +54,16 @@ export function Home() {
                     imageBase64_2,
                     templateId: template.id,
                     templateImageSrc: template.image,
-                    templateLabel: template.label,
-                    templateEmoji: template.emoji,
                 }),
             });
             setResultImage(result.image);
             refetchUser();
+            saveGen.mutate({
+                imageUrl: result.image,
+                templateLabel: template.label,
+                templateEmoji: template.emoji,
+                createdAt: new Date().toISOString(),
+            });
         }
         catch (e) {
             if (e instanceof ApiError && e.status === 429) {

@@ -3100,35 +3100,13 @@ async function faceSwap(templateInput, userPhotoBase64) {
 
 // apps/api/src/routes/generate.ts
 var router5 = (0, import_express6.Router)();
-async function uploadGenerationImage(dataUri, uid) {
-  const base64 = dataUri.replace(/^data:[^;]+;base64,/, "");
-  const buffer = Buffer.from(base64, "base64");
-  const filename = `generations/${uid}/${Date.now()}.jpg`;
-  const bucket = adminStorage.bucket();
-  const file = bucket.file(filename);
-  await file.save(buffer, {
-    contentType: "image/jpeg",
-    metadata: { cacheControl: "public, max-age=31536000" }
-  });
-  await file.makePublic();
-  return `https://storage.googleapis.com/${bucket.name}/${filename}`;
-}
 router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) => {
   try {
     const parsed = GenerateRequestSchema.safeParse(req.body);
     if (!parsed.success) {
       return next(new ValidationError(parsed.error.message));
     }
-    const {
-      prompt,
-      imageBase64,
-      imageBase64_2,
-      templateBase64,
-      templateId,
-      templateImageSrc,
-      templateLabel,
-      templateEmoji
-    } = parsed.data;
+    const { prompt, imageBase64, imageBase64_2, templateBase64, templateId, templateImageSrc } = parsed.data;
     const appBaseUrl = process.env["APP_BASE_URL"] ?? "https://mytrendy.app";
     let imageDataUri;
     if (imageBase64) {
@@ -3152,14 +3130,7 @@ router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) 
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, void 0, void 0);
     }
-    const imageUrl = await uploadGenerationImage(imageDataUri, req.uid);
-    await db.collection("users").doc(req.uid).collection("generations").add({
-      imageUrl,
-      templateLabel: templateLabel ?? "Generation",
-      templateEmoji: templateEmoji ?? "\u2728",
-      createdAt: (/* @__PURE__ */ new Date()).toISOString()
-    });
-    res.json({ image: imageUrl, prompt });
+    res.json({ image: imageDataUri, prompt });
   } catch (e) {
     try {
       await db.collection("users").doc(req.uid).update({

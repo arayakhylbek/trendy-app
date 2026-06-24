@@ -5,10 +5,12 @@ import {
   orderBy,
   limit,
   getDocs,
+  addDoc,
   deleteDoc,
   doc,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { compressImage } from '../lib/compressImage';
 
 export interface GalleryItem {
   id: string;
@@ -32,6 +34,27 @@ export function useGallery(uid: string | undefined) {
       return snap.docs.map((d) => ({ id: d.id, ...d.data() } as GalleryItem));
     },
     staleTime: 30_000,
+  });
+}
+
+export function useSaveGeneration(uid: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (item: Omit<GalleryItem, 'id'>) => {
+      if (!uid) throw new Error('Not authenticated');
+      // Compress aggressively: 400px max, 0.72 quality → ~40-60 KB base64 (well under Firestore 1MB limit)
+      const compressed = await compressImage(item.imageUrl, 400, 0.72);
+      await addDoc(collection(db, 'users', uid, 'generations'), {
+        ...item,
+        imageUrl: compressed,
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['gallery', uid] });
+    },
+    onError: (err) => {
+      console.error('[gallery] save failed:', err);
+    },
   });
 }
 

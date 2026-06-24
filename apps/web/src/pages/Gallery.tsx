@@ -15,19 +15,11 @@ export function Gallery() {
     return null;
   }
 
-  async function download(item: GalleryItem) {
-    try {
-      const res = await fetch(item.imageUrl);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `trendy-${item.templateLabel.replace(/\s+/g, '-').toLowerCase()}.jpg`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      window.open(item.imageUrl, '_blank');
-    }
+  function download(item: GalleryItem) {
+    const a = document.createElement('a');
+    a.href = item.imageUrl;
+    a.download = `trendy-${item.templateLabel.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+    a.click();
   }
 
   function handleDelete(id: string) {
