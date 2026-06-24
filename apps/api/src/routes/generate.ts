@@ -22,7 +22,6 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     let imageDataUri: string;
 
     if (imageBase64) {
-      // Resolve template image
       let templateInput: string | undefined = templateBase64;
 
       if (!templateInput) {
@@ -47,21 +46,20 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.personalizeImage(swapped, prompt);
     } else {
-      // No selfie — pure Gemini text-to-image
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, undefined, undefined);
     }
 
-    await db
-      .collection('users')
-      .doc(req.uid)
-      .update({
-        generationsUsed: FieldValue.increment(1),
-        updatedAt: new Date().toISOString(),
-      });
-
+    // Quota slot was already reserved atomically in checkQuota
     res.json({ image: imageDataUri, prompt });
   } catch (e) {
+    // Generation failed after quota was reserved — refund the slot
+    try {
+      await db.collection('users').doc(req.uid).update({
+        generationsUsed: FieldValue.increment(-1),
+        updatedAt: new Date().toISOString(),
+      });
+    } catch { /* ignore refund error */ }
     next(e);
   }
 });

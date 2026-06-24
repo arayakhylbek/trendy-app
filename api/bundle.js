@@ -2730,23 +2730,26 @@ var import_firestore2 = require("firebase-admin/firestore");
 var OWNER_EMAIL = "araiakhylbek78@gmail.com";
 async function checkQuota(req, _res, next) {
   try {
-    const snap = await db.collection("users").doc(req.uid).get();
-    if (!snap.exists) {
-      return next(new NotFoundError("User"));
-    }
-    const user = snap.data();
-    if (user["email"]?.toLowerCase() === OWNER_EMAIL) {
-      return next();
-    }
-    const tier = user["tier"] ?? "free";
-    const plan = PLANS[tier] ?? PLANS.free;
-    if (plan.monthlyLimit === Infinity) {
-      return next();
-    }
-    const used = user["generationsUsed"] ?? 0;
-    if (used >= plan.monthlyLimit) {
-      return next(new QuotaExceededError());
-    }
+    const userRef = db.collection("users").doc(req.uid);
+    const allowed = await db.runTransaction(async (t) => {
+      const snap = await t.get(userRef);
+      if (!snap.exists) throw new NotFoundError("User");
+      const user = snap.data();
+      if (user["email"]?.toLowerCase() === OWNER_EMAIL) {
+        return true;
+      }
+      const tier = user["tier"] ?? "free";
+      const plan = PLANS[tier] ?? PLANS.free;
+      if (plan.monthlyLimit === Infinity) return true;
+      const used = user["generationsUsed"] ?? 0;
+      if (used >= plan.monthlyLimit) return false;
+      t.update(userRef, {
+        generationsUsed: used + 1,
+        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+      });
+      return true;
+    });
+    if (!allowed) return next(new QuotaExceededError());
     next();
   } catch (e) {
     next(e);
@@ -3123,12 +3126,15 @@ router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) 
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, void 0, void 0);
     }
-    await db.collection("users").doc(req.uid).update({
-      generationsUsed: import_firestore2.FieldValue.increment(1),
-      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-    });
     res.json({ image: imageDataUri, prompt });
   } catch (e) {
+    try {
+      await db.collection("users").doc(req.uid).update({
+        generationsUsed: import_firestore2.FieldValue.increment(-1),
+        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+      });
+    } catch {
+    }
     next(e);
   }
 });
