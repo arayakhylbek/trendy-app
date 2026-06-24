@@ -9,6 +9,7 @@ export function Admin() {
     const { user, loading } = useAuth();
     const [tab, setTab] = useState('pending');
     const [generating, setGenerating] = useState(false);
+    const [generatingStyled, setGeneratingStyled] = useState(false);
     const [generateMsg, setGenerateMsg] = useState(null);
     const [creditEmail, setCreditEmail] = useState('');
     const [creditAmount, setCreditAmount] = useState('3');
@@ -31,9 +32,9 @@ export function Admin() {
             setCreditMsg(`❌ ${e.message}`);
         }
     }
-    return _jsx(AdminInner, { tab: tab, setTab: setTab, generating: generating, setGenerating: setGenerating, generateMsg: generateMsg, setGenerateMsg: setGenerateMsg, qc: qc, creditEmail: creditEmail, setCreditEmail: setCreditEmail, creditAmount: creditAmount, setCreditAmount: setCreditAmount, creditMsg: creditMsg, grantCredits: grantCredits });
+    return _jsx(AdminInner, { tab: tab, setTab: setTab, generating: generating, setGenerating: setGenerating, generatingStyled: generatingStyled, setGeneratingStyled: setGeneratingStyled, generateMsg: generateMsg, setGenerateMsg: setGenerateMsg, qc: qc, creditEmail: creditEmail, setCreditEmail: setCreditEmail, creditAmount: creditAmount, setCreditAmount: setCreditAmount, creditMsg: creditMsg, grantCredits: grantCredits });
 }
-function AdminInner({ tab, setTab, generating, setGenerating, generateMsg, setGenerateMsg, qc, creditEmail, setCreditEmail, creditAmount, setCreditAmount, creditMsg, grantCredits, }) {
+function AdminInner({ tab, setTab, generating, setGenerating, generatingStyled, setGeneratingStyled, generateMsg, setGenerateMsg, qc, creditEmail, setCreditEmail, creditAmount, setCreditAmount, creditMsg, grantCredits, }) {
     const { data, isLoading } = useQuery({
         queryKey: ['admin-templates', tab],
         queryFn: () => apiFetch(`/api/admin/templates?status=${tab}`),
@@ -46,6 +47,23 @@ function AdminInner({ tab, setTab, generating, setGenerating, generateMsg, setGe
         mutationFn: (id) => apiFetch(`/api/admin/templates/${id}`, { method: 'DELETE' }),
         onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-templates'] }); },
     });
+    async function triggerGenerateStyled() {
+        setGeneratingStyled(true);
+        setGenerateMsg('⏳ Generating styled templates (K-Drama, Anime, Fantasy, Vintage)… ~1 min');
+        try {
+            const result = await apiFetch('/api/admin/generate-styled?count=3', { method: 'POST' });
+            setGenerateMsg(result.generated > 0
+                ? `✅ ${result.generated} styled templates added to Pending!`
+                : `⚠️ 0 generated. ${result.errors?.join(' | ') ?? 'Check logs.'}`);
+            qc.invalidateQueries({ queryKey: ['admin-templates'] });
+        }
+        catch (e) {
+            setGenerateMsg(`❌ ${e.message}`);
+        }
+        finally {
+            setGeneratingStyled(false);
+        }
+    }
     async function triggerGenerate() {
         setGenerating(true);
         setGenerateMsg('⏳ Generating templates… this takes 2–4 min, please wait.');
@@ -66,12 +84,17 @@ function AdminInner({ tab, setTab, generating, setGenerating, generateMsg, setGe
         }
     }
     const templates = data?.templates ?? [];
-    return (_jsxs("div", { style: { maxWidth: 1100, margin: '0 auto', padding: '2rem 1rem' }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: 12 }, children: [_jsxs("div", { children: [_jsx("h1", { style: { fontFamily: '"Playfair Display", serif', fontSize: '1.75rem', fontWeight: 700, color: '#fff', fontStyle: 'italic' }, children: "Template Queue" }), _jsx("p", { style: { color: '#666', fontSize: 13, marginTop: 4 }, children: "Review AI-generated templates before they go live" })] }), _jsx("button", { onClick: triggerGenerate, disabled: generating, style: {
-                            padding: '10px 20px', borderRadius: 12, border: 'none',
-                            background: generating ? '#333' : 'linear-gradient(135deg, #ff6b9d, #c084fc)',
-                            color: generating ? '#888' : '#fff', fontSize: 13, fontWeight: 600,
-                            cursor: generating ? 'default' : 'pointer', fontFamily: '"DM Sans", sans-serif',
-                        }, children: generating ? '⏳ Generating…' : '⚡ Generate Now' })] }), generateMsg && (_jsx("div", { style: { marginBottom: '1.5rem', padding: '12px 16px', borderRadius: 12, background: 'rgba(192,132,252,0.1)', border: '1px solid rgba(192,132,252,0.2)', color: '#c084fc', fontSize: 13 }, children: generateMsg })), _jsx("div", { style: { display: 'flex', gap: 8, marginBottom: '1.5rem' }, children: ['pending', 'published'].map((t) => (_jsxs("button", { onClick: () => setTab(t), style: {
+    return (_jsxs("div", { style: { maxWidth: 1100, margin: '0 auto', padding: '2rem 1rem' }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: 12 }, children: [_jsxs("div", { children: [_jsx("h1", { style: { fontFamily: '"Playfair Display", serif', fontSize: '1.75rem', fontWeight: 700, color: '#fff', fontStyle: 'italic' }, children: "Template Queue" }), _jsx("p", { style: { color: '#666', fontSize: 13, marginTop: 4 }, children: "Review AI-generated templates before they go live" })] }), _jsxs("div", { style: { display: 'flex', gap: 10, flexWrap: 'wrap' }, children: [_jsx("button", { onClick: triggerGenerateStyled, disabled: generatingStyled || generating, style: {
+                                    padding: '10px 20px', borderRadius: 12, border: 'none',
+                                    background: generatingStyled ? '#333' : 'linear-gradient(135deg, #ff6b9d, #c084fc)',
+                                    color: generatingStyled ? '#888' : '#fff', fontSize: 13, fontWeight: 600,
+                                    cursor: (generatingStyled || generating) ? 'default' : 'pointer', fontFamily: '"DM Sans", sans-serif',
+                                }, children: generatingStyled ? '⏳ Generating…' : '🎨 Styled Templates' }), _jsx("button", { onClick: triggerGenerate, disabled: generating || generatingStyled, style: {
+                                    padding: '10px 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)',
+                                    background: 'transparent',
+                                    color: generating ? '#888' : '#aaa', fontSize: 13, fontWeight: 600,
+                                    cursor: (generating || generatingStyled) ? 'default' : 'pointer', fontFamily: '"DM Sans", sans-serif',
+                                }, children: generating ? '⏳ Generating…' : '⚡ Trend-Based' })] })] }), generateMsg && (_jsx("div", { style: { marginBottom: '1.5rem', padding: '12px 16px', borderRadius: 12, background: 'rgba(192,132,252,0.1)', border: '1px solid rgba(192,132,252,0.2)', color: '#c084fc', fontSize: 13 }, children: generateMsg })), _jsx("div", { style: { display: 'flex', gap: 8, marginBottom: '1.5rem' }, children: ['pending', 'published'].map((t) => (_jsxs("button", { onClick: () => setTab(t), style: {
                         padding: '7px 18px', borderRadius: 20, border: '1px solid',
                         borderColor: tab === t ? 'rgba(255,107,157,0.5)' : 'rgba(255,255,255,0.08)',
                         background: tab === t ? 'rgba(255,107,157,0.1)' : 'transparent',

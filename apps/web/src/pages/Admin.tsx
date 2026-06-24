@@ -15,6 +15,7 @@ export function Admin() {
   const { user, loading } = useAuth();
   const [tab, setTab] = useState<TabStatus>('pending');
   const [generating, setGenerating] = useState(false);
+  const [generatingStyled, setGeneratingStyled] = useState(false);
   const [generateMsg, setGenerateMsg] = useState<string | null>(null);
   const [creditEmail, setCreditEmail] = useState('');
   const [creditAmount, setCreditAmount] = useState('3');
@@ -39,17 +40,19 @@ export function Admin() {
     }
   }
 
-  return <AdminInner tab={tab} setTab={setTab} generating={generating} setGenerating={setGenerating} generateMsg={generateMsg} setGenerateMsg={setGenerateMsg} qc={qc} creditEmail={creditEmail} setCreditEmail={setCreditEmail} creditAmount={creditAmount} setCreditAmount={setCreditAmount} creditMsg={creditMsg} grantCredits={grantCredits} />;
+  return <AdminInner tab={tab} setTab={setTab} generating={generating} setGenerating={setGenerating} generatingStyled={generatingStyled} setGeneratingStyled={setGeneratingStyled} generateMsg={generateMsg} setGenerateMsg={setGenerateMsg} qc={qc} creditEmail={creditEmail} setCreditEmail={setCreditEmail} creditAmount={creditAmount} setCreditAmount={setCreditAmount} creditMsg={creditMsg} grantCredits={grantCredits} />;
 }
 
 function AdminInner({
-  tab, setTab, generating, setGenerating, generateMsg, setGenerateMsg, qc,
+  tab, setTab, generating, setGenerating, generatingStyled, setGeneratingStyled, generateMsg, setGenerateMsg, qc,
   creditEmail, setCreditEmail, creditAmount, setCreditAmount, creditMsg, grantCredits,
 }: {
   tab: TabStatus;
   setTab: (t: TabStatus) => void;
   generating: boolean;
   setGenerating: (v: boolean) => void;
+  generatingStyled: boolean;
+  setGeneratingStyled: (v: boolean) => void;
   generateMsg: string | null;
   setGenerateMsg: (v: string | null) => void;
   creditEmail: string;
@@ -76,6 +79,26 @@ function AdminInner({
       apiFetch(`/api/admin/templates/${id}`, { method: 'DELETE' }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-templates'] }); },
   });
+
+  async function triggerGenerateStyled() {
+    setGeneratingStyled(true);
+    setGenerateMsg('⏳ Generating styled templates (K-Drama, Anime, Fantasy, Vintage)… ~1 min');
+    try {
+      const result = await apiFetch<{ generated: number; errors: string[] | null }>(
+        '/api/admin/generate-styled?count=3',
+        { method: 'POST' },
+      );
+      setGenerateMsg(result.generated > 0
+        ? `✅ ${result.generated} styled templates added to Pending!`
+        : `⚠️ 0 generated. ${result.errors?.join(' | ') ?? 'Check logs.'}`
+      );
+      qc.invalidateQueries({ queryKey: ['admin-templates'] });
+    } catch (e) {
+      setGenerateMsg(`❌ ${(e as Error).message}`);
+    } finally {
+      setGeneratingStyled(false);
+    }
+  }
 
   async function triggerGenerate() {
     setGenerating(true);
@@ -111,18 +134,32 @@ function AdminInner({
           </h1>
           <p style={{ color: '#666', fontSize: 13, marginTop: 4 }}>Review AI-generated templates before they go live</p>
         </div>
-        <button
-          onClick={triggerGenerate}
-          disabled={generating}
-          style={{
-            padding: '10px 20px', borderRadius: 12, border: 'none',
-            background: generating ? '#333' : 'linear-gradient(135deg, #ff6b9d, #c084fc)',
-            color: generating ? '#888' : '#fff', fontSize: 13, fontWeight: 600,
-            cursor: generating ? 'default' : 'pointer', fontFamily: '"DM Sans", sans-serif',
-          }}
-        >
-          {generating ? '⏳ Generating…' : '⚡ Generate Now'}
-        </button>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button
+            onClick={triggerGenerateStyled}
+            disabled={generatingStyled || generating}
+            style={{
+              padding: '10px 20px', borderRadius: 12, border: 'none',
+              background: generatingStyled ? '#333' : 'linear-gradient(135deg, #ff6b9d, #c084fc)',
+              color: generatingStyled ? '#888' : '#fff', fontSize: 13, fontWeight: 600,
+              cursor: (generatingStyled || generating) ? 'default' : 'pointer', fontFamily: '"DM Sans", sans-serif',
+            }}
+          >
+            {generatingStyled ? '⏳ Generating…' : '🎨 Styled Templates'}
+          </button>
+          <button
+            onClick={triggerGenerate}
+            disabled={generating || generatingStyled}
+            style={{
+              padding: '10px 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)',
+              background: 'transparent',
+              color: generating ? '#888' : '#aaa', fontSize: 13, fontWeight: 600,
+              cursor: (generating || generatingStyled) ? 'default' : 'pointer', fontFamily: '"DM Sans", sans-serif',
+            }}
+          >
+            {generating ? '⏳ Generating…' : '⚡ Trend-Based'}
+          </button>
+        </div>
       </div>
 
       {generateMsg && (

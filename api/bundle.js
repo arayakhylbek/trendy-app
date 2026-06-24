@@ -2082,6 +2082,86 @@ var STATIC_TEMPLATES = [
     prompt: "Cinematic horror movie still inspired by classic slasher films. Subject styled as the iconic final girl \u2014 wide frightened eyes, disheveled hair, torn or blood-splattered clothing. Scene set at night in a dark suburban street, haunted house, or dimly lit corridor. Dramatic chiaroscuro lighting with harsh shadows and a single flickering light source. Color grade is desaturated with deep blues and harsh white highlights \u2014 classic horror film look. The overall atmosphere is terrifying, suspenseful, and cinematic \u2014 like a frame from a 90s horror blockbuster. Hyper-realistic, 4K, horror film cinematography."
   },
   {
+    id: "35",
+    emoji: "\u{1FA75}",
+    label: "Cyan Editorial",
+    style: "Editorial",
+    styleName: "Editorial",
+    cat: "aesthetic",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/cyan-editorial.jpg",
+    prompt: "Close-up editorial portrait. Subject with flowing auburn brown hair, smoky eye makeup and deep berry lip. Shot against a bold cyan blue geometric background with dramatic shadows. Intense gaze directed slightly upward, confident expression. Soft natural skin texture, fashion magazine quality lighting. High fashion editorial photography, 4K."
+  },
+  {
+    id: "36",
+    emoji: "\u{1F338}",
+    label: "Pink Beauty",
+    style: "Beauty",
+    styleName: "Beauty",
+    cat: "aesthetic",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/pink-beauty.jpg",
+    prompt: "Minimalist beauty portrait. Subject with dark hair swept up in a loose bun with soft curtain bangs framing the face. Wearing gold hoop earrings and a delicate gold chain necklace. Soft pink pastel background, clean natural makeup, dewy skin, golden-brown eyes. Intimate close-up, beauty campaign aesthetic, soft diffused studio lighting. High fashion beauty photography, 4K."
+  },
+  {
+    id: "37",
+    emoji: "\u{1F9E5}",
+    label: "Denim Edge",
+    style: "Street",
+    styleName: "Street",
+    cat: "urban",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/denim-edge.jpg",
+    prompt: "Street fashion portrait. Subject with dramatic dark hair swept up in a tousled updo, wearing a classic blue denim jacket over a white tee and large silver hoop earrings. Soft coral lip, strong brow, intense direct gaze into camera. Muted pink urban wall background. Cool-girl street style meets editorial fashion. Portrait format, natural light, 4K."
+  },
+  {
+    id: "38",
+    emoji: "\u{1F499}",
+    label: "Blue Neon",
+    style: "Futuristic",
+    styleName: "Futuristic",
+    cat: "aesthetic",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/blue-neon.jpg",
+    prompt: "Futuristic studio portrait. Subject with sleek dark hair worn back, wearing a black fitted turtleneck. Face dramatically lit with cool electric blue neon light from one side, creating a striking split-light effect against a soft lavender-grey background. Minimal makeup, clean dewy skin, serene direct expression. Sci-fi editorial aesthetic, cinematic quality, 4K."
+  },
+  {
+    id: "39",
+    emoji: "\u2728",
+    label: "Afro Glow",
+    style: "Artistic",
+    styleName: "Artistic",
+    cat: "aesthetic",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/afro-glow.jpg",
+    prompt: "Artistic beauty portrait. Subject with a voluminous natural afro halo, glowing deep skin, soft golden highlights. Dreamy pink-peach pastel background with soft atmospheric mist at the base. Bare shoulders, no jewellery, natural luminous skin with a subtle sheen. Gazing slightly upward with a contemplative expression. Fine art beauty photography, cinematic, 4K."
+  },
+  {
     id: "32",
     emoji: "\u{1F33A}",
     label: "Maldives Lunch",
@@ -2128,6 +2208,170 @@ var STATIC_TEMPLATES = [
     createdAt: NOW,
     image: "/templates/flower-field.jpg",
     prompt: "Dreamy romantic portrait of a person lying in a lush green flower field surrounded by blooming pink daisies. Wearing a pink floral ruffled sundress. Flowers tucked into hair, flower-shaped earrings. Close-up face shot looking directly into camera with soft natural expression. Warm golden sunlight filtering through greenery. Soft bokeh background, freckled dewy skin, vibrant yet tender mood. Editorial nature photography, 4K, cinematic."
+  },
+  // ── K-Drama (3) ──────────────────────────────────────────────────────────────
+  {
+    id: "40",
+    emoji: "\u{1F327}\uFE0F",
+    label: "Seoul Rain",
+    style: "K-Drama",
+    styleName: "K-Drama",
+    cat: "kdrama",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/kdrama-rain.jpg",
+    prompt: "Cinematic Korean drama scene. Standing on a quiet Seoul street at night in the rain holding a transparent bubble umbrella, pastel trench coat, warm neon CU convenience store signs in Korean glowing behind. Wet pavement reflections, cinematic warm-cool color grade, K-drama lead energy, 4K."
+  },
+  {
+    id: "41",
+    emoji: "\u{1F338}",
+    label: "School Romance",
+    style: "K-Drama",
+    styleName: "K-Drama",
+    cat: "kdrama",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/kdrama-uniform.jpg",
+    prompt: "Korean high school drama aesthetic. Sitting by a large classroom window in a Korean school uniform \u2014 white shirt, navy blazer, plaid skirt. Cherry blossom petals float past the open window. Resting chin on hand, dreamy expression. Warm golden afternoon light, clean pastel tones, K-drama school romance, 4K."
+  },
+  {
+    id: "42",
+    emoji: "\u{1F3EE}",
+    label: "Hanok Night",
+    style: "K-Drama",
+    styleName: "K-Drama",
+    cat: "kdrama",
+    isTrending: false,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/kdrama-hanok.jpg",
+    prompt: "Period Korean drama romantic scene. Traditional pink silk hanbok with gold embroidery, standing in a wooden hanok courtyard with paper lanterns and plum blossom trees in full bloom. Gentle evening light, floating petals, dramatic yet delicate atmosphere. Historical K-drama romance, cinematic 4K."
+  },
+  // ── Anime (1 — others generated via admin panel) ─────────────────────────────
+  {
+    id: "44",
+    emoji: "\u2B50",
+    label: "Magical Girl",
+    style: "Anime",
+    styleName: "Anime",
+    cat: "anime",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/anime-magical.jpg",
+    prompt: "Real-life magical girl cosplay editorial. Stunning pink and lavender pleated skirt outfit, white gloves, star accessories, holding a glowing star wand. Pastel blue and pink swirling background with hanging star lights. Photorealistic professional photography, cinematic lighting, 4K."
+  },
+  // ── Fantasy (3) ──────────────────────────────────────────────────────────────
+  {
+    id: "46",
+    emoji: "\u{1F9DD}",
+    label: "Forest Elf",
+    style: "Fantasy",
+    styleName: "Fantasy",
+    cat: "fantasy",
+    isTrending: false,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/fantasy-elf.jpg",
+    prompt: "High fantasy elven portrait. Silver-blonde hair and pointed ears, intricate flowing emerald green gown with leaf-and-vine embroidery. Enchanted ancient forest with glowing fireflies and bioluminescent flowers behind. Regal posture, intense intelligent eyes. LOTR-level fantasy cinematics, 8K detail."
+  },
+  {
+    id: "47",
+    emoji: "\u{1F52E}",
+    label: "Dark Witch",
+    style: "Fantasy",
+    styleName: "Fantasy",
+    cat: "fantasy",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/fantasy-witch.jpg",
+    prompt: "Dark fantasy witch portrait. Black wavy hair, dramatic black velvet cloak with moon and star embroidery, holding a glowing crystal ball. Mystical tower library with floating candles, ancient spell books and purple magical smoke. Deep violet and gold tones, cinematic dark fantasy, 4K."
+  },
+  {
+    id: "48",
+    emoji: "\u{1F3F0}",
+    label: "Castle Princess",
+    style: "Fantasy",
+    styleName: "Fantasy",
+    cat: "fantasy",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/fantasy-princess.jpg",
+    prompt: "Fairy tale princess on a magical castle balcony at twilight. Ethereal white tulle ball gown with silver embroidery and tiny crystals. Stars and moonlight behind, glowing fireflies around the dress, flowering vines on stone railing. Disney princess meets editorial photography, whimsical, 4K."
+  },
+  // ── Vintage (3) ──────────────────────────────────────────────────────────────
+  {
+    id: "49",
+    emoji: "\u{1FAA9}",
+    label: "70s Soul",
+    style: "Vintage",
+    styleName: "Vintage",
+    cat: "vintage",
+    isTrending: false,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/vintage-70s.jpg",
+    prompt: "1970s fashion portrait. Natural afro hairstyle, bold rust-orange wide-collar blouse, high-waist flared denim jeans, platform heels, hands on hips. Retro living room with yellow-orange geometric wallpaper, lava lamp, vintage record player on a wooden sideboard. Kodachrome film aesthetic, 4K."
+  },
+  {
+    id: "50",
+    emoji: "\u{1F950}",
+    label: "Paris 60s",
+    style: "Vintage",
+    styleName: "Vintage",
+    cat: "vintage",
+    isTrending: false,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/vintage-paris.jpg",
+    prompt: "1960s French New Wave cinema aesthetic. Short chic bob haircut, striped Breton top, high-waist wide-leg trousers, sitting at a Parisian sidewalk caf\xE9 table with espresso. Cobblestone street, classic French cars behind. Black and white film with warm sepia tint, Godard film aesthetic, 4K."
+  },
+  {
+    id: "51",
+    emoji: "\u{1F4FC}",
+    label: "90s Hallway",
+    style: "Vintage",
+    styleName: "Vintage",
+    cat: "vintage",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/vintage-90s.jpg",
+    prompt: "90s nostalgia fashion. Straight-across bangs, butterfly hair clips, slip dress over white t-shirt, chunky platform sneakers. Leaning against a school locker covered in Nirvana and Spice Girls posters and polaroid photos. Warm overexposed film grain, vintage 90s color palette, nostalgic, 4K."
   }
 ];
 function isFirebaseUnconfigured(e) {
@@ -2311,62 +2555,6 @@ async function checkQuota(req, _res, next) {
   }
 }
 
-// apps/api/src/ai/ClaudePromptEnhancer.ts
-var ClaudePromptEnhancer = class {
-  async enhance(basePrompt, imageBase64) {
-    const apiKey = process.env["ANTHROPIC_API_KEY"];
-    if (!apiKey) {
-      return basePrompt;
-    }
-    const messages = [
-      {
-        role: "user",
-        content: imageBase64 ? [
-          {
-            type: "image",
-            source: { type: "base64", media_type: "image/jpeg", data: imageBase64 }
-          },
-          {
-            type: "text",
-            text: `You are an expert AI image generation prompt engineer. The user wants to create a stylized photo using this template:
-
-${basePrompt}
-
-Analyze the uploaded photo and enhance the template prompt to perfectly incorporate the person's features (skin tone, hair color, face shape, etc.) while maintaining the template's artistic style. Return ONLY the enhanced prompt, no explanations.`
-          }
-        ] : [
-          {
-            type: "text",
-            text: `Enhance this AI image generation prompt to be more vivid and detailed while keeping the same style and mood. Return ONLY the enhanced prompt:
-
-${basePrompt}`
-          }
-        ]
-      }
-    ];
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "claude-opus-4-8",
-        max_tokens: 1024,
-        thinking: { type: "adaptive" },
-        messages
-      })
-    });
-    if (!res.ok) {
-      return basePrompt;
-    }
-    const data = await res.json();
-    const textBlock = data.content?.find((b) => b.type === "text");
-    return textBlock?.text ?? basePrompt;
-  }
-};
-
 // apps/api/src/ai/GeminiProvider.ts
 async function geminiPost(endpoint, body) {
   const apiKey = process.env["GEMINI_API_KEY"];
@@ -2436,7 +2624,7 @@ Return ONLY valid JSON with these fields:
   // Generates a template preview image (no user face)
   async generateTemplateImage(concept) {
     const result = await geminiPost(
-      "gemini-2.0-flash-preview-image-generation:generateContent",
+      "gemini-2.5-flash-image:generateContent",
       {
         contents: [
           {
@@ -2473,7 +2661,7 @@ Requirements:
   }
   // Generates a styled template image (with a person, no user face) for face-swap
   async generateTemplateOnly(prompt) {
-    const result = await geminiPost("gemini-2.0-flash-preview-image-generation:generateContent", {
+    const result = await geminiPost("gemini-2.5-flash-image:generateContent", {
       contents: [{
         parts: [{
           text: `Generate a photorealistic styled portrait photo of a person:
@@ -2497,16 +2685,31 @@ Requirements:
     const { mimeType, data } = imagePart.inlineData;
     return `data:${mimeType};base64,${data}`;
   }
+  // Enhances quality of an existing image (after face-swap) without changing the face
+  async enhanceImage(imageBase64) {
+    const data = imageBase64.replace(/^data:[^;]+;base64,/, "");
+    const result = await geminiPost("gemini-2.5-flash-image:generateContent", {
+      contents: [{
+        parts: [
+          { inlineData: { mimeType: "image/jpeg", data } },
+          { text: "Enhance the quality of this portrait photo. Make the skin texture more realistic, sharpen the details, improve lighting and color grading. Keep the face, composition and identity EXACTLY the same. Do not change who the person is. Only improve the visual quality to professional editorial photography level." }
+        ]
+      }],
+      generationConfig: { responseModalities: ["IMAGE", "TEXT"] }
+    });
+    const parts = result.candidates?.[0]?.content?.parts ?? [];
+    const imagePart = parts.find((p) => p.inlineData);
+    if (!imagePart?.inlineData) {
+      return imageBase64;
+    }
+    const { mimeType, data: outData } = imagePart.inlineData;
+    return `data:${mimeType};base64,${outData}`;
+  }
   // Generates a personalized image using both the template image and the user's face photo
   async generateUserImage(templatePrompt, userImageBase64, templateImageBase64) {
     const parts = [];
     if (userImageBase64 && templateImageBase64) {
-      parts.push({
-        inlineData: {
-          mimeType: "image/png",
-          data: templateImageBase64.replace(/^data:[^;]+;base64,/, "")
-        }
-      });
+      const templateMime = templateImageBase64.match(/^data:([^;]+);/)?.[1] ?? "image/jpeg";
       parts.push({
         inlineData: {
           mimeType: "image/jpeg",
@@ -2514,7 +2717,26 @@ Requirements:
         }
       });
       parts.push({
-        text: "Take the first image as the base template. Replace ONLY the face in the first image with the face from the second image. Keep absolutely everything else exactly the same \u2014 same background, same clothes, same pose, same lighting, same composition. Only the face should change. The result must look natural and photorealistic."
+        inlineData: {
+          mimeType: templateMime,
+          data: templateImageBase64.replace(/^data:[^;]+;base64,/, "")
+        }
+      });
+      parts.push({
+        text: `You have two images.
+Image 1: a selfie of a real person (their face, skin tone, eye shape, hair).
+Image 2: a styled photo template (background, outfit, lighting, pose, scene).
+
+Generate a single photorealistic portrait of the SAME PERSON from Image 1 placed into the SCENE from Image 2.
+
+Rules:
+- Face: reproduce the person's face from Image 1 as closely as possible \u2014 same eye shape, skin tone, facial bone structure, hair color and texture
+- Scene: use the background, lighting, color palette, outfit and pose from Image 2
+- The result must look like a real professional photo of that specific person in that setting
+- Do NOT generate a random or generic face
+- Photorealistic, cinematic, editorial quality
+
+Scene: ${templatePrompt}`
       });
     } else if (userImageBase64) {
       const base64Data = userImageBase64.replace(/^data:[^;]+;base64,/, "");
@@ -2547,7 +2769,7 @@ Portrait orientation, cinematic lighting, ultra-detailed.`
       });
     }
     const result = await geminiPost(
-      "gemini-2.0-flash-preview-image-generation:generateContent",
+      "gemini-2.5-flash-image:generateContent",
       {
         contents: [{ parts }],
         generationConfig: { responseModalities: ["IMAGE", "TEXT"] }
@@ -2578,13 +2800,16 @@ function dataUriToBlob(dataUri) {
   return new Blob([bytes], { type: mimeType });
 }
 async function toReplicateUrl(replicate, input) {
-  if (input.startsWith("http")) {
-    return input;
-  }
-  const file = await replicate.files.create(dataUriToBlob(input), {
-    filename: "image.jpg"
-  });
+  if (input.startsWith("http")) return input;
+  const dataUri = input.startsWith("data:") ? input : `data:image/jpeg;base64,${input}`;
+  const file = await replicate.files.create(dataUriToBlob(dataUri), { filename: "image.jpg" });
   return file.urls.get;
+}
+async function fetchResultAsBase64(url) {
+  const response = await fetch(url, { signal: AbortSignal.timeout(6e4) });
+  if (!response.ok) throw new AppError("REPLICATE_FETCH", `Failed to fetch result: ${response.status}`, 502);
+  const buffer = await response.arrayBuffer();
+  return `data:image/jpeg;base64,${Buffer.from(buffer).toString("base64")}`;
 }
 async function faceSwap(templateInput, userPhotoBase64) {
   const replicate = getClient();
@@ -2593,24 +2818,14 @@ async function faceSwap(templateInput, userPhotoBase64) {
     toReplicateUrl(replicate, `data:image/jpeg;base64,${userPhotoBase64}`)
   ]);
   const output = await replicate.run(FACE_SWAP_VERSION, {
-    input: {
-      input_image: templateUrl,
-      swap_image: userUrl
-    }
+    input: { input_image: templateUrl, swap_image: userUrl }
   });
   const resultUrl = typeof output === "string" ? output : output.url().href;
-  const response = await fetch(resultUrl, { signal: AbortSignal.timeout(3e4) });
-  if (!response.ok) {
-    throw new AppError("REPLICATE_FETCH", `Failed to fetch result: ${response.status}`, 502);
-  }
-  const buffer = await response.arrayBuffer();
-  const base64 = Buffer.from(buffer).toString("base64");
-  return `data:image/jpeg;base64,${base64}`;
+  return fetchResultAsBase64(resultUrl);
 }
 
 // apps/api/src/routes/generate.ts
 var router5 = (0, import_express6.Router)();
-var useReplicate = !!process.env["REPLICATE_API_TOKEN"];
 router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) => {
   try {
     const parsed = GenerateRequestSchema.safeParse(req.body);
@@ -2620,34 +2835,31 @@ router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) 
     const { prompt, imageBase64, templateBase64, templateId, templateImageSrc } = parsed.data;
     const appBaseUrl = process.env["APP_BASE_URL"] ?? "https://mytrendy.app";
     let imageDataUri;
-    let enhancedPrompt = prompt;
-    if (imageBase64 && useReplicate) {
-      let templateInput;
-      if (templateBase64) {
-        templateInput = templateBase64;
-      } else if (templateImageSrc?.startsWith("data:")) {
-        templateInput = templateImageSrc;
-      } else if (templateImageSrc && (templateImageSrc.startsWith("/") || templateImageSrc.startsWith("http"))) {
-        templateInput = templateImageSrc.startsWith("http") ? templateImageSrc : `${appBaseUrl}${templateImageSrc}`;
-      } else if (templateId) {
-        const snap = await db.collection("templates").doc(templateId).get();
-        templateInput = snap.data()?.["image"] ?? void 0;
-      }
+    if (imageBase64) {
+      let templateInput = templateBase64;
       if (!templateInput) {
-        throw new AppError("NO_TEMPLATE", "Could not resolve template image", 400);
+        if (templateImageSrc?.startsWith("data:")) {
+          templateInput = templateImageSrc;
+        } else if (templateImageSrc) {
+          templateInput = templateImageSrc.startsWith("http") ? templateImageSrc : `${appBaseUrl}${templateImageSrc}`;
+        } else if (templateId) {
+          const snap = await db.collection("templates").doc(templateId).get();
+          templateInput = snap.data()?.["image"] ?? void 0;
+        }
       }
-      imageDataUri = await faceSwap(templateInput, imageBase64);
-    } else {
-      const enhancer = new ClaudePromptEnhancer();
-      enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
+      if (!templateInput) throw new AppError("NO_TEMPLATE", "Could not resolve template image", 400);
+      const swapped = await faceSwap(templateInput, imageBase64);
       const gemini = new GeminiProvider();
-      imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, templateBase64);
+      imageDataUri = await gemini.enhanceImage(swapped);
+    } else {
+      const gemini = new GeminiProvider();
+      imageDataUri = await gemini.generateUserImage(prompt, void 0, void 0);
     }
     await db.collection("users").doc(req.uid).update({
       generationsUsed: import_firestore2.FieldValue.increment(1),
       updatedAt: (/* @__PURE__ */ new Date()).toISOString()
     });
-    res.json({ image: imageDataUri, prompt: enhancedPrompt });
+    res.json({ image: imageDataUri, prompt });
   } catch (e) {
     next(e);
   }
@@ -3026,6 +3238,24 @@ async function ensureOwner(req, _res, next) {
 }
 
 // apps/api/src/routes/admin.ts
+var STYLED_PROMPTS = [
+  // K-Drama
+  { emoji: "\u{1F327}\uFE0F", label: "Seoul Rain", style: "K-Drama", cat: "kdrama", prompt: "Cinematic live-action Korean drama scene. Real woman standing on a quiet Seoul street at night in the rain holding a transparent bubble umbrella, wearing a soft pastel trench coat. CU convenience store glowing behind with Korean neon signs. Wet cobblestone reflections, warm-cool cinematic color grade. Photorealistic professional photography, not illustration, 4K." },
+  { emoji: "\u{1F338}", label: "School Crush", style: "K-Drama", cat: "kdrama", prompt: "Real-life Korean high school drama. Young woman sitting at a classroom desk by a large window in a Korean navy school uniform with plaid skirt and red bow. Cherry blossom petals falling past the open window behind her. Soft golden afternoon light, dreamy expression. Photorealistic photography, cinematic, 4K." },
+  { emoji: "\u{1F3EE}", label: "Hanbok Evening", style: "K-Drama", cat: "kdrama", prompt: "Photorealistic period K-drama portrait. Woman in a stunning traditional Korean hanbok \u2014 pale pink silk with gold floral embroidery. Standing alone in a wooden hanok courtyard at dusk, paper lanterns glowing around her, plum blossoms behind. Real actress-quality photography, cinematic depth of field, 4K." },
+  // Anime-inspired real-life
+  { emoji: "\u{1F380}", label: "Harajuku Girl", style: "Anime", cat: "anime", prompt: "Photorealistic Harajuku street fashion editorial. Real woman in a bold Harajuku kawaii outfit \u2014 pastel pink layered petticoat skirt, lace-trimmed blouse, platform Mary Janes, giant bow hair accessories. Tokyo Takeshita Street behind her with colorful shops. Real photography, not illustration, editorial fashion, 4K." },
+  { emoji: "\u{1F319}", label: "Cosplay Moon", style: "Anime", cat: "anime", prompt: "High-quality cosplay portrait photoshoot. Real woman in a professional Sailor Moon-inspired costume \u2014 white sailor fuku with blue pleated skirt, red bow, with twin buns hairstyle. Dark starry background with glowing crescent moon. Studio photography, photorealistic, not cartoon, professional cosplay photography, 4K." },
+  { emoji: "\u{1F361}", label: "Matsuri Night", style: "Anime", cat: "anime", prompt: "Real-life Japanese summer festival scene. Young woman in a beautiful floral yukata with obi sash, holding a paper lantern, standing on a festival street lit with rows of orange chochin lanterns at night. Bokeh festival lights behind. Photorealistic photography, warm candlelight tones, cinematic 4K." },
+  // Fantasy
+  { emoji: "\u{1F33F}", label: "Forest Queen", style: "Fantasy", cat: "fantasy", prompt: "Live-action high fantasy portrait. Real woman with silver-white hair wearing an intricate dark green velvet gown with gold leaf embroidery, standing in an ancient enchanted forest at twilight. Glowing golden fireflies and bioluminescent blue flowers surround her. Photorealistic cinematography, not illustration, LOTR film quality, 4K." },
+  { emoji: "\u{1F52E}", label: "Spell Caster", style: "Fantasy", cat: "fantasy", prompt: "Photorealistic dark fantasy portrait. Real woman with long dark hair, wearing a dramatic black velvet cloak with crescent moon and star embroidery, both hands holding a glowing crystal orb with purple magical energy. Ancient candlelit library behind with floating spell books. Real photography with VFX lighting, 4K." },
+  { emoji: "\u{1F98B}", label: "Fairy Wing", style: "Fantasy", cat: "fantasy", prompt: "Photorealistic fairy fantasy portrait. Real woman with flowing auburn hair in an ethereal white and lavender gossamer dress with translucent iridescent fairy wings. Standing in a sunlit meadow full of wildflowers and floating golden dust particles. Real-world photography quality, soft cinematic lighting, 4K." },
+  // Vintage
+  { emoji: "\u{1F576}\uFE0F", label: "70s Disco", style: "Vintage", cat: "vintage", prompt: "Authentic 1970s disco fashion portrait. Real woman in a sparkly gold halter jumpsuit with wide bell-bottoms, big hoop earrings, voluminous blow-dried hair. Standing under a mirror ball in a retro disco club with colorful neon lights. Real photography, warm Kodachrome film grain, 4K." },
+  { emoji: "\u{1F4F8}", label: "Film Noir", style: "Vintage", cat: "vintage", prompt: "1940s film noir photorealistic portrait. Real woman in a classic 1940s look \u2014 red lips, finger-waved hair, black belted trench coat, holding a cigarette. Standing in a rainy city street under a lamppost at night. Black and white with high contrast shadows. Real photography quality, cinematic film noir mood, 4K." },
+  { emoji: "\u{1F33A}", label: "90s Mall", style: "Vintage", cat: "vintage", prompt: "Real 1990s American mall fashion scene. Young woman with feathered hair, wearing a plaid flannel shirt tied at the waist over a floral slip dress, platform sneakers. Leaning against a mall railing with neon store signs behind. Warm over-saturated 90s film photography aesthetic. Real photography, 4K." }
+];
 var router8 = (0, import_express9.Router)();
 router8.use(ensureOwner);
 router8.get("/templates", async (req, res, next) => {
@@ -3087,6 +3317,47 @@ router8.post("/generate", async (_req, res, next) => {
       errors: runData["errors"] ?? null,
       error: runData["error"] ?? null
     });
+  } catch (e) {
+    next(e);
+  }
+});
+router8.post("/generate-styled", async (req, res, next) => {
+  try {
+    const count = Math.min(Number(req.query["count"]) || 3, 6);
+    const gemini = new GeminiProvider();
+    const offset = Math.floor(Date.now() / 1e3) % STYLED_PROMPTS.length;
+    const selected = [];
+    for (let i = 0; i < count; i++) {
+      selected.push(STYLED_PROMPTS[(offset + i) % STYLED_PROMPTS.length]);
+    }
+    let generated = 0;
+    const errors = [];
+    for (const p of selected) {
+      try {
+        const imageDataUri = await gemini.generateTemplateOnly(p.prompt);
+        await db.collection("templates").add({
+          emoji: p.emoji,
+          label: p.label,
+          style: p.style,
+          styleName: p.style,
+          cat: p.cat,
+          prompt: p.prompt,
+          image: imageDataUri,
+          isTrending: false,
+          isNew: true,
+          isPro: false,
+          likes: 0,
+          uses: 0,
+          status: "pending",
+          generatedDate: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+          createdAt: (/* @__PURE__ */ new Date()).toISOString()
+        });
+        generated++;
+      } catch (e) {
+        errors.push(`${p.label}: ${String(e)}`);
+      }
+    }
+    res.json({ ok: true, generated, errors: errors.length ? errors : null });
   } catch (e) {
     next(e);
   }

@@ -298,24 +298,12 @@ const STATIC_TEMPLATES = [
     image: '/templates/kdrama-hanok.jpg',
     prompt: 'Period Korean drama romantic scene. Traditional pink silk hanbok with gold embroidery, standing in a wooden hanok courtyard with paper lanterns and plum blossom trees in full bloom. Gentle evening light, floating petals, dramatic yet delicate atmosphere. Historical K-drama romance, cinematic 4K.',
   },
-  // ── Anime (3) ────────────────────────────────────────────────────────────────
-  {
-    id: '43', emoji: '🎒', label: 'Sailor Class', style: 'Anime', styleName: 'Anime',
-    cat: 'anime', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/anime-school.jpg',
-    prompt: 'Anime aesthetic in real life. Sitting on top of a school desk in a Japanese sailor uniform — white sailor blouse, red bow, dark pleated skirt, white thigh-high socks. Classroom with golden sunset light, cherry blossoms outside the window. Large bright eyes, anime heroine real-life style, 4K.',
-  },
+  // ── Anime (1 — others generated via admin panel) ─────────────────────────────
   {
     id: '44', emoji: '⭐', label: 'Magical Girl', style: 'Anime', styleName: 'Anime',
     cat: 'anime', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
     image: '/templates/anime-magical.jpg',
-    prompt: 'Magical girl transformation in real life. Stunning pink and lavender pleated skirt outfit, white gloves, star accessories, holding a glowing star wand. Pastel blue and pink swirling background with hanging star lights and a glowing magic circle. Sailor Moon energy, dramatic pose, 4K editorial.',
-  },
-  {
-    id: '45', emoji: '🌆', label: 'Tokyo Rooftop', style: 'Anime', styleName: 'Anime',
-    cat: 'anime', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/anime-rooftop.jpg',
-    prompt: 'Anime-style rooftop at sunset. Sitting on a rooftop fence in a Japanese school uniform, wind blowing through hair. Tokyo city skyline and orange-pink sky with Tokyo Tower visible behind, tiny sparkles in the air. Dreamy anime illustration aesthetic rendered in photorealistic style, golden hour, 4K.',
+    prompt: 'Real-life magical girl cosplay editorial. Stunning pink and lavender pleated skirt outfit, white gloves, star accessories, holding a glowing star wand. Pastel blue and pink swirling background with hanging star lights. Photorealistic professional photography, cinematic lighting, 4K.',
   },
   // ── Fantasy (3) ──────────────────────────────────────────────────────────────
   {
