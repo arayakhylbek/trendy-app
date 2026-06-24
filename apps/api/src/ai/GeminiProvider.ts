@@ -160,20 +160,14 @@ Requirements:
         },
       });
       parts.push({
-        text: `You have two images:
-IMAGE 1 is the TEMPLATE — preserve it EXACTLY: the background, scene, location, lighting, outfit, clothing, pose, colors, composition, and every visual detail must remain 100% identical.
-IMAGE 2 is the USER'S FACE — use ONLY their face: eyes, nose, mouth, skin tone, face shape, and facial features.
+        text: `IMAGE 1 is a scene/template photo. IMAGE 2 is a person's face photo.
 
-Your task: Generate a photorealistic image that is pixel-perfect to IMAGE 1 in every detail, but with the face from IMAGE 2 naturally placed where the face is in IMAGE 1.
-
-Strict rules:
-- Background from IMAGE 1: IDENTICAL, do not change anything
-- Clothing and outfit from IMAGE 1: IDENTICAL, do not change
-- Pose and body position from IMAGE 1: IDENTICAL
-- Lighting, colors and mood from IMAGE 1: IDENTICAL
-- ONLY the face is replaced with the face from IMAGE 2
-- Blend the face seamlessly to match IMAGE 1's lighting and skin tones
-- The final result must look like a real professional photograph, not AI-generated`,
+Create a NEW photorealistic portrait photo where:
+- The PERSON from IMAGE 2 (their face, eyes, skin tone, facial features, likeness) is the subject
+- They are shown IN THE SAME SCENE as IMAGE 1: same background, same location, same lighting, same outfit/clothing, same pose, same colors
+- The result looks like the person from IMAGE 2 actually took this photo in that setting
+- Professional photography quality, natural and realistic, not AI-looking
+- The face must clearly resemble the person from IMAGE 2`,
       });
     } else if (userImageBase64) {
       const base64Data = userImageBase64.replace(/^data:[^;]+;base64,/, '');
