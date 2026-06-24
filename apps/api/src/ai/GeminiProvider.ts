@@ -162,40 +162,69 @@ Requirements:
     return `data:${mimeType};base64,${outData}`;
   }
 
-  // Personalizes a face-swapped result: keeps the person's face identical,
-  // but reimagines the scene with a natural variation (pose, angle, expression)
-  // so every user gets a unique output in the same aesthetic.
-  async personalizeImage(faceSwappedBase64: string, templatePrompt: string): Promise<string> {
-    const data = faceSwappedBase64.replace(/^data:[^;]+;base64,/, '');
-    const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
-      contents: [{
-        parts: [
-          { inlineData: { mimeType: 'image/jpeg', data } },
-          {
-            text: `You have a portrait photo where a person's face has been placed into a styled scene.
+  // Personalizes a face-swapped result: keeps the person's face + hair from their
+  // original selfie, reimagines the scene with a natural pose/angle variation.
+  async personalizeImage(
+    faceSwappedBase64: string,
+    templatePrompt: string,
+    userPhotoBase64?: string,
+  ): Promise<string> {
+    const swappedData = faceSwappedBase64.replace(/^data:[^;]+;base64,/, '');
+
+    const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+
+    if (userPhotoBase64) {
+      // Send both images: face-swapped scene + original selfie
+      // Gemini uses the selfie to restore real hair, keeping face identity
+      const selfieData = userPhotoBase64.replace(/^data:[^;]+;base64,/, '');
+      parts.push({ inlineData: { mimeType: 'image/jpeg', data: swappedData } });
+      parts.push({ inlineData: { mimeType: 'image/jpeg', data: selfieData } });
+      parts.push({
+        text: `You have two images:
+- Image 1: a styled scene where a person's face has been inserted via face-swap
+- Image 2: the original selfie of that same person
+
+Your task: generate a fresh, high-quality portrait that combines both.
+
+RULES:
+1. FACE — use the exact face from Image 2 (original selfie): same bone structure, skin tone, eye color, facial features
+2. HAIR — use the exact hair from Image 2 (original selfie): same hair color, length, texture, style. The template's hair should be REPLACED with the user's real hair.
+3. SCENE & STYLE — keep the setting, background, lighting, color palette, and outfit aesthetic from Image 1
+4. VARIATION — add a subtle natural variation: slightly different pose, angle, or expression to make the result feel unique and personal
+5. QUALITY — photorealistic, professional editorial photography, cinematic 4K, beautiful lighting, social-media ready
+
+Scene style reference: ${templatePrompt}
+
+Output a single portrait. The person should look naturally placed in the scene with their real hair and face.`,
+      });
+    } else {
+      // No selfie available — fall back to face-only personalization
+      parts.push({ inlineData: { mimeType: 'image/jpeg', data: swappedData } });
+      parts.push({
+        text: `You have a portrait photo where a person's face has been placed into a styled scene.
 
 Your task: recreate this image as a fresh, high-quality editorial portrait.
 
 RULES:
-1. FACE & IDENTITY — reproduce the person's exact face from this image: same bone structure, skin tone, eye shape, hair color and texture. Do NOT change who this person is.
-2. STYLE & AESTHETIC — keep the same visual aesthetic, setting, lighting mood, color palette, and outfit style shown in the image.
-3. CREATIVE VARIATION — introduce a natural, subtle variation: a slightly different pose, camera angle, expression, or minor scene detail. Make the result feel personal and unique, not a copy.
+1. FACE & IDENTITY — reproduce the person's exact face: same bone structure, skin tone, eye shape, hair color and texture. Do NOT change who this person is.
+2. STYLE & AESTHETIC — keep the same visual aesthetic, setting, lighting mood, color palette, and outfit style.
+3. CREATIVE VARIATION — introduce a natural, subtle variation: slightly different pose, camera angle, or expression.
 4. QUALITY — professional editorial photography, cinematic, 4K, realistic skin texture, beautiful lighting.
 
-Style reference for the scene:
-${templatePrompt}
+Scene style: ${templatePrompt}
 
-Generate a single portrait image. Photorealistic, beautiful, social-media ready.`,
-          },
-        ],
-      }],
+Generate a single portrait. Photorealistic, beautiful, social-media ready.`,
+      });
+    }
+
+    const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
+      contents: [{ parts }],
       generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
     });
 
-    const parts = result.candidates?.[0]?.content?.parts ?? [];
-    const imagePart = parts.find((p) => p.inlineData);
+    const responseParts = result.candidates?.[0]?.content?.parts ?? [];
+    const imagePart = responseParts.find((p) => p.inlineData);
     if (!imagePart?.inlineData) {
-      // Fallback to basic enhancement if personalization fails
       return this.enhanceImage(faceSwappedBase64);
     }
     const { mimeType, data: outData } = imagePart.inlineData;

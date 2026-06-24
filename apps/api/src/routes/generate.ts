@@ -51,10 +51,10 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
         swapped = swapped1;
       }
 
-      // Step 2: Gemini personalization — keeps the face, reimagines scene with natural variation
-      // Every user gets a unique result in the same aesthetic style
+      // Step 2: Gemini personalization — restores user's real hair + face, reimagines scene
+      // Passes original selfie so Gemini can replace template hair with user's actual hair
       const gemini = new GeminiProvider();
-      imageDataUri = await gemini.personalizeImage(swapped, prompt);
+      imageDataUri = await gemini.personalizeImage(swapped, prompt, imageBase64);
     } else {
       // No selfie — Gemini text-to-image
       const gemini = new GeminiProvider();
