@@ -145,8 +145,16 @@ Requirements:
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
 
     if (userImageBase64 && templateImageBase64) {
-      // Detect mime type from data URI header
       const templateMime = templateImageBase64.match(/^data:([^;]+);/)?.[1] ?? 'image/jpeg';
+
+      // USER PHOTO FIRST — Gemini treats first image as the subject to transform
+      parts.push({
+        inlineData: {
+          mimeType: 'image/jpeg',
+          data: userImageBase64.replace(/^data:[^;]+;base64,/, ''),
+        },
+      });
+      // TEMPLATE SECOND — used as style/scene reference
       parts.push({
         inlineData: {
           mimeType: templateMime,
@@ -154,25 +162,15 @@ Requirements:
         },
       });
       parts.push({
-        inlineData: {
-          mimeType: 'image/jpeg',
-          data: userImageBase64.replace(/^data:[^;]+;base64,/, ''),
-        },
-      });
-      parts.push({
-        text: `You are given two photos:
-- Photo 1: a styled template/scene photo (background, location, lighting, outfit, pose)
-- Photo 2: a selfie of the user (their real face, skin tone, eyes, features)
+        text: `Edit the first photo (the person) to place them into the scene from the second photo (the template).
 
-Task: Generate a single high-quality photorealistic portrait where the USER from Photo 2 is placed into the SCENE from Photo 1.
+Keep the person's face, skin tone, eye shape, and facial features EXACTLY as they are in the first photo.
+Transform their surroundings, background, lighting, outfit and pose to match the second photo.
 
-Requirements:
-1. FACE: The face in the output MUST look like the person in Photo 2. Copy their exact facial features, eye shape, skin tone, face structure, and likeness. This is the most important requirement.
-2. SCENE: Use the background, setting, lighting, outfit, pose and colors from Photo 1 as the visual context.
-3. STYLE: The result should look like a professional editorial photo — cinematic quality, sharp focus, realistic skin texture, natural lighting.
-4. Do NOT generate a generic face. The face MUST match Photo 2.
+The result should look like a real professional photo shoot of this exact person in that setting.
+Photorealistic, cinematic quality, sharp focus on face.
 
-Additional scene context: ${templatePrompt}`,
+Scene description: ${templatePrompt}`,
       });
     } else if (userImageBase64) {
       const base64Data = userImageBase64.replace(/^data:[^;]+;base64,/, '');

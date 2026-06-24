@@ -25,31 +25,43 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     let imageDataUri: string;
     let enhancedPrompt = prompt;
 
-    if (imageBase64 && useReplicate) {
-      // Replicate face-swap path — resolve template to a URL or base64
-      let templateInput: string | undefined;
+    if (imageBase64) {
+      // Resolve template image to base64
+      let resolvedTemplateBase64: string | undefined = templateBase64;
 
-      if (templateBase64) {
-        templateInput = templateBase64;
-      } else if (templateImageSrc?.startsWith('data:')) {
-        templateInput = templateImageSrc;
-      } else if (templateImageSrc) {
-        templateInput = templateImageSrc.startsWith('http')
-          ? templateImageSrc
-          : `${appBaseUrl}${templateImageSrc}`;
-      } else if (templateId) {
-        const snap = await db.collection('templates').doc(templateId).get();
-        templateInput = (snap.data()?.['image'] as string | undefined) ?? undefined;
+      if (!resolvedTemplateBase64) {
+        if (templateImageSrc?.startsWith('data:')) {
+          resolvedTemplateBase64 = templateImageSrc;
+        } else if (templateImageSrc) {
+          const url = templateImageSrc.startsWith('http')
+            ? templateImageSrc
+            : `${appBaseUrl}${templateImageSrc}`;
+          const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
+          if (resp.ok) {
+            const buf = await resp.arrayBuffer();
+            const mime = resp.headers.get('content-type') ?? 'image/jpeg';
+            resolvedTemplateBase64 = `data:${mime};base64,${Buffer.from(buf).toString('base64')}`;
+          }
+        } else if (templateId) {
+          const snap = await db.collection('templates').doc(templateId).get();
+          resolvedTemplateBase64 = (snap.data()?.['image'] as string | undefined) ?? undefined;
+        }
       }
 
-      if (!templateInput) throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
-      imageDataUri = await faceSwap(templateInput, imageBase64);
-    } else {
-      // Gemini fallback — text-to-image or no Replicate token
-      const enhancer = new ClaudePromptEnhancer();
-      enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
+      if (!resolvedTemplateBase64) throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
+
+      const userPhotoUri = imageBase64.startsWith('data:')
+        ? imageBase64
+        : `data:image/jpeg;base64,${imageBase64}`;
+
       const gemini = new GeminiProvider();
-      imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, templateBase64);
+      imageDataUri = await gemini.generateUserImage(prompt, userPhotoUri, resolvedTemplateBase64);
+    } else {
+      // No user photo — text-to-image
+      const enhancer = new ClaudePromptEnhancer();
+      enhancedPrompt = await enhancer.enhance(prompt, undefined);
+      const gemini = new GeminiProvider();
+      imageDataUri = await gemini.generateUserImage(enhancedPrompt, undefined, templateBase64);
     }
 
     await db
