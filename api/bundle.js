@@ -2926,42 +2926,44 @@ Output: the same photo, retouched to look like a professional cinematic photogra
     const { mimeType, data: outData } = imagePart.inlineData;
     return `data:${mimeType};base64,${outData}`;
   }
-  // Personalizes a face-swapped result: keeps the person's face + hair from their
-  // original selfie, reimagines the scene with a natural pose/angle variation.
-  async personalizeImage(faceSwappedBase64, templatePrompt, userPhotoBase64) {
+  async personalizeImage(faceSwappedBase64, templatePrompt, _userPhotoBase64) {
     const swappedData = faceSwappedBase64.replace(/^data:[^;]+;base64,/, "");
+    const POSES = [
+      "body turned 3/4 to the left, face looking back over the left shoulder toward the camera, confident gaze",
+      "body turned 3/4 to the right, chin slightly raised, eyes directed straight at camera with a soft expression",
+      "slight side profile facing right, face angled toward camera, hair falling naturally to one side",
+      "facing camera directly, one hand lightly touching hair, relaxed candid expression",
+      "body angled left, weight on back foot, eyes looking at camera with a calm confident look",
+      "leaning slightly forward toward camera, intimate close framing, direct eye contact",
+      "low angle shot looking slightly upward at subject, subject looking down at camera with calm expression",
+      "body turned away slightly, glancing back at camera over the shoulder with a natural expression"
+    ];
+    const pose = POSES[Math.floor(Math.random() * POSES.length)];
     const parts = [];
     parts.push({ inlineData: { mimeType: "image/jpeg", data: swappedData } });
     parts.push({
-      text: `You are given a portrait photo where a specific person's face has been placed into a styled scene.
+      text: `You are given a portrait photo where a person's face has been placed into a styled scene.
 
-YOUR TASK: Produce a higher quality version of this exact photo with a subtle creative variation.
+YOUR TASK: Recreate this as a new high-quality editorial portrait \u2014 same person, same scene style, but with a COMPLETELY DIFFERENT pose and camera angle.
 
-FACE \u2014 THIS IS THE MOST IMPORTANT RULE:
-- The person's face in the input is the CORRECT face. Reproduce it with 100% identity accuracy.
-- Same skin tone, eye shape, nose, lips, bone structure, jawline. Do NOT invent or alter facial features.
-- Same hair color, length and texture as shown in the input image.
+\u2501\u2501\u2501 FACE IDENTITY (most important) \u2501\u2501\u2501
+\u2022 Reproduce this exact person's face: same skin tone, eye shape, nose, lips, jawline, bone structure
+\u2022 Keep same hair color, length, and texture from the input
+\u2022 The person must be 100% recognizable as the same individual
 
-QUALITY IMPROVEMENTS TO MAKE:
-- Fix any face-swap blending artifacts or seams around the face edges
-- Match the face lighting to the scene's light direction and color temperature
-- Make skin texture look realistic (not plastic or AI-generated)
-- Improve sharpness, reduce noise, apply cinematic color grading
-- Make the person look naturally integrated into the scene
+\u2501\u2501\u2501 REQUIRED POSE \u2014 YOU MUST USE THIS EXACTLY \u2501\u2501\u2501
+\u2192 ${pose}
+\u2022 The pose in the input photo must NOT be copied \u2014 use the new pose above
+\u2022 This is mandatory, not optional
 
-CREATIVE VARIATION (subtle only):
-- Slightly adjust the pose, body angle, or camera framing
-- Small change in expression (e.g. slight smile vs neutral)
-- This makes each person's result feel unique
+\u2501\u2501\u2501 SCENE & QUALITY \u2501\u2501\u2501
+\u2022 Same background, setting, atmosphere, outfit style, and lighting mood as the input
+\u2022 Fix any face-swap blending seams, match face lighting to scene
+\u2022 Photorealistic skin, cinematic color grade, 4K quality
 
-KEEP UNCHANGED:
-- The background, setting, and environment
-- The overall outfit and style
-- The person's identity and appearance
+Scene: ${templatePrompt}
 
-Scene context: ${templatePrompt}
-
-Output: a single photorealistic portrait, cinematic quality, 4K. The person must be clearly recognizable as the same individual from the input.`
+Output: one portrait. New pose. Same person. Same scene.`
     });
     const result = await geminiPost("gemini-2.5-flash-image:generateContent", {
       contents: [{ parts }],
