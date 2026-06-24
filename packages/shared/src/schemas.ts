@@ -58,6 +58,8 @@ export const GenerateRequestSchema = z.object({
   templateBase64: z.string().optional(),
   templateId: z.string().optional(),
   templateImageSrc: z.string().optional(),
+  templateLabel: z.string().optional(),
+  templateEmoji: z.string().optional(),
 });
 
 export type UserDoc = z.infer<typeof UserDocSchema>;

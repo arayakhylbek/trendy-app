@@ -5,11 +5,20 @@ export function GalleryModal({ uid, onClose }) {
     const { data: items = [], isLoading } = useGallery(uid);
     const deleteMut = useDeleteGeneration(uid);
     const [preview, setPreview] = useState(null);
-    function download(item) {
-        const a = document.createElement('a');
-        a.href = item.imageBase64;
-        a.download = `trendy-${item.templateLabel.replace(/\s+/g, '-').toLowerCase()}.jpg`;
-        a.click();
+    async function download(item) {
+        try {
+            const res = await fetch(item.imageUrl);
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `trendy-${item.templateLabel.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        catch {
+            window.open(item.imageUrl, '_blank');
+        }
     }
     function handleDelete(id) {
         deleteMut.mutate(id);
@@ -55,7 +64,7 @@ export function GalleryModal({ uid, onClose }) {
                     display: 'flex', flexDirection: 'column',
                     alignItems: 'center', justifyContent: 'center',
                     padding: '1rem', gap: 16,
-                }, children: [_jsx("img", { src: preview.imageBase64, alt: preview.templateLabel, onClick: (e) => e.stopPropagation(), style: {
+                }, children: [_jsx("img", { src: preview.imageUrl, alt: preview.templateLabel, onClick: (e) => e.stopPropagation(), style: {
                             maxWidth: '90vw', maxHeight: '75vh',
                             borderRadius: 20, objectFit: 'contain',
                             boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
@@ -75,7 +84,7 @@ function GalleryCard({ item, onPreview, onDownload, onDelete, deleting, }) {
             transform: hovered ? 'translateY(-4px)' : 'none',
             boxShadow: hovered ? '0 16px 40px rgba(0,0,0,0.5)' : 'none',
             cursor: 'pointer',
-        }, children: [_jsxs("div", { onClick: onPreview, style: { position: 'relative', aspectRatio: '3/4', overflow: 'hidden' }, children: [_jsx("img", { src: item.imageBase64, alt: item.templateLabel, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }), hovered && (_jsx("div", { style: {
+        }, children: [_jsxs("div", { onClick: onPreview, style: { position: 'relative', aspectRatio: '3/4', overflow: 'hidden' }, children: [_jsx("img", { src: item.imageUrl, alt: item.templateLabel, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }), hovered && (_jsx("div", { style: {
                             position: 'absolute', inset: 0,
                             background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)',
                             display: 'flex', alignItems: 'flex-end', padding: 10,

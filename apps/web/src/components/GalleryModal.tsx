@@ -11,11 +11,19 @@ export function GalleryModal({ uid, onClose }: Props) {
   const deleteMut = useDeleteGeneration(uid);
   const [preview, setPreview] = useState<GalleryItem | null>(null);
 
-  function download(item: GalleryItem) {
-    const a = document.createElement('a');
-    a.href = item.imageBase64;
-    a.download = `trendy-${item.templateLabel.replace(/\s+/g, '-').toLowerCase()}.jpg`;
-    a.click();
+  async function download(item: GalleryItem) {
+    try {
+      const res = await fetch(item.imageUrl);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `trendy-${item.templateLabel.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(item.imageUrl, '_blank');
+    }
   }
 
   function handleDelete(id: string) {
@@ -136,7 +144,7 @@ export function GalleryModal({ uid, onClose }: Props) {
           }}
         >
           <img
-            src={preview.imageBase64}
+            src={preview.imageUrl}
             alt={preview.templateLabel}
             onClick={(e) => e.stopPropagation()}
             style={{
@@ -200,7 +208,7 @@ function GalleryCard({
         style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden' }}
       >
         <img
-          src={item.imageBase64}
+          src={item.imageUrl}
           alt={item.templateLabel}
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
         />

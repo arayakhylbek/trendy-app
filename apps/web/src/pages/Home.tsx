@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CategoryPills } from '../components/templates/CategoryPills';
 import { TemplateGrid } from '../components/templates/TemplateGrid';
@@ -9,7 +9,6 @@ import { AuthModal } from '../components/auth/AuthModal';
 import { useTemplates } from '../hooks/useTemplates';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useAuth } from '../hooks/useAuth';
-import { useSaveGeneration } from '../hooks/useGallery';
 import { apiFetch, ApiError } from '../lib/api';
 import { PLANS } from '@trendy/shared';
 import type { Template } from '@trendy/shared';
@@ -23,7 +22,6 @@ function scrollToPricing() {
 export function Home() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
-  const [, setPendingTemplate] = useState<Template | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
@@ -32,8 +30,6 @@ export function Home() {
   const { user } = useAuth();
   const { data: currentUser, refetch: refetchUser } = useCurrentUser();
   const { data: templates = [], isLoading, error } = useTemplates(activeCategory);
-  const saveGen = useSaveGeneration(user?.uid);
-  const savingRef = useRef<Promise<void> | null>(null);
 
   const isOwner = user?.email?.toLowerCase() === 'araiakhylbek78@gmail.com';
   const tier = currentUser?.tier ?? 'free';
@@ -51,7 +47,6 @@ export function Home() {
       return;
     }
 
-    setPendingTemplate(template);
     setIsGenerating(true);
     try {
       const result = await apiFetch<{ image: string }>('/api/generate', {
@@ -62,17 +57,12 @@ export function Home() {
           imageBase64_2,
           templateId: template.id,
           templateImageSrc: template.image,
+          templateLabel: template.label,
+          templateEmoji: template.emoji,
         }),
       });
       setResultImage(result.image);
       refetchUser();
-
-      savingRef.current = saveGen.mutateAsync({
-        imageBase64: result.image,
-        templateLabel: template.label,
-        templateEmoji: template.emoji,
-        createdAt: new Date().toISOString(),
-      }).catch((err) => { console.error('[gallery] save error:', err); });
     } catch (e) {
       if (e instanceof ApiError && e.status === 429) {
         scrollToPricing();
@@ -81,7 +71,6 @@ export function Home() {
       }
     } finally {
       setIsGenerating(false);
-      setPendingTemplate(null);
     }
   }
 
@@ -180,9 +169,8 @@ export function Home() {
           imageUrl={resultImage}
           onClose={() => setResultImage(null)}
           onNew={() => setResultImage(null)}
-          onViewGallery={async () => {
+          onViewGallery={() => {
             setResultImage(null);
-            await savingRef.current;
             navigate('/gallery');
           }}
         />

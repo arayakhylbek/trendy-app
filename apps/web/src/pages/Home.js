@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CategoryPills } from '../components/templates/CategoryPills';
 import { TemplateGrid } from '../components/templates/TemplateGrid';
@@ -10,7 +10,6 @@ import { AuthModal } from '../components/auth/AuthModal';
 import { useTemplates } from '../hooks/useTemplates';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useAuth } from '../hooks/useAuth';
-import { useSaveGeneration } from '../hooks/useGallery';
 import { apiFetch, ApiError } from '../lib/api';
 import { PLANS } from '@trendy/shared';
 import { PricingSection } from '../components/PricingSection';
@@ -21,7 +20,6 @@ function scrollToPricing() {
 export function Home() {
     const [activeCategory, setActiveCategory] = useState('all');
     const [selectedTemplate, setSelectedTemplate] = useState(null);
-    const [, setPendingTemplate] = useState(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [resultImage, setResultImage] = useState(null);
     const [showAuth, setShowAuth] = useState(false);
@@ -30,8 +28,6 @@ export function Home() {
     const { user } = useAuth();
     const { data: currentUser, refetch: refetchUser } = useCurrentUser();
     const { data: templates = [], isLoading, error } = useTemplates(activeCategory);
-    const saveGen = useSaveGeneration(user?.uid);
-    const savingRef = useRef(null);
     const isOwner = user?.email?.toLowerCase() === 'araiakhylbek78@gmail.com';
     const tier = currentUser?.tier ?? 'free';
     const plan = PLANS[tier];
@@ -46,7 +42,6 @@ export function Home() {
             scrollToPricing();
             return;
         }
-        setPendingTemplate(template);
         setIsGenerating(true);
         try {
             const result = await apiFetch('/api/generate', {
@@ -57,16 +52,12 @@ export function Home() {
                     imageBase64_2,
                     templateId: template.id,
                     templateImageSrc: template.image,
+                    templateLabel: template.label,
+                    templateEmoji: template.emoji,
                 }),
             });
             setResultImage(result.image);
             refetchUser();
-            savingRef.current = saveGen.mutateAsync({
-                imageBase64: result.image,
-                templateLabel: template.label,
-                templateEmoji: template.emoji,
-                createdAt: new Date().toISOString(),
-            }).catch((err) => { console.error('[gallery] save error:', err); });
         }
         catch (e) {
             if (e instanceof ApiError && e.status === 429) {
@@ -78,7 +69,6 @@ export function Home() {
         }
         finally {
             setIsGenerating(false);
-            setPendingTemplate(null);
         }
     }
     return (_jsxs(_Fragment, { children: [_jsxs("main", { className: "max-w-6xl mx-auto px-4 py-8", children: [_jsxs("div", { className: "text-center mb-12", children: [_jsxs("h1", { className: "font-display text-5xl sm:text-6xl font-bold text-white mb-4", children: ["Your photo,", ' ', _jsx("span", { className: "bg-gradient-accent bg-clip-text text-transparent italic", children: "any vibe." })] }), _jsx("p", { className: "text-text-muted text-lg max-w-md mx-auto", children: "Fresh AI-generated templates every day from the latest trends." }), user && (_jsx("button", { onClick: () => navigate('/gallery'), style: {
@@ -109,9 +99,8 @@ export function Home() {
                             } }) }))] }), _jsx(PricingSection, { onUpgrade: scrollToPricing, onNeedAuth: () => setShowAuth(true) }), selectedTemplate && (_jsx(TemplateModal, { template: selectedTemplate, onClose: () => setSelectedTemplate(null), onGenerate: (t, img, img2) => {
                     setSelectedTemplate(null);
                     handleGenerate(t, img, img2);
-                } })), _jsx(CatLoadingScreen, { visible: isGenerating }), resultImage && (_jsx(ResultModal, { imageUrl: resultImage, onClose: () => setResultImage(null), onNew: () => setResultImage(null), onViewGallery: async () => {
+                } })), _jsx(CatLoadingScreen, { visible: isGenerating }), resultImage && (_jsx(ResultModal, { imageUrl: resultImage, onClose: () => setResultImage(null), onNew: () => setResultImage(null), onViewGallery: () => {
                     setResultImage(null);
-                    await savingRef.current;
                     navigate('/gallery');
                 } })), showAuth && _jsx(AuthModal, { onClose: () => setShowAuth(false) }), showUpgrade && _jsx(UpgradeModal, { onClose: () => setShowUpgrade(false) })] }));
 }
