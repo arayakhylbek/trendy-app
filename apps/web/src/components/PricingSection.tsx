@@ -10,7 +10,7 @@ interface Props {
 const FEATURES = {
   free: ['2 AI photo generations', 'All 8 templates', 'Standard quality', 'No watermark removal', 'Priority processing'],
   lite: ['10 generations / month', 'All templates + new drops', 'HD quality output', 'No watermark', 'Priority processing'],
-  pro:  ['30 generations / month', 'All templates + early access', '4K quality output', 'No watermark', 'Priority processing'],
+  pro:  ['10 generations / month', 'All templates + early access', '4K quality output', 'No watermark', 'Priority processing'],
 };
 
 const DISABLED = {
@@ -105,11 +105,11 @@ export function PricingSection({ onNeedAuth }: Props) {
           <PopularBadge />
           <PlanName>Lite</PlanName>
           <PriceRow>
-            <OldPrice>$3.99</OldPrice>
-            <BigPrice>$2.99</BigPrice>
+            <OldPrice>$2.99</OldPrice>
+            <BigPrice>$1.99</BigPrice>
           </PriceRow>
           <Per>/ mo</Per>
-          <PromoBadge>Limited time — 25% off</PromoBadge>
+          <PromoBadge>Limited time — 33% off</PromoBadge>
           <Desc>For the casual creator who posts regularly.</Desc>
           <FeatureList features={FEATURES.lite} disabled={DISABLED.lite} />
           <GradientButton onClick={() => handleCheckout('lite')} disabled={loading === 'lite'}>
@@ -121,11 +121,11 @@ export function PricingSection({ onNeedAuth }: Props) {
         <Card>
           <PlanName>Pro</PlanName>
           <PriceRow>
-            <OldPrice>$6.99</OldPrice>
-            <BigPrice>$4.99</BigPrice>
+            <OldPrice>$4.99</OldPrice>
+            <BigPrice>$2.99</BigPrice>
           </PriceRow>
           <Per>/ mo</Per>
-          <PromoBadge>Limited time — 30% off</PromoBadge>
+          <PromoBadge>Limited time — 40% off</PromoBadge>
           <Desc>For the serious creator who posts every day.</Desc>
           <FeatureList features={FEATURES.pro} disabled={DISABLED.pro} />
           <DarkButton onClick={() => handleCheckout('pro')} disabled={loading === 'pro'}>
