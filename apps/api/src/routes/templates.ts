@@ -375,6 +375,19 @@ export const STATIC_TEMPLATES = [
     image: '/templates/couple-hug.jpg',
     prompt: 'Romantic couple portrait. Woman hugging man from behind, arms around his shoulders, both smiling at camera. Hilltop at golden hour with glowing city skyline. Casual stylish outfits. Both faces clearly visible. Cinematic color grade, professional photography, 4K.',
   },
+  // Car meet
+  {
+    id: '57', emoji: '🚗', label: 'JDM Sit', style: 'Car Fit', styleName: 'Car Fit',
+    cat: 'carfit', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/car-sit.jpg',
+    prompt: 'Young woman sitting on the ground in an underground parking garage, leaning against the front bumper of a lowered blue JDM Subaru sport car. White fitted tank top, baggy wide-leg dark blue jeans, black sneakers. Long straight dark hair, relaxed expression looking at camera. Moody dim parking garage fluorescent lighting. Dark blue teal color palette, film grain, underground car culture, 4K portrait.',
+  },
+  {
+    id: '58', emoji: '🏎️', label: 'Supercar Hood', style: 'Car Fit', styleName: 'Car Fit',
+    cat: 'carfit', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/car-hood.jpg',
+    prompt: 'Young woman leaning confidently on the hood of a matte dark gray McLaren supercar in a dimly lit underground parking lot at night. Tight black cropped baby tee, loose gray wide-leg cargo pants, hand resting on the car hood. Long dark wavy hair, striking eyes, subtle smirk. Dramatic low-key lighting, deep shadows, car headlights glowing softly. Dark moody color grade, film grain, underground car meet, 4K.',
+  },
 ];
 
 function isFirebaseUnconfigured(e: unknown): boolean {

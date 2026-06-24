@@ -3,6 +3,7 @@ const CATEGORIES = [
     { id: 'all', label: 'All' },
     { id: 'trending', label: '🔥 Trending' },
     { id: 'couple', label: '💑 Couples' },
+    { id: 'carfit', label: '🚗 Car Fit' },
     { id: 'kdrama', label: 'K-Drama' },
     { id: 'gossipgirl', label: 'Gossip Girl' },
     { id: 'anime', label: 'Anime' },
