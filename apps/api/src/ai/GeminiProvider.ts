@@ -145,10 +145,11 @@ Requirements:
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
 
     if (userImageBase64 && templateImageBase64) {
-      // Face-swap: send template image first, then user face image
+      // Detect mime type from data URI header
+      const templateMime = templateImageBase64.match(/^data:([^;]+);/)?.[1] ?? 'image/jpeg';
       parts.push({
         inlineData: {
-          mimeType: 'image/png',
+          mimeType: templateMime,
           data: templateImageBase64.replace(/^data:[^;]+;base64,/, ''),
         },
       });
@@ -159,7 +160,20 @@ Requirements:
         },
       });
       parts.push({
-        text: 'Take the first image as the base template. Replace ONLY the face in the first image with the face from the second image. Keep absolutely everything else exactly the same — same background, same clothes, same pose, same lighting, same composition. Only the face should change. The result must look natural and photorealistic.',
+        text: `You have two images:
+IMAGE 1 is the TEMPLATE — preserve it EXACTLY: the background, scene, location, lighting, outfit, clothing, pose, colors, composition, and every visual detail must remain 100% identical.
+IMAGE 2 is the USER'S FACE — use ONLY their face: eyes, nose, mouth, skin tone, face shape, and facial features.
+
+Your task: Generate a photorealistic image that is pixel-perfect to IMAGE 1 in every detail, but with the face from IMAGE 2 naturally placed where the face is in IMAGE 1.
+
+Strict rules:
+- Background from IMAGE 1: IDENTICAL, do not change anything
+- Clothing and outfit from IMAGE 1: IDENTICAL, do not change
+- Pose and body position from IMAGE 1: IDENTICAL
+- Lighting, colors and mood from IMAGE 1: IDENTICAL
+- ONLY the face is replaced with the face from IMAGE 2
+- Blend the face seamlessly to match IMAGE 1's lighting and skin tones
+- The final result must look like a real professional photograph, not AI-generated`,
       });
     } else if (userImageBase64) {
       const base64Data = userImageBase64.replace(/^data:[^;]+;base64,/, '');
