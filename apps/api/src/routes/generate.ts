@@ -6,6 +6,7 @@ import { rateLimit } from '../middleware/rateLimit.js';
 import { db } from '../lib/firebase.js';
 import { GenerateRequestSchema, ValidationError, AppError } from '@trendy/shared';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
+import { faceSwap } from '../services/replicateService.js';
 
 const router: ReturnType<typeof Router> = Router();
 
@@ -21,38 +22,27 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     let imageDataUri: string;
 
     if (imageBase64) {
-      // Resolve template image
-      let resolvedTemplateBase64: string | undefined = templateBase64;
+      // Resolve template to URL or data URI for Replicate
+      let templateInput: string | undefined = templateBase64;
 
-      if (!resolvedTemplateBase64) {
+      if (!templateInput) {
         if (templateImageSrc?.startsWith('data:')) {
-          resolvedTemplateBase64 = templateImageSrc;
+          templateInput = templateImageSrc;
         } else if (templateImageSrc) {
-          const url = templateImageSrc.startsWith('http')
+          templateInput = templateImageSrc.startsWith('http')
             ? templateImageSrc
             : `${appBaseUrl}${templateImageSrc}`;
-          const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
-          if (resp.ok) {
-            const buf = await resp.arrayBuffer();
-            const mime = resp.headers.get('content-type') ?? 'image/jpeg';
-            resolvedTemplateBase64 = `data:${mime};base64,${Buffer.from(buf).toString('base64')}`;
-          }
         } else if (templateId) {
           const snap = await db.collection('templates').doc(templateId).get();
-          resolvedTemplateBase64 = (snap.data()?.['image'] as string | undefined) ?? undefined;
+          templateInput = (snap.data()?.['image'] as string | undefined) ?? undefined;
         }
       }
 
-      if (!resolvedTemplateBase64) throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
+      if (!templateInput) throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
 
-      const userPhotoUri = imageBase64.startsWith('data:')
-        ? imageBase64
-        : `data:image/jpeg;base64,${imageBase64}`;
-
-      const gemini = new GeminiProvider();
-      imageDataUri = await gemini.generateUserImage(prompt, userPhotoUri, resolvedTemplateBase64);
+      imageDataUri = await faceSwap(templateInput, imageBase64);
     } else {
-      // No selfie — text-to-image
+      // No selfie — Gemini text-to-image
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, undefined, undefined);
     }
