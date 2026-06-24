@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getAuth, type Auth } from 'firebase-admin/auth';
+import { getStorage, type Storage } from 'firebase-admin/storage';
 
 let _app: App | null = null;
 
@@ -22,7 +23,8 @@ function getApp(): App {
     );
   }
 
-  _app = initializeApp({ credential: cert({ projectId, clientEmail, privateKey }) });
+  const storageBucket = process.env['FIREBASE_STORAGE_BUCKET'] ?? `${projectId}.firebasestorage.app`;
+  _app = initializeApp({ credential: cert({ projectId, clientEmail, privateKey }), storageBucket });
   return _app;
 }
 
@@ -36,5 +38,11 @@ export const db: Firestore = new Proxy({} as Firestore, {
 export const adminAuth: Auth = new Proxy({} as Auth, {
   get(_target, prop) {
     return (getAuth(getApp()) as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
+
+export const adminStorage: Storage = new Proxy({} as Storage, {
+  get(_target, prop) {
+    return (getStorage(getApp()) as unknown as Record<string | symbol, unknown>)[prop];
   },
 });

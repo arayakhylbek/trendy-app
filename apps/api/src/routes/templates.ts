@@ -6,7 +6,7 @@ const router: ReturnType<typeof Router> = Router();
 
 const NOW = '2026-06-18T00:00:00.000Z';
 
-const STATIC_TEMPLATES = [
+export const STATIC_TEMPLATES = [
   {
     id: '24',
     emoji: '⚾',
@@ -375,11 +375,18 @@ router.get('/', async (req, res, next) => {
     const snap = await query.get();
     const firestoreTemplates = snap.docs
       .map((d) => ({ id: d.id, ...d.data() }))
-      .filter((t: Record<string, unknown>) => t['status'] !== 'pending');
+      .filter((t: Record<string, unknown>) => t['status'] !== 'pending' && t['status'] !== 'rejected');
+
+    // Load hidden static template IDs (admin-deleted static templates)
+    let hiddenIds: string[] = [];
+    try {
+      const hiddenSnap = await db.collection('hiddenTemplates').doc('static').get();
+      hiddenIds = (hiddenSnap.data()?.['ids'] as string[] | undefined) ?? [];
+    } catch { /* ignore */ }
 
     // Merge: Firestore first (AI-generated), then STATIC_TEMPLATES not already in Firestore
     const firestoreIds = new Set(firestoreTemplates.map((t) => t.id));
-    let statics = STATIC_TEMPLATES.filter((t) => !firestoreIds.has(t.id));
+    let statics = STATIC_TEMPLATES.filter((t) => !firestoreIds.has(t.id) && !hiddenIds.includes(t.id));
     if (typeof cat === 'string' && cat !== 'all') {
       if (cat === 'trending') {
         statics = statics.filter((t) => t.isTrending);
