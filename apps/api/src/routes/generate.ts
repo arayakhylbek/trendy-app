@@ -7,6 +7,7 @@ import { db } from '../lib/firebase.js';
 import { GenerateRequestSchema, ValidationError, AppError } from '@trendy/shared';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
 import { faceSwap } from '../services/replicateService.js';
+// Two-step pipeline: Replicate face-swap → Gemini quality enhancement
 
 const router: ReturnType<typeof Router> = Router();
 
@@ -40,7 +41,11 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
 
       if (!templateInput) throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
 
-      imageDataUri = await faceSwap(templateInput, imageBase64);
+      // Step 1: Replicate face-swap (puts the face in)
+      const swapped = await faceSwap(templateInput, imageBase64);
+      // Step 2: Gemini enhancement (improves quality without changing the face)
+      const gemini = new GeminiProvider();
+      imageDataUri = await gemini.enhanceImage(swapped);
     } else {
       // No selfie — Gemini text-to-image
       const gemini = new GeminiProvider();

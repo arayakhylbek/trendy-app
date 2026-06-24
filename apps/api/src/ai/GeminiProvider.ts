@@ -140,6 +140,29 @@ Requirements:
     return `data:${mimeType};base64,${data}`;
   }
 
+  // Enhances quality of an existing image (after face-swap) without changing the face
+  async enhanceImage(imageBase64: string): Promise<string> {
+    const data = imageBase64.replace(/^data:[^;]+;base64,/, '');
+    const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
+      contents: [{
+        parts: [
+          { inlineData: { mimeType: 'image/jpeg', data } },
+          { text: 'Enhance the quality of this portrait photo. Make the skin texture more realistic, sharpen the details, improve lighting and color grading. Keep the face, composition and identity EXACTLY the same. Do not change who the person is. Only improve the visual quality to professional editorial photography level.' },
+        ],
+      }],
+      generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
+    });
+
+    const parts = result.candidates?.[0]?.content?.parts ?? [];
+    const imagePart = parts.find((p) => p.inlineData);
+    if (!imagePart?.inlineData) {
+      // If Gemini fails to enhance, return original
+      return imageBase64;
+    }
+    const { mimeType, data: outData } = imagePart.inlineData;
+    return `data:${mimeType};base64,${outData}`;
+  }
+
   // Generates a personalized image using both the template image and the user's face photo
   async generateUserImage(templatePrompt: string, userImageBase64?: string, templateImageBase64?: string): Promise<string> {
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
