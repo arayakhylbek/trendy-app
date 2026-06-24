@@ -43,10 +43,9 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
       const swapped1 = await faceSwap(templateInput, imageBase64);
       const swapped = imageBase64_2 ? await faceSwap(swapped1, imageBase64_2) : swapped1;
 
-      // Gemini retouching: blend face edges, fix lighting mismatch, improve realism
-      // Prompt is written as "retouching", not "generation" — preserves face/hair
+      // Gemini: improve quality + add unique pose/angle variation per user
       const gemini = new GeminiProvider();
-      imageDataUri = await gemini.enhanceImage(swapped);
+      imageDataUri = await gemini.personalizeImage(swapped, prompt);
     } else {
       // No selfie — pure Gemini text-to-image
       const gemini = new GeminiProvider();

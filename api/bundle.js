@@ -2928,46 +2928,38 @@ Output: the same photo, retouched to look like a professional cinematic photogra
   async personalizeImage(faceSwappedBase64, templatePrompt, userPhotoBase64) {
     const swappedData = faceSwappedBase64.replace(/^data:[^;]+;base64,/, "");
     const parts = [];
-    if (userPhotoBase64) {
-      const selfieData = userPhotoBase64.replace(/^data:[^;]+;base64,/, "");
-      parts.push({ inlineData: { mimeType: "image/jpeg", data: swappedData } });
-      parts.push({ inlineData: { mimeType: "image/jpeg", data: selfieData } });
-      parts.push({
-        text: `You have two images:
-- Image 1: a styled scene where a person's face has been inserted via face-swap
-- Image 2: the original selfie of that same person
+    parts.push({ inlineData: { mimeType: "image/jpeg", data: swappedData } });
+    parts.push({
+      text: `You are given a portrait photo where a specific person's face has been placed into a styled scene.
 
-Your task: generate a fresh, high-quality portrait that combines both.
+YOUR TASK: Produce a higher quality version of this exact photo with a subtle creative variation.
 
-RULES:
-1. FACE \u2014 use the exact face from Image 2 (original selfie): same bone structure, skin tone, eye color, facial features
-2. HAIR \u2014 use the exact hair from Image 2 (original selfie): same hair color, length, texture, style. The template's hair should be REPLACED with the user's real hair.
-3. SCENE & STYLE \u2014 keep the setting, background, lighting, color palette, and outfit aesthetic from Image 1
-4. VARIATION \u2014 add a subtle natural variation: slightly different pose, angle, or expression to make the result feel unique and personal
-5. QUALITY \u2014 photorealistic, professional editorial photography, cinematic 4K, beautiful lighting, social-media ready
+FACE \u2014 THIS IS THE MOST IMPORTANT RULE:
+- The person's face in the input is the CORRECT face. Reproduce it with 100% identity accuracy.
+- Same skin tone, eye shape, nose, lips, bone structure, jawline. Do NOT invent or alter facial features.
+- Same hair color, length and texture as shown in the input image.
 
-Scene style reference: ${templatePrompt}
+QUALITY IMPROVEMENTS TO MAKE:
+- Fix any face-swap blending artifacts or seams around the face edges
+- Match the face lighting to the scene's light direction and color temperature
+- Make skin texture look realistic (not plastic or AI-generated)
+- Improve sharpness, reduce noise, apply cinematic color grading
+- Make the person look naturally integrated into the scene
 
-Output a single portrait. The person should look naturally placed in the scene with their real hair and face.`
-      });
-    } else {
-      parts.push({ inlineData: { mimeType: "image/jpeg", data: swappedData } });
-      parts.push({
-        text: `You have a portrait photo where a person's face has been placed into a styled scene.
+CREATIVE VARIATION (subtle only):
+- Slightly adjust the pose, body angle, or camera framing
+- Small change in expression (e.g. slight smile vs neutral)
+- This makes each person's result feel unique
 
-Your task: recreate this image as a fresh, high-quality editorial portrait.
+KEEP UNCHANGED:
+- The background, setting, and environment
+- The overall outfit and style
+- The person's identity and appearance
 
-RULES:
-1. FACE & IDENTITY \u2014 reproduce the person's exact face: same bone structure, skin tone, eye shape, hair color and texture. Do NOT change who this person is.
-2. STYLE & AESTHETIC \u2014 keep the same visual aesthetic, setting, lighting mood, color palette, and outfit style.
-3. CREATIVE VARIATION \u2014 introduce a natural, subtle variation: slightly different pose, camera angle, or expression.
-4. QUALITY \u2014 professional editorial photography, cinematic, 4K, realistic skin texture, beautiful lighting.
+Scene context: ${templatePrompt}
 
-Scene style: ${templatePrompt}
-
-Generate a single portrait. Photorealistic, beautiful, social-media ready.`
-      });
-    }
+Output: a single photorealistic portrait, cinematic quality, 4K. The person must be clearly recognizable as the same individual from the input.`
+    });
     const result = await geminiPost("gemini-2.5-flash-image:generateContent", {
       contents: [{ parts }],
       generationConfig: { responseModalities: ["IMAGE", "TEXT"] }
@@ -3126,7 +3118,7 @@ router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) 
       const swapped1 = await faceSwap(templateInput, imageBase64);
       const swapped = imageBase64_2 ? await faceSwap(swapped1, imageBase64_2) : swapped1;
       const gemini = new GeminiProvider();
-      imageDataUri = await gemini.enhanceImage(swapped);
+      imageDataUri = await gemini.personalizeImage(swapped, prompt);
     } else {
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, void 0, void 0);
