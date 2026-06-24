@@ -279,8 +279,6 @@ const STATIC_TEMPLATES = [
     prompt:
       'Dreamy romantic portrait of a person lying in a lush green flower field surrounded by blooming pink daisies. Wearing a pink floral ruffled sundress. Flowers tucked into hair, flower-shaped earrings. Close-up face shot looking directly into camera with soft natural expression. Warm golden sunlight filtering through greenery. Soft bokeh background, freckled dewy skin, vibrant yet tender mood. Editorial nature photography, 4K, cinematic.',
   },
-];
-
   // ── K-Drama (3) ──────────────────────────────────────────────────────────────
   {
     id: '40', emoji: '🌅', label: 'Sunset Softness', style: 'K-Drama', styleName: 'K-Drama',
@@ -357,6 +355,7 @@ const STATIC_TEMPLATES = [
     image: '/templates/anime-pink.jpg',
     prompt: 'Dreamy anime-aesthetic portrait. Subject with long voluminous wavy blonde hair, wearing a white cropped top, hands running through hair in front of a soft pastel pink wall. Blue-green eyes, clean dewy skin. Bright daylight, effortless kawaii energy, soft warm tones. Anime real-life aesthetic, 4K.',
   },
+];
 
 function isFirebaseUnconfigured(e: unknown): boolean {
   return e instanceof Error && e.message.includes('Firebase Admin credentials not configured');
