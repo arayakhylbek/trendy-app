@@ -4,14 +4,11 @@ import { ensureAuth } from '../middleware/auth.js';
 import { checkQuota } from '../middleware/quota.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 import { db } from '../lib/firebase.js';
-import { GenerateRequestSchema, ValidationError, AppError } from '@trendy/shared';
-import { ClaudePromptEnhancer } from '../ai/ClaudePromptEnhancer.js';
+import { GenerateRequestSchema, ValidationError } from '@trendy/shared';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
-import { faceSwap } from '../services/replicateService.js';
+import { fluxKontextFaceInsert } from '../services/replicateService.js';
 
 const router: ReturnType<typeof Router> = Router();
-
-const useReplicate = !!process.env['REPLICATE_API_TOKEN'];
 
 router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) => {
   try {
@@ -19,49 +16,18 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     if (!parsed.success) {
       return next(new ValidationError(parsed.error.message));
     }
-    const { prompt, imageBase64, templateBase64, templateId, templateImageSrc } = parsed.data;
+    const { prompt, imageBase64 } = parsed.data;
 
-    const appBaseUrl = process.env['APP_BASE_URL'] ?? 'https://mytrendy.app';
     let imageDataUri: string;
-    let enhancedPrompt = prompt;
 
     if (imageBase64) {
-      // Resolve template image to base64
-      let resolvedTemplateBase64: string | undefined = templateBase64;
-
-      if (!resolvedTemplateBase64) {
-        if (templateImageSrc?.startsWith('data:')) {
-          resolvedTemplateBase64 = templateImageSrc;
-        } else if (templateImageSrc) {
-          const url = templateImageSrc.startsWith('http')
-            ? templateImageSrc
-            : `${appBaseUrl}${templateImageSrc}`;
-          const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
-          if (resp.ok) {
-            const buf = await resp.arrayBuffer();
-            const mime = resp.headers.get('content-type') ?? 'image/jpeg';
-            resolvedTemplateBase64 = `data:${mime};base64,${Buffer.from(buf).toString('base64')}`;
-          }
-        } else if (templateId) {
-          const snap = await db.collection('templates').doc(templateId).get();
-          resolvedTemplateBase64 = (snap.data()?.['image'] as string | undefined) ?? undefined;
-        }
-      }
-
-      if (!resolvedTemplateBase64) throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
-
-      const userPhotoUri = imageBase64.startsWith('data:')
-        ? imageBase64
-        : `data:image/jpeg;base64,${imageBase64}`;
-
-      const gemini = new GeminiProvider();
-      imageDataUri = await gemini.generateUserImage(prompt, userPhotoUri, resolvedTemplateBase64);
+      // User uploaded selfie → FLUX Kontext Pro (identity-preserving scene transfer)
+      // prompt = the template's scene description sent from the frontend
+      imageDataUri = await fluxKontextFaceInsert(imageBase64, prompt);
     } else {
-      // No user photo — text-to-image
-      const enhancer = new ClaudePromptEnhancer();
-      enhancedPrompt = await enhancer.enhance(prompt, undefined);
+      // No selfie → Gemini text-to-image
       const gemini = new GeminiProvider();
-      imageDataUri = await gemini.generateUserImage(enhancedPrompt, undefined, templateBase64);
+      imageDataUri = await gemini.generateUserImage(prompt, undefined, undefined);
     }
 
     await db
@@ -72,7 +38,7 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
         updatedAt: new Date().toISOString(),
       });
 
-    res.json({ image: imageDataUri, prompt: enhancedPrompt });
+    res.json({ image: imageDataUri, prompt });
   } catch (e) {
     next(e);
   }
