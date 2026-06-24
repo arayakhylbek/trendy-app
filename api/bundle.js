@@ -2805,6 +2805,43 @@ Requirements:
     const { mimeType, data: outData } = imagePart.inlineData;
     return `data:${mimeType};base64,${outData}`;
   }
+  // Personalizes a face-swapped result: keeps the person's face identical,
+  // but reimagines the scene with a natural variation (pose, angle, expression)
+  // so every user gets a unique output in the same aesthetic.
+  async personalizeImage(faceSwappedBase64, templatePrompt) {
+    const data = faceSwappedBase64.replace(/^data:[^;]+;base64,/, "");
+    const result = await geminiPost("gemini-2.5-flash-image:generateContent", {
+      contents: [{
+        parts: [
+          { inlineData: { mimeType: "image/jpeg", data } },
+          {
+            text: `You have a portrait photo where a person's face has been placed into a styled scene.
+
+Your task: recreate this image as a fresh, high-quality editorial portrait.
+
+RULES:
+1. FACE & IDENTITY \u2014 reproduce the person's exact face from this image: same bone structure, skin tone, eye shape, hair color and texture. Do NOT change who this person is.
+2. STYLE & AESTHETIC \u2014 keep the same visual aesthetic, setting, lighting mood, color palette, and outfit style shown in the image.
+3. CREATIVE VARIATION \u2014 introduce a natural, subtle variation: a slightly different pose, camera angle, expression, or minor scene detail. Make the result feel personal and unique, not a copy.
+4. QUALITY \u2014 professional editorial photography, cinematic, 4K, realistic skin texture, beautiful lighting.
+
+Style reference for the scene:
+${templatePrompt}
+
+Generate a single portrait image. Photorealistic, beautiful, social-media ready.`
+          }
+        ]
+      }],
+      generationConfig: { responseModalities: ["IMAGE", "TEXT"] }
+    });
+    const parts = result.candidates?.[0]?.content?.parts ?? [];
+    const imagePart = parts.find((p) => p.inlineData);
+    if (!imagePart?.inlineData) {
+      return this.enhanceImage(faceSwappedBase64);
+    }
+    const { mimeType, data: outData } = imagePart.inlineData;
+    return `data:${mimeType};base64,${outData}`;
+  }
   // Generates a personalized image using both the template image and the user's face photo
   async generateUserImage(templatePrompt, userImageBase64, templateImageBase64) {
     const parts = [];
@@ -2956,7 +2993,7 @@ router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) 
         swapped = swapped1;
       }
       const gemini = new GeminiProvider();
-      imageDataUri = await gemini.enhanceImage(swapped);
+      imageDataUri = await gemini.personalizeImage(swapped, prompt);
     } else {
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, void 0, void 0);

@@ -156,8 +156,47 @@ Requirements:
     const parts = result.candidates?.[0]?.content?.parts ?? [];
     const imagePart = parts.find((p) => p.inlineData);
     if (!imagePart?.inlineData) {
-      // If Gemini fails to enhance, return original
       return imageBase64;
+    }
+    const { mimeType, data: outData } = imagePart.inlineData;
+    return `data:${mimeType};base64,${outData}`;
+  }
+
+  // Personalizes a face-swapped result: keeps the person's face identical,
+  // but reimagines the scene with a natural variation (pose, angle, expression)
+  // so every user gets a unique output in the same aesthetic.
+  async personalizeImage(faceSwappedBase64: string, templatePrompt: string): Promise<string> {
+    const data = faceSwappedBase64.replace(/^data:[^;]+;base64,/, '');
+    const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
+      contents: [{
+        parts: [
+          { inlineData: { mimeType: 'image/jpeg', data } },
+          {
+            text: `You have a portrait photo where a person's face has been placed into a styled scene.
+
+Your task: recreate this image as a fresh, high-quality editorial portrait.
+
+RULES:
+1. FACE & IDENTITY — reproduce the person's exact face from this image: same bone structure, skin tone, eye shape, hair color and texture. Do NOT change who this person is.
+2. STYLE & AESTHETIC — keep the same visual aesthetic, setting, lighting mood, color palette, and outfit style shown in the image.
+3. CREATIVE VARIATION — introduce a natural, subtle variation: a slightly different pose, camera angle, expression, or minor scene detail. Make the result feel personal and unique, not a copy.
+4. QUALITY — professional editorial photography, cinematic, 4K, realistic skin texture, beautiful lighting.
+
+Style reference for the scene:
+${templatePrompt}
+
+Generate a single portrait image. Photorealistic, beautiful, social-media ready.`,
+          },
+        ],
+      }],
+      generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
+    });
+
+    const parts = result.candidates?.[0]?.content?.parts ?? [];
+    const imagePart = parts.find((p) => p.inlineData);
+    if (!imagePart?.inlineData) {
+      // Fallback to basic enhancement if personalization fails
+      return this.enhanceImage(faceSwappedBase64);
     }
     const { mimeType, data: outData } = imagePart.inlineData;
     return `data:${mimeType};base64,${outData}`;

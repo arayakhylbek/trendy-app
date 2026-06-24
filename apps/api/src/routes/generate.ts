@@ -46,15 +46,15 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
       let swapped: string;
       if (imageBase64_2) {
         // Couple mode — Step 1b: insert person 2 (guy) into the result from step 1
-        // swapped1 is a data URI; faceSwap auto-detects the remaining original face
         swapped = await faceSwap(swapped1, imageBase64_2);
       } else {
         swapped = swapped1;
       }
 
-      // Step 2: Gemini enhancement (improves quality without changing faces)
+      // Step 2: Gemini personalization — keeps the face, reimagines scene with natural variation
+      // Every user gets a unique result in the same aesthetic style
       const gemini = new GeminiProvider();
-      imageDataUri = await gemini.enhanceImage(swapped);
+      imageDataUri = await gemini.personalizeImage(swapped, prompt);
     } else {
       // No selfie — Gemini text-to-image
       const gemini = new GeminiProvider();
