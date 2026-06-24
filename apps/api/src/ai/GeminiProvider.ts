@@ -162,15 +162,16 @@ Requirements:
         },
       });
       parts.push({
-        text: `Edit the first photo (the person) to place them into the scene from the second photo (the template).
+        text: `Insert the face from the first photo into the second photo (the template scene).
 
-Keep the person's face, skin tone, eye shape, and facial features EXACTLY as they are in the first photo.
-Transform their surroundings, background, lighting, outfit and pose to match the second photo.
+CRITICAL:
+- The OUTPUT must look like the second photo (same background, same outfit, same pose, same lighting)
+- But the FACE must be replaced with the face from the first photo
+- Match the exact skin tone, eye shape, facial structure, and likeness from the first photo
+- The result should look like the person from photo 1 is posing in the exact scene from photo 2
+- Photorealistic, seamless, professional photo quality
 
-The result should look like a real professional photo shoot of this exact person in that setting.
-Photorealistic, cinematic quality, sharp focus on face.
-
-Scene description: ${templatePrompt}`,
+Scene context: ${templatePrompt}`,
       });
     } else if (userImageBase64) {
       const base64Data = userImageBase64.replace(/^data:[^;]+;base64,/, '');
