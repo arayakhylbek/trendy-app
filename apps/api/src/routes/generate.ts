@@ -25,47 +25,27 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     let imageDataUri: string;
     let enhancedPrompt = prompt;
 
-    console.log('[generate] imageBase64 present:', !!imageBase64, '| length:', imageBase64?.length ?? 0);
-    console.log('[generate] templateImageSrc:', templateImageSrc, '| templateId:', templateId);
+    if (imageBase64 && useReplicate) {
+      // Replicate face-swap path — resolve template to a URL or base64
+      let templateInput: string | undefined;
 
-    if (imageBase64) {
-      // Resolve template image to base64 for Gemini
-      let resolvedTemplateBase64: string | undefined = templateBase64;
-
-      if (!resolvedTemplateBase64) {
-        if (templateImageSrc?.startsWith('data:')) {
-          resolvedTemplateBase64 = templateImageSrc;
-        } else if (templateImageSrc) {
-          const url = templateImageSrc.startsWith('http')
-            ? templateImageSrc
-            : `${appBaseUrl}${templateImageSrc}`;
-          const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
-          if (resp.ok) {
-            const buf = await resp.arrayBuffer();
-            const mime = resp.headers.get('content-type') ?? 'image/jpeg';
-            resolvedTemplateBase64 = `data:${mime};base64,${Buffer.from(buf).toString('base64')}`;
-          }
-        } else if (templateId) {
-          const snap = await db.collection('templates').doc(templateId).get();
-          resolvedTemplateBase64 = (snap.data()?.['image'] as string | undefined) ?? undefined;
-        }
+      if (templateBase64) {
+        templateInput = templateBase64;
+      } else if (templateImageSrc?.startsWith('data:')) {
+        templateInput = templateImageSrc;
+      } else if (templateImageSrc) {
+        templateInput = templateImageSrc.startsWith('http')
+          ? templateImageSrc
+          : `${appBaseUrl}${templateImageSrc}`;
+      } else if (templateId) {
+        const snap = await db.collection('templates').doc(templateId).get();
+        templateInput = (snap.data()?.['image'] as string | undefined) ?? undefined;
       }
 
-      if (!resolvedTemplateBase64) {
-        throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
-      }
-
-      // Ensure user photo has proper data URI prefix for Gemini
-      const userPhotoUri = imageBase64.startsWith('data:')
-        ? imageBase64
-        : `data:image/jpeg;base64,${imageBase64}`;
-
-      console.log('[generate] templateResolved:', !!resolvedTemplateBase64, '| userPhoto prefix:', userPhotoUri.slice(0, 30));
-      // Use Gemini for high-quality face-in-template generation
-      const gemini = new GeminiProvider();
-      imageDataUri = await gemini.generateUserImage(prompt, userPhotoUri, resolvedTemplateBase64);
+      if (!templateInput) throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
+      imageDataUri = await faceSwap(templateInput, imageBase64);
     } else {
-      // No user photo → Gemini text-to-image with enhanced prompt
+      // Gemini fallback — text-to-image or no Replicate token
       const enhancer = new ClaudePromptEnhancer();
       enhancedPrompt = await enhancer.enhance(prompt, imageBase64);
       const gemini = new GeminiProvider();
