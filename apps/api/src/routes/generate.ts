@@ -7,7 +7,6 @@ import { db } from '../lib/firebase.js';
 import { GenerateRequestSchema, ValidationError, AppError } from '@trendy/shared';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
 import { faceSwap } from '../services/replicateService.js';
-// Two-step pipeline: Replicate face-swap → Gemini quality enhancement
 
 const router: ReturnType<typeof Router> = Router();
 
@@ -17,7 +16,7 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     if (!parsed.success) {
       return next(new ValidationError(parsed.error.message));
     }
-    const { prompt, imageBase64, templateBase64, templateId, templateImageSrc } = parsed.data;
+    const { prompt, imageBase64, imageBase64_2, templateBase64, templateId, templateImageSrc } = parsed.data;
 
     const appBaseUrl = process.env['APP_BASE_URL'] ?? 'https://mytrendy.app';
     let imageDataUri: string;
@@ -41,9 +40,19 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
 
       if (!templateInput) throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
 
-      // Step 1: Replicate face-swap (puts the face in)
-      const swapped = await faceSwap(templateInput, imageBase64);
-      // Step 2: Gemini enhancement (improves quality without changing the face)
+      // Step 1: Replicate face-swap — insert person 1 (girl / main photo)
+      const swapped1 = await faceSwap(templateInput, imageBase64);
+
+      let swapped: string;
+      if (imageBase64_2) {
+        // Couple mode — Step 1b: insert person 2 (guy) into the result from step 1
+        // swapped1 is a data URI; faceSwap auto-detects the remaining original face
+        swapped = await faceSwap(swapped1, imageBase64_2);
+      } else {
+        swapped = swapped1;
+      }
+
+      // Step 2: Gemini enhancement (improves quality without changing faces)
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.enhanceImage(swapped);
     } else {

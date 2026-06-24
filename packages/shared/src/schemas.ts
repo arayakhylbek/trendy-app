@@ -26,6 +26,7 @@ export const TemplateSchema = z.object({
   isTrending: z.boolean().default(false),
   isNew: z.boolean().default(false),
   isPro: z.boolean().default(false),
+  isCouple: z.boolean().optional(),
   likes: z.number().int().nonnegative().default(0),
   uses: z.number().int().nonnegative().default(0),
   createdAt: z.string().datetime(),
@@ -53,6 +54,7 @@ export const CheckoutRequestSchema = z.object({
 export const GenerateRequestSchema = z.object({
   prompt: z.string().min(1).max(2000),
   imageBase64: z.string().optional(),
+  imageBase64_2: z.string().optional(),
   templateBase64: z.string().optional(),
   templateId: z.string().optional(),
   templateImageSrc: z.string().optional(),

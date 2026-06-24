@@ -37,7 +37,7 @@ export function Home() {
     const plan = PLANS[tier];
     const used = currentUser?.generationsUsed ?? 0;
     const atLimit = !isOwner && plan.monthlyLimit !== Infinity && used >= plan.monthlyLimit;
-    async function handleGenerate(template, imageBase64) {
+    async function handleGenerate(template, imageBase64, imageBase64_2) {
         if (!user) {
             setShowAuth(true);
             return;
@@ -54,6 +54,7 @@ export function Home() {
                 body: JSON.stringify({
                     prompt: template.prompt,
                     imageBase64,
+                    imageBase64_2,
                     templateId: template.id,
                     templateImageSrc: template.image,
                 }),
@@ -105,9 +106,9 @@ export function Home() {
                                     return;
                                 }
                                 setSelectedTemplate(t);
-                            } }) }))] }), _jsx(PricingSection, { onUpgrade: scrollToPricing, onNeedAuth: () => setShowAuth(true) }), selectedTemplate && (_jsx(TemplateModal, { template: selectedTemplate, onClose: () => setSelectedTemplate(null), onGenerate: (t, img) => {
+                            } }) }))] }), _jsx(PricingSection, { onUpgrade: scrollToPricing, onNeedAuth: () => setShowAuth(true) }), selectedTemplate && (_jsx(TemplateModal, { template: selectedTemplate, onClose: () => setSelectedTemplate(null), onGenerate: (t, img, img2) => {
                     setSelectedTemplate(null);
-                    handleGenerate(t, img);
+                    handleGenerate(t, img, img2);
                 } })), _jsx(CatLoadingScreen, { visible: isGenerating }), resultImage && (_jsx(ResultModal, { imageUrl: resultImage, onClose: () => setResultImage(null), onNew: () => setResultImage(null), onViewGallery: async () => {
                     setResultImage(null);
                     await savingRef.current;

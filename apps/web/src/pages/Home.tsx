@@ -41,7 +41,7 @@ export function Home() {
   const used = currentUser?.generationsUsed ?? 0;
   const atLimit = !isOwner && plan.monthlyLimit !== Infinity && used >= plan.monthlyLimit;
 
-  async function handleGenerate(template: Template, imageBase64: string | undefined) {
+  async function handleGenerate(template: Template, imageBase64: string | undefined, imageBase64_2?: string | undefined) {
     if (!user) {
       setShowAuth(true);
       return;
@@ -59,6 +59,7 @@ export function Home() {
         body: JSON.stringify({
           prompt: template.prompt,
           imageBase64,
+          imageBase64_2,
           templateId: template.id,
           templateImageSrc: template.image,
         }),
@@ -165,9 +166,9 @@ export function Home() {
         <TemplateModal
           template={selectedTemplate}
           onClose={() => setSelectedTemplate(null)}
-          onGenerate={(t, img) => {
+          onGenerate={(t, img, img2) => {
             setSelectedTemplate(null);
-            handleGenerate(t, img);
+            handleGenerate(t, img, img2);
           }}
         />
       )}

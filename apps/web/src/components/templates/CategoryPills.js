@@ -2,10 +2,11 @@ import { jsx as _jsx } from "react/jsx-runtime";
 const CATEGORIES = [
     { id: 'all', label: 'All' },
     { id: 'trending', label: '🔥 Trending' },
+    { id: 'couple', label: '💑 Couples' },
     { id: 'kdrama', label: 'K-Drama' },
+    { id: 'gossipgirl', label: 'Gossip Girl' },
     { id: 'anime', label: 'Anime' },
     { id: 'aesthetic', label: 'Aesthetic' },
-    { id: 'fantasy', label: 'Fantasy' },
     { id: 'vintage', label: 'Vintage' },
 ];
 export function CategoryPills({ active, onChange }) {

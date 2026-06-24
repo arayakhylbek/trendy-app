@@ -1666,6 +1666,7 @@ var TemplateSchema = import_zod.z.object({
   isTrending: import_zod.z.boolean().default(false),
   isNew: import_zod.z.boolean().default(false),
   isPro: import_zod.z.boolean().default(false),
+  isCouple: import_zod.z.boolean().optional(),
   likes: import_zod.z.number().int().nonnegative().default(0),
   uses: import_zod.z.number().int().nonnegative().default(0),
   createdAt: import_zod.z.string().datetime()
@@ -1689,6 +1690,7 @@ var CheckoutRequestSchema = import_zod.z.object({
 var GenerateRequestSchema = import_zod.z.object({
   prompt: import_zod.z.string().min(1).max(2e3),
   imageBase64: import_zod.z.string().optional(),
+  imageBase64_2: import_zod.z.string().optional(),
   templateBase64: import_zod.z.string().optional(),
   templateId: import_zod.z.string().optional(),
   templateImageSrc: import_zod.z.string().optional()
@@ -2379,6 +2381,91 @@ var STATIC_TEMPLATES = [
     createdAt: NOW,
     image: "/templates/vintage-90s.jpg",
     prompt: "90s nostalgia fashion. Straight-across bangs, butterfly hair clips, slip dress over white t-shirt, chunky platform sneakers. Leaning against a school locker covered in Nirvana and Spice Girls posters and polaroid photos. Warm overexposed film grain, vintage 90s color palette, nostalgic, 4K."
+  },
+  // Gossip Girl
+  {
+    id: "52",
+    emoji: "\u{1F942}",
+    label: "GG Penthouse",
+    style: "Gossip Girl",
+    styleName: "Gossip Girl",
+    cat: "gossipgirl",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/gg-penthouse.jpg",
+    prompt: "Glamorous Upper East Side NYC penthouse apartment. Floor-to-ceiling windows with Manhattan skyline at dusk behind. Velvet chaise lounge, silk slip dress, statement pearl jewelry, wine glass. Warm luxury interior, moody HBO drama cinematic lighting, 4K professional fashion photography."
+  },
+  {
+    id: "53",
+    emoji: "\u{1F45C}",
+    label: "GG Met Steps",
+    style: "Gossip Girl",
+    styleName: "Gossip Girl",
+    cat: "gossipgirl",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/gg-met-steps.jpg",
+    prompt: "Preppy-chic fashion editorial on the iconic Metropolitan Museum steps in New York. Plaid blazer skirt set, knee-high leather boots, designer handbag, coffee cup, sunglasses. Fall leaves, NYC luxury editorial mood, cinematic color grade, professional photography, 4K."
+  },
+  // Couples
+  {
+    id: "54",
+    emoji: "\u{1F3CD}\uFE0F",
+    label: "Moto Couple",
+    style: "Couple",
+    styleName: "Couple",
+    cat: "couple",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    isCouple: true,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/couple-bike.jpg",
+    prompt: "Cinematic couple portrait. Young man and woman on a vintage black motorcycle on a coastal road at golden hour. She wears a leather jacket, he wears a white tee. Both looking at camera, romantic chemistry, warm sunset light. Professional photography, 4K."
+  },
+  {
+    id: "55",
+    emoji: "\u{1F338}",
+    label: "School Bench",
+    style: "Couple",
+    styleName: "Couple",
+    cat: "couple",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    isCouple: true,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/couple-bench.jpg",
+    prompt: "Japanese school romance. Young man and woman sitting on a bench under cherry blossoms, wearing school uniforms \u2014 navy gakuran for him, white sailor fuku for her. Petals falling, golden light. Both looking at camera. Cinematic, professional photography, 4K."
+  },
+  {
+    id: "56",
+    emoji: "\u{1F917}",
+    label: "City Hug",
+    style: "Couple",
+    styleName: "Couple",
+    cat: "couple",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    isCouple: true,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/couple-hug.jpg",
+    prompt: "Romantic couple portrait. Woman hugging man from behind, arms around his shoulders, both smiling at camera. Hilltop at golden hour with glowing city skyline. Casual stylish outfits. Both faces clearly visible. Cinematic color grade, professional photography, 4K."
   }
 ];
 function isFirebaseUnconfigured(e) {
@@ -2845,7 +2932,7 @@ router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) 
     if (!parsed.success) {
       return next(new ValidationError(parsed.error.message));
     }
-    const { prompt, imageBase64, templateBase64, templateId, templateImageSrc } = parsed.data;
+    const { prompt, imageBase64, imageBase64_2, templateBase64, templateId, templateImageSrc } = parsed.data;
     const appBaseUrl = process.env["APP_BASE_URL"] ?? "https://mytrendy.app";
     let imageDataUri;
     if (imageBase64) {
@@ -2861,7 +2948,13 @@ router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) 
         }
       }
       if (!templateInput) throw new AppError("NO_TEMPLATE", "Could not resolve template image", 400);
-      const swapped = await faceSwap(templateInput, imageBase64);
+      const swapped1 = await faceSwap(templateInput, imageBase64);
+      let swapped;
+      if (imageBase64_2) {
+        swapped = await faceSwap(swapped1, imageBase64_2);
+      } else {
+        swapped = swapped1;
+      }
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.enhanceImage(swapped);
     } else {
