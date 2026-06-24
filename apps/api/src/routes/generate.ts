@@ -52,9 +52,14 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
         throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
       }
 
+      // Ensure user photo has proper data URI prefix for Gemini
+      const userPhotoUri = imageBase64.startsWith('data:')
+        ? imageBase64
+        : `data:image/jpeg;base64,${imageBase64}`;
+
       // Use Gemini for high-quality face-in-template generation
       const gemini = new GeminiProvider();
-      imageDataUri = await gemini.generateUserImage(enhancedPrompt, imageBase64, resolvedTemplateBase64);
+      imageDataUri = await gemini.generateUserImage(prompt, userPhotoUri, resolvedTemplateBase64);
     } else {
       // No user photo → Gemini text-to-image with enhanced prompt
       const enhancer = new ClaudePromptEnhancer();

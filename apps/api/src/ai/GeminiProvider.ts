@@ -160,14 +160,19 @@ Requirements:
         },
       });
       parts.push({
-        text: `IMAGE 1 is a scene/template photo. IMAGE 2 is a person's face photo.
+        text: `You are given two photos:
+- Photo 1: a styled template/scene photo (background, location, lighting, outfit, pose)
+- Photo 2: a selfie of the user (their real face, skin tone, eyes, features)
 
-Create a NEW photorealistic portrait photo where:
-- The PERSON from IMAGE 2 (their face, eyes, skin tone, facial features, likeness) is the subject
-- They are shown IN THE SAME SCENE as IMAGE 1: same background, same location, same lighting, same outfit/clothing, same pose, same colors
-- The result looks like the person from IMAGE 2 actually took this photo in that setting
-- Professional photography quality, natural and realistic, not AI-looking
-- The face must clearly resemble the person from IMAGE 2`,
+Task: Generate a single high-quality photorealistic portrait where the USER from Photo 2 is placed into the SCENE from Photo 1.
+
+Requirements:
+1. FACE: The face in the output MUST look like the person in Photo 2. Copy their exact facial features, eye shape, skin tone, face structure, and likeness. This is the most important requirement.
+2. SCENE: Use the background, setting, lighting, outfit, pose and colors from Photo 1 as the visual context.
+3. STYLE: The result should look like a professional editorial photo — cinematic quality, sharp focus, realistic skin texture, natural lighting.
+4. Do NOT generate a generic face. The face MUST match Photo 2.
+
+Additional scene context: ${templatePrompt}`,
       });
     } else if (userImageBase64) {
       const base64Data = userImageBase64.replace(/^data:[^;]+;base64,/, '');
