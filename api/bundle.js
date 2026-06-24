@@ -3123,14 +3123,11 @@ router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) 
       }
       if (!templateInput) throw new AppError("NO_TEMPLATE", "Could not resolve template image", 400);
       const swapped1 = await faceSwap(templateInput, imageBase64);
-      let swapped;
       if (imageBase64_2) {
-        swapped = await faceSwap(swapped1, imageBase64_2);
+        imageDataUri = await faceSwap(swapped1, imageBase64_2);
       } else {
-        swapped = swapped1;
+        imageDataUri = swapped1;
       }
-      const gemini = new GeminiProvider();
-      imageDataUri = await gemini.enhanceImage(swapped);
     } else {
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, void 0, void 0);

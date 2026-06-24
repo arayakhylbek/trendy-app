@@ -22,7 +22,7 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     let imageDataUri: string;
 
     if (imageBase64) {
-      // Resolve template to URL or data URI for Replicate
+      // Resolve template image
       let templateInput: string | undefined = templateBase64;
 
       if (!templateInput) {
@@ -40,23 +40,18 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
 
       if (!templateInput) throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
 
-      // Step 1: Replicate face-swap — insert person 1 (girl / main photo)
+      // Replicate face-swap — returns the result directly, no Gemini post-processing
+      // Gemini regenerates faces instead of preserving them, so we skip it entirely
       const swapped1 = await faceSwap(templateInput, imageBase64);
 
-      let swapped: string;
       if (imageBase64_2) {
-        // Couple mode — Step 1b: insert person 2 (guy) into the result from step 1
-        swapped = await faceSwap(swapped1, imageBase64_2);
+        // Couple mode: second face-swap on the already-swapped result
+        imageDataUri = await faceSwap(swapped1, imageBase64_2);
       } else {
-        swapped = swapped1;
+        imageDataUri = swapped1;
       }
-
-      // Step 2: Gemini enhancement — sharpens quality, fixes face-swap seams,
-      // does NOT reimagine or change face/hair/composition
-      const gemini = new GeminiProvider();
-      imageDataUri = await gemini.enhanceImage(swapped);
     } else {
-      // No selfie — Gemini text-to-image
+      // No selfie — pure Gemini text-to-image
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, undefined, undefined);
     }
