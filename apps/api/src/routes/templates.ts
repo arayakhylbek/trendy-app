@@ -281,79 +281,79 @@ const STATIC_TEMPLATES = [
   },
   // ── K-Drama (3) ──────────────────────────────────────────────────────────────
   {
-    id: '40', emoji: '🌅', label: 'Sunset Softness', style: 'K-Drama', styleName: 'K-Drama',
+    id: '40', emoji: '🌧️', label: 'Seoul Rain', style: 'K-Drama', styleName: 'K-Drama',
     cat: 'kdrama', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/kdrama-sunset.jpg',
-    prompt: 'Soft cinematic outdoor portrait at golden hour. Woman with straight dark hair wearing a classic black and white striped shirt, bathed in warm dusk light. Blurred green hillside behind her. Gentle smile, natural makeup, romantic K-drama lead energy. Film-quality shallow depth of field, warm color grade.',
+    image: '/templates/kdrama-rain.jpg',
+    prompt: 'Cinematic Korean drama scene. Standing on a quiet Seoul street at night in the rain holding a transparent bubble umbrella, pastel trench coat, warm neon CU convenience store signs in Korean glowing behind. Wet pavement reflections, cinematic warm-cool color grade, K-drama lead energy, 4K.',
   },
   {
-    id: '41', emoji: '🧢', label: 'Bucket Hat Crush', style: 'K-Drama', styleName: 'K-Drama',
+    id: '41', emoji: '🌸', label: 'School Romance', style: 'K-Drama', styleName: 'K-Drama',
+    cat: 'kdrama', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/kdrama-uniform.jpg',
+    prompt: 'Korean high school drama aesthetic. Sitting by a large classroom window in a Korean school uniform — white shirt, navy blazer, plaid skirt. Cherry blossom petals float past the open window. Resting chin on hand, dreamy expression. Warm golden afternoon light, clean pastel tones, K-drama school romance, 4K.',
+  },
+  {
+    id: '42', emoji: '🏮', label: 'Hanok Night', style: 'K-Drama', styleName: 'K-Drama',
     cat: 'kdrama', isTrending: false, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/kdrama-bucket.jpg',
-    prompt: 'Candid cozy portrait of a young woman with long wavy dark hair, wearing a soft knit sweater and a denim bucket hat, hands cupping her face with a relaxed expression. Light grey rocky background. Natural daylight, no makeup, fresh-faced, intimate casual vibe. K-drama campus romance aesthetic, 4K.',
-  },
-  {
-    id: '42', emoji: '☕', label: 'Café Daydream', style: 'K-Drama', styleName: 'K-Drama',
-    cat: 'kdrama', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/kdrama-cafe.jpg',
-    prompt: 'Moody café portrait. Young woman with long curly dark hair in a cozy grey hoodie, holding a black take-away coffee cup, seated in a blue-toned café interior. Soft bokeh lights, thoughtful gaze slightly off-camera. K-drama aesthetic, cinematic color grade, warm-cool contrast, 4K.',
-  },
-  // ── Fantasy (3) ──────────────────────────────────────────────────────────────
-  {
-    id: '43', emoji: '🌿', label: 'Forest Wanderer', style: 'Fantasy', styleName: 'Fantasy',
-    cat: 'fantasy', isTrending: false, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/fantasy-forest.jpg',
-    prompt: 'Ethereal forest portrait. Young woman with long straight dark hair standing in a lush green tree-lined country road, wearing a golden mustard boho sundress with crochet trim. One hand touching her hair, looking directly into the camera. Soft bokeh green canopy, dreamy natural light, 4K.',
-  },
-  {
-    id: '44', emoji: '✨', label: 'Studio Fantasy', style: 'Fantasy', styleName: 'Fantasy',
-    cat: 'fantasy', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/fantasy-studio.jpg',
-    prompt: 'Glamorous fantasy studio portrait. Woman with curly soft blonde hair, wearing a delicate silver dress with a sheer blush overlay. Dramatic dark studio background with a vintage spotlight behind her creating a magical golden halo effect. Intense gaze, old Hollywood meets fantasy. Cinematic, 4K.',
-  },
-  {
-    id: '45', emoji: '❄️', label: 'Winter Fairy', style: 'Fantasy', styleName: 'Fantasy',
-    cat: 'fantasy', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/fantasy-winter.jpg',
-    prompt: 'Dramatic close-up fantasy portrait. Woman with long dark wavy hair framing her face, wearing a dark teal fur-trimmed hood. Piercing green eyes, windswept strands across face, soft parted lips. Dark moody background, fairy-tale intensity, magical winter queen energy. Hyper-realistic, 4K.',
-  },
-  // ── Vintage (3) ──────────────────────────────────────────────────────────────
-  {
-    id: '46', emoji: '🎞️', label: 'Copper Glow', style: 'Vintage', styleName: 'Vintage',
-    cat: 'vintage', isTrending: false, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/vintage-redhead.jpg',
-    prompt: 'Warm vintage portrait. Young woman with flowing copper-red hair looking over her bare shoulder toward the camera. Warm amber and terracotta color grade, geometric concrete building behind her. Film photography aesthetic, soft focus, intimate over-the-shoulder gaze. 35mm film look, 4K.',
-  },
-  {
-    id: '47', emoji: '🪟', label: 'Stained Glass', style: 'Vintage', styleName: 'Vintage',
-    cat: 'vintage', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/vintage-glass.jpg',
-    prompt: 'Cinematic vintage portrait inside a grand historic hall. Blonde woman with tousled hair wearing a fitted black long-sleeve dress, bold red lip. Stunning stained glass ceiling with colorful bokeh lights behind her. Film noir meets old European glamour. Moody, editorial, 4K.',
-  },
-  {
-    id: '48', emoji: '🍂', label: 'Breezy Vintage', style: 'Vintage', styleName: 'Vintage',
-    cat: 'vintage', isTrending: false, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/vintage-breeze.jpg',
-    prompt: 'Outdoor vintage fashion portrait. Young woman with long dark hair blowing in the wind, eyes gently closed, wearing a distressed denim jacket over a white tee. Urban park setting with soft grey overcast sky and blurred pine trees. Candid, effortless, 90s film photography vibe, 4K.',
+    image: '/templates/kdrama-hanok.jpg',
+    prompt: 'Period Korean drama romantic scene. Traditional pink silk hanbok with gold embroidery, standing in a wooden hanok courtyard with paper lanterns and plum blossom trees in full bloom. Gentle evening light, floating petals, dramatic yet delicate atmosphere. Historical K-drama romance, cinematic 4K.',
   },
   // ── Anime (3) ────────────────────────────────────────────────────────────────
   {
-    id: '49', emoji: '🍊', label: 'Orange Aura', style: 'Anime', styleName: 'Anime',
+    id: '43', emoji: '🎒', label: 'Sailor Class', style: 'Anime', styleName: 'Anime',
     cat: 'anime', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/anime-orange.jpg',
-    prompt: 'Bold anime-inspired fashion editorial. Subject with voluminous wavy red hair sitting against a vivid orange-red background wearing a matching red knit outfit and denim jacket. One hand raised thoughtfully. Intense direct gaze, anime-large eyes, bold colour blocking. Hyper-vivid, editorial, 4K.',
+    image: '/templates/anime-school.jpg',
+    prompt: 'Anime aesthetic in real life. Sitting on top of a school desk in a Japanese sailor uniform — white sailor blouse, red bow, dark pleated skirt, white thigh-high socks. Classroom with golden sunset light, cherry blossoms outside the window. Large bright eyes, anime heroine real-life style, 4K.',
   },
   {
-    id: '50', emoji: '🌸', label: 'Soft Bob', style: 'Anime', styleName: 'Anime',
-    cat: 'anime', isTrending: false, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/anime-bob.jpg',
-    prompt: 'Clean anime-aesthetic portrait. Subject with a soft auburn bob haircut, pale blue eyes, natural freckled skin. Light ocean-blue sky and mountains behind. Minimal makeup, very clean skin, innocent fresh expression looking directly into camera. Anime heroine realness, soft warm light, 4K.',
+    id: '44', emoji: '⭐', label: 'Magical Girl', style: 'Anime', styleName: 'Anime',
+    cat: 'anime', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/anime-magical.jpg',
+    prompt: 'Magical girl transformation in real life. Stunning pink and lavender pleated skirt outfit, white gloves, star accessories, holding a glowing star wand. Pastel blue and pink swirling background with hanging star lights and a glowing magic circle. Sailor Moon energy, dramatic pose, 4K editorial.',
   },
   {
-    id: '51', emoji: '🌷', label: 'Pink Wall', style: 'Anime', styleName: 'Anime',
+    id: '45', emoji: '🌆', label: 'Tokyo Rooftop', style: 'Anime', styleName: 'Anime',
     cat: 'anime', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
-    image: '/templates/anime-pink.jpg',
-    prompt: 'Dreamy anime-aesthetic portrait. Subject with long voluminous wavy blonde hair, wearing a white cropped top, hands running through hair in front of a soft pastel pink wall. Blue-green eyes, clean dewy skin. Bright daylight, effortless kawaii energy, soft warm tones. Anime real-life aesthetic, 4K.',
+    image: '/templates/anime-rooftop.jpg',
+    prompt: 'Anime-style rooftop at sunset. Sitting on a rooftop fence in a Japanese school uniform, wind blowing through hair. Tokyo city skyline and orange-pink sky with Tokyo Tower visible behind, tiny sparkles in the air. Dreamy anime illustration aesthetic rendered in photorealistic style, golden hour, 4K.',
+  },
+  // ── Fantasy (3) ──────────────────────────────────────────────────────────────
+  {
+    id: '46', emoji: '🧝', label: 'Forest Elf', style: 'Fantasy', styleName: 'Fantasy',
+    cat: 'fantasy', isTrending: false, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/fantasy-elf.jpg',
+    prompt: 'High fantasy elven portrait. Silver-blonde hair and pointed ears, intricate flowing emerald green gown with leaf-and-vine embroidery. Enchanted ancient forest with glowing fireflies and bioluminescent flowers behind. Regal posture, intense intelligent eyes. LOTR-level fantasy cinematics, 8K detail.',
+  },
+  {
+    id: '47', emoji: '🔮', label: 'Dark Witch', style: 'Fantasy', styleName: 'Fantasy',
+    cat: 'fantasy', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/fantasy-witch.jpg',
+    prompt: 'Dark fantasy witch portrait. Black wavy hair, dramatic black velvet cloak with moon and star embroidery, holding a glowing crystal ball. Mystical tower library with floating candles, ancient spell books and purple magical smoke. Deep violet and gold tones, cinematic dark fantasy, 4K.',
+  },
+  {
+    id: '48', emoji: '🏰', label: 'Castle Princess', style: 'Fantasy', styleName: 'Fantasy',
+    cat: 'fantasy', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/fantasy-princess.jpg',
+    prompt: 'Fairy tale princess on a magical castle balcony at twilight. Ethereal white tulle ball gown with silver embroidery and tiny crystals. Stars and moonlight behind, glowing fireflies around the dress, flowering vines on stone railing. Disney princess meets editorial photography, whimsical, 4K.',
+  },
+  // ── Vintage (3) ──────────────────────────────────────────────────────────────
+  {
+    id: '49', emoji: '🪩', label: '70s Soul', style: 'Vintage', styleName: 'Vintage',
+    cat: 'vintage', isTrending: false, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/vintage-70s.jpg',
+    prompt: '1970s fashion portrait. Natural afro hairstyle, bold rust-orange wide-collar blouse, high-waist flared denim jeans, platform heels, hands on hips. Retro living room with yellow-orange geometric wallpaper, lava lamp, vintage record player on a wooden sideboard. Kodachrome film aesthetic, 4K.',
+  },
+  {
+    id: '50', emoji: '🥐', label: 'Paris 60s', style: 'Vintage', styleName: 'Vintage',
+    cat: 'vintage', isTrending: false, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/vintage-paris.jpg',
+    prompt: '1960s French New Wave cinema aesthetic. Short chic bob haircut, striped Breton top, high-waist wide-leg trousers, sitting at a Parisian sidewalk café table with espresso. Cobblestone street, classic French cars behind. Black and white film with warm sepia tint, Godard film aesthetic, 4K.',
+  },
+  {
+    id: '51', emoji: '📼', label: '90s Hallway', style: 'Vintage', styleName: 'Vintage',
+    cat: 'vintage', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/vintage-90s.jpg',
+    prompt: '90s nostalgia fashion. Straight-across bangs, butterfly hair clips, slip dress over white t-shirt, chunky platform sneakers. Leaning against a school locker covered in Nirvana and Spice Girls posters and polaroid photos. Warm overexposed film grain, vintage 90s color palette, nostalgic, 4K.',
   },
 ];
 
