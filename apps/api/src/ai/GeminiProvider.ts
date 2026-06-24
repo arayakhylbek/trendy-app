@@ -140,14 +140,33 @@ Requirements:
     return `data:${mimeType};base64,${data}`;
   }
 
-  // Enhances quality of an existing image (after face-swap) without changing the face
+  // Enhances quality of a face-swapped image — fixes seams, improves skin/lighting.
+  // CRITICAL: must not change the face, hair, pose, or composition at all.
   async enhanceImage(imageBase64: string): Promise<string> {
     const data = imageBase64.replace(/^data:[^;]+;base64,/, '');
     const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
       contents: [{
         parts: [
           { inlineData: { mimeType: 'image/jpeg', data } },
-          { text: 'Enhance the quality of this portrait photo. Make the skin texture more realistic, sharpen the details, improve lighting and color grading. Keep the face, composition and identity EXACTLY the same. Do not change who the person is. Only improve the visual quality to professional editorial photography level.' },
+          {
+            text: `This is a face-swapped portrait photo. Your task is ONLY to improve technical image quality.
+
+DO:
+- Fix face-swap seams and blending artifacts around the edges of the face
+- Match the face lighting to the scene's light direction and color temperature
+- Improve skin texture realism (remove plastic/AI look)
+- Sharpen overall image details
+- Improve color grading to cinematic quality
+
+DO NOT:
+- Change the person's face shape, features, or identity in any way
+- Change the hair color, style, length, or texture
+- Change the pose, composition, framing, or background
+- Add or remove any elements
+- Change who the person is
+
+Output the same image, technically improved. Photorealistic, professional photography quality.`,
+          },
         ],
       }],
       generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
