@@ -25,7 +25,9 @@ export function Header() {
   const tier = currentUser?.tier ?? 'free';
   const plan = PLANS[tier];
   const used = currentUser?.generationsUsed ?? 0;
-  const limit = isOwner || plan.monthlyLimit === Infinity ? null : plan.monthlyLimit;
+  const bonus = currentUser?.bonusGenerations ?? 0;
+  const effectiveLimit = plan.monthlyLimit === Infinity ? Infinity : plan.monthlyLimit + bonus;
+  const limit = isOwner || effectiveLimit === Infinity ? null : effectiveLimit;
   const remaining = limit !== null ? Math.max(0, limit - used) : null;
   const atLimit = !isOwner && remaining === 0;
 

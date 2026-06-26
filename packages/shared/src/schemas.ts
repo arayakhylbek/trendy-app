@@ -8,6 +8,7 @@ export const UserDocSchema = z.object({
   displayName: z.string().nullable().default(null),
   tier: PlanIdSchema.default('free'),
   generationsUsed: z.number().int().nonnegative().default(0),
+  bonusGenerations: z.number().int().nonnegative().optional(),
   generationsResetAt: z.string().datetime().optional(),
   polarCustomerId: z.string().optional(),
   createdAt: z.string().datetime(),

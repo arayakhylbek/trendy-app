@@ -29,7 +29,9 @@ export async function checkQuota(req: Request, _res: Response, next: NextFunctio
       if (plan.monthlyLimit === Infinity) return true;
 
       const used = (user['generationsUsed'] as number) ?? 0;
-      if (used >= plan.monthlyLimit) return false;
+      const bonus = (user['bonusGenerations'] as number) ?? 0;
+      const effectiveLimit = plan.monthlyLimit + bonus;
+      if (used >= effectiveLimit) return false;
 
       // Reserve the slot now — generation.ts no longer needs to increment
       t.update(userRef, {

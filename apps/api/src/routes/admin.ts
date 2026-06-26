@@ -237,4 +237,31 @@ router.post('/users/grant-credits', async (req, res, next) => {
   }
 });
 
+// POST /api/admin/users/grant-bonus { email, bonus }
+// Adds bonus generations on top of plan limit (shows on screen as plan limit + bonus)
+router.post('/users/grant-bonus', async (req, res, next) => {
+  try {
+    const { email, bonus } = req.body as { email?: string; bonus?: number };
+    if (!email || bonus === undefined || bonus < 0) {
+      throw new AppError('BAD_REQUEST', 'email and bonus (>=0) required', 400);
+    }
+
+    const snap = await db.collection('users').where('email', '==', email.toLowerCase().trim()).limit(1).get();
+    if (snap.empty) {
+      throw new AppError('NOT_FOUND', `User not found: ${email}`, 404);
+    }
+
+    const doc = snap.docs[0];
+    await doc.ref.update({
+      bonusGenerations: bonus,
+      generationsUsed: 0,
+      updatedAt: new Date().toISOString(),
+    });
+
+    res.json({ ok: true, email, bonusGenerations: bonus });
+  } catch (e) {
+    next(e);
+  }
+});
+
 export default router;

@@ -16,8 +16,10 @@ export function Dashboard() {
   const tier = currentUser?.tier ?? 'free';
   const plan = PLANS[tier];
   const used = currentUser?.generationsUsed ?? 0;
-  const limit = plan.monthlyLimit === Infinity ? '∞' : plan.monthlyLimit;
-  const pct = plan.monthlyLimit === Infinity ? 0 : Math.round((used / plan.monthlyLimit) * 100);
+  const bonus = currentUser?.bonusGenerations ?? 0;
+  const effectiveLimit = plan.monthlyLimit === Infinity ? Infinity : plan.monthlyLimit + bonus;
+  const limit = effectiveLimit === Infinity ? '∞' : effectiveLimit;
+  const pct = effectiveLimit === Infinity ? 0 : Math.round((used / effectiveLimit) * 100);
 
   async function handleAutoGenerate() {
     setGenerating(true);

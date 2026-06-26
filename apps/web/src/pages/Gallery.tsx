@@ -202,6 +202,7 @@ function GalleryCard({
   deleting: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const date = new Date(item.createdAt).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric',
   });
@@ -222,15 +223,27 @@ function GalleryCard({
     >
       {/* Image */}
       <div
-        onClick={onPreview}
-        style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', cursor: 'pointer' }}
+        onClick={!imgError ? onPreview : undefined}
+        style={{ position: 'relative', aspectRatio: '3/4', overflow: 'hidden', cursor: imgError ? 'default' : 'pointer' }}
       >
-        <img
-          src={item.imageUrl}
-          alt={item.templateLabel}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-        />
-        {hovered && (
+        {imgError ? (
+          <div style={{
+            width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            background: '#1e1e24', color: '#444', fontSize: 12, gap: 8,
+          }}>
+            <span style={{ fontSize: 28 }}>🖼️</span>
+            <span>Image unavailable</span>
+          </div>
+        ) : (
+          <img
+            src={item.imageUrl}
+            alt={item.templateLabel}
+            onError={() => setImgError(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        )}
+        {hovered && !imgError && (
           <div
             style={{
               position: 'absolute', inset: 0,

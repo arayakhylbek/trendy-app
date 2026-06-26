@@ -65,7 +65,7 @@ export function Home() {
       setResultImage(result.image);
       refetchUser();
       saveGen.mutate({
-        imageUrl: result.image,
+        imageDataUri: result.image,
         templateLabel: template.label,
         templateEmoji: template.emoji,
         createdAt: new Date().toISOString(),
