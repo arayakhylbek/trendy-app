@@ -4,7 +4,7 @@ import { adminAuth, db } from '../lib/firebase.js';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
 import { AppError } from '@trendy/shared';
 
-const ADMIN_EMAIL = 'araiakhylbek78@gmail.com';
+const ADMIN_EMAILS = ['araiakhylbek78@gmail.com', 'potizhmoti@gmail.com'];
 
 const THEMES = [
   'stadium cam',
@@ -29,7 +29,7 @@ const router: ReturnType<typeof Router> = Router();
 router.post('/', ensureAuth, async (req, res, next) => {
   try {
     const userRecord = await adminAuth.getUser(req.uid);
-    if (userRecord.email !== ADMIN_EMAIL) {
+    if (!ADMIN_EMAILS.includes(userRecord.email ?? '')) {
       return next(new AppError('FORBIDDEN', 'Admin only', 403));
     }
 

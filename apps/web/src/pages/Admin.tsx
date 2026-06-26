@@ -5,14 +5,14 @@ import { useAuth } from '../hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import type { Template } from '@trendy/shared';
 
-const OWNER_EMAIL = 'araiakhylbek78@gmail.com';
+const ADMIN_EMAILS = ['araiakhylbek78@gmail.com', 'potizhmoti@gmail.com'];
 
 type AdminTemplate = Template & { id: string; status?: string; trendTopic?: string; _isStatic?: boolean };
 
 export function Admin() {
   const { user, loading } = useAuth();
   if (loading) return null;
-  if (!user || user.email?.toLowerCase() !== OWNER_EMAIL) return <Navigate to="/" replace />;
+  if (!user || !ADMIN_EMAILS.includes(user.email?.toLowerCase() ?? '')) return <Navigate to="/" replace />;
   return <AdminInner />;
 }
 

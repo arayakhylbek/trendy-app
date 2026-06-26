@@ -21,7 +21,8 @@ export function Header() {
     }
   }
 
-  const isOwner = user?.email?.toLowerCase() === 'araiakhylbek78@gmail.com';
+  const ADMIN_EMAILS = ['araiakhylbek78@gmail.com', 'potizhmoti@gmail.com'];
+  const isOwner = ADMIN_EMAILS.includes(user?.email?.toLowerCase() ?? '');
   const tier = currentUser?.tier ?? 'free';
   const plan = PLANS[tier];
   const used = currentUser?.generationsUsed ?? 0;

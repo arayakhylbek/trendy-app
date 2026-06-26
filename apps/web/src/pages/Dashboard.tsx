@@ -11,7 +11,8 @@ export function Dashboard() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
-  const isAdmin = user?.email === 'araiakhylbek78@gmail.com';
+  const ADMIN_EMAILS = ['araiakhylbek78@gmail.com', 'potizhmoti@gmail.com'];
+  const isAdmin = ADMIN_EMAILS.includes(user?.email ?? '');
 
   const tier = currentUser?.tier ?? 'free';
   const plan = PLANS[tier];

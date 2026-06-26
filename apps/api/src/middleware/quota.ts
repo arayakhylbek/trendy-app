@@ -3,7 +3,7 @@ import { db } from '../lib/firebase.js';
 import { PLANS, QuotaExceededError, NotFoundError } from '@trendy/shared';
 import type { PlanId } from '@trendy/shared';
 
-const OWNER_EMAIL = 'araiakhylbek78@gmail.com';
+const ADMIN_EMAILS = ['araiakhylbek78@gmail.com', 'potizhmoti@gmail.com'];
 
 export async function checkQuota(req: Request, _res: Response, next: NextFunction) {
   try {
@@ -19,7 +19,7 @@ export async function checkQuota(req: Request, _res: Response, next: NextFunctio
       const user = snap.data()!;
 
       // Owner always bypasses quota
-      if ((user['email'] as string | undefined)?.toLowerCase() === OWNER_EMAIL) {
+      if (ADMIN_EMAILS.includes((user['email'] as string | undefined)?.toLowerCase() ?? '')) {
         return true;
       }
 
