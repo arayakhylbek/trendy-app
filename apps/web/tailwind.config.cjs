@@ -14,6 +14,7 @@ module.exports = {
         'text-muted': '#888888',
         'text-dim': '#555555',
         'plan-free': '#4ade80',
+        'plan-lite': '#67e8f9',
         'plan-pro': '#f59e0b',
         'plan-studio': '#c084fc',
       },

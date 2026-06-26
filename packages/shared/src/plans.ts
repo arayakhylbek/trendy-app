@@ -6,6 +6,13 @@ export const PLANS = {
     monthlyLimit: 2,
     features: ['2 generations / month', 'Limited template library', 'Standard quality'],
   },
+  lite: {
+    id: 'lite' as const,
+    label: 'Lite',
+    price: 0.99,
+    monthlyLimit: 10,
+    features: ['10 generations / month', 'Full template library', 'HD downloads'],
+  },
   pro: {
     id: 'pro' as const,
     label: 'Pro',

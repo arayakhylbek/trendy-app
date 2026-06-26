@@ -7,6 +7,7 @@ import { AuthModal } from '../components/auth/AuthModal';
 
 const PLAN_STYLES = {
   free: { border: 'border-white/10', badge: 'bg-plan-free/20 text-plan-free' },
+  lite: { border: 'border-plan-lite/50', badge: 'bg-plan-lite/20 text-plan-lite' },
   pro: {
     border: 'border-plan-pro/50',
     badge: 'bg-plan-pro/20 text-plan-pro',
@@ -23,7 +24,7 @@ export function Pricing() {
 
   const currentTier = currentUser?.tier ?? 'free';
 
-  async function handleUpgrade(planId: 'pro' | 'studio') {
+  async function handleUpgrade(planId: 'lite' | 'pro' | 'studio') {
     if (!user) {
       setShowAuth(true);
       return;
@@ -62,8 +63,8 @@ export function Pricing() {
           <p className="text-text-muted">Start free. Upgrade when you need more.</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {(['free', 'pro', 'studio'] as const).map((planId) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {(['free', 'lite', 'pro', 'studio'] as const).map((planId) => {
             const plan = PLANS[planId];
             const styles = PLAN_STYLES[planId];
             const isCurrent = currentTier === planId;
@@ -114,6 +115,7 @@ export function Pricing() {
                     onClick={() => handleUpgrade(planId)}
                     disabled={!!loading}
                     className={`w-full py-2.5 rounded-xl font-medium text-sm transition-opacity disabled:opacity-50 ${
+                      planId === 'lite' ? 'bg-plan-lite text-black' :
                       planId === 'pro' ? 'bg-plan-pro text-black' : 'bg-plan-studio text-black'
                     } hover:opacity-90`}
                   >

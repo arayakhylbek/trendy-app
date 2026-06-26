@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const PlanIdSchema = z.enum(['free', 'pro', 'studio']);
+export const PlanIdSchema = z.enum(['free', 'lite', 'pro', 'studio']);
 
 export const UserDocSchema = z.object({
   uid: z.string(),
@@ -49,7 +49,7 @@ export const WebhookEventSchema = z.object({
 });
 
 export const CheckoutRequestSchema = z.object({
-  planId: z.enum(['pro', 'studio']),
+  planId: z.enum(['lite', 'pro', 'studio']),
 });
 
 export const GenerateRequestSchema = z.object({
