@@ -204,28 +204,19 @@ Output: the same photo, retouched to look like a professional cinematic photogra
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: swappedData } });
     parts.push({
-      text: `You are given a portrait photo where a person's face has been placed into a styled scene.
+      text: `You are a photo editor. Edit this photo by changing ONLY the body pose. Nothing else.
 
-YOUR TASK: Recreate this as a new high-quality editorial portrait — same person, same scene style, but with a COMPLETELY DIFFERENT pose and camera angle.
+NEW POSE: ${pose}
 
-━━━ FACE IDENTITY (most important) ━━━
-• Reproduce this exact person's face: same skin tone, eye shape, nose, lips, jawline, bone structure
-• Keep same hair color, length, and texture from the input
-• The person must be 100% recognizable as the same individual
+KEEP EVERYTHING ELSE EXACTLY AS IN THE INPUT PHOTO:
+- Background: identical, do not change anything in the scene
+- Outfit: same clothes, same colors, same every detail
+- Lighting: same direction, same shadows, same mood
+- Hair: same style, color, length
+- Face: same person, same features, same skin tone
+- Color grade: same tones
 
-━━━ REQUIRED POSE — YOU MUST USE THIS EXACTLY ━━━
-→ ${pose}
-• The pose in the input photo must NOT be copied — use the new pose above
-• This is mandatory, not optional
-
-━━━ SCENE & QUALITY ━━━
-• Same background, setting, atmosphere, outfit style, and lighting mood as the input
-• Fix any face-swap blending seams, match face lighting to scene
-• Photorealistic skin, cinematic color grade, 4K quality
-
-Scene: ${templatePrompt}
-
-Output: one portrait. New pose. Same person. Same scene.`,
+Do NOT regenerate or reimagine the scene. Do NOT change clothes, background, or any element other than the body pose. This is a minimal pose-only edit.`,
     });
 
     const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
