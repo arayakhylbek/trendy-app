@@ -43,7 +43,11 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
       const swapped = imageBase64_2 ? await faceSwap(swapped1, imageBase64_2) : swapped1;
 
       const gemini = new GeminiProvider();
-      imageDataUri = await gemini.personalizeImage(swapped, prompt);
+      try {
+        imageDataUri = await gemini.personalizeImage(swapped, prompt);
+      } catch {
+        imageDataUri = swapped;
+      }
     } else {
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, undefined, undefined);
