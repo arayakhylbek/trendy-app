@@ -16,9 +16,9 @@ export const PLANS = {
   pro: {
     id: 'pro' as const,
     label: 'Pro',
-    price: 19,
-    monthlyLimit: 200,
-    features: ['200 generations / month', 'Full daily template library', 'HD downloads'],
+    price: 2.22,
+    monthlyLimit: 30,
+    features: ['30 generations / month', 'Full daily template library', 'HD downloads'],
   },
   studio: {
     id: 'studio' as const,

@@ -413,6 +413,37 @@ export const STATIC_TEMPLATES = [
     image: '/templates/backrooms-suburb.jpg',
     prompt: 'Young person standing in the middle of an endless suburban street lined with identical colorful pastel houses — red, pink, green, yellow, blue siding — stretching to the horizon. Perfectly manicured lawns, no people. Deep blue cloudless sky. Uncanny too-perfect empty neighborhood. Liminal space, digital film grain, photorealistic, 4K.',
   },
+  // Meme / Viral
+  {
+    id: '63', emoji: '😄', label: 'Pink Shirt Guy', style: 'Meme', styleName: 'Meme',
+    cat: 'meme', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/pink-shirt.jpg',
+    prompt: 'Cheerful heavyset man standing in a bright studio, wearing a pink plaid button-up shirt with rolled cuffs, dark blue jeans and brown shoes. Hands clasped in front, big warm friendly smile, relaxed posture. Clean light grey studio background. Professional portrait photography, soft studio lighting, 4K.',
+  },
+  {
+    id: '64', emoji: '🪞', label: 'Vanity Glow', style: 'Aesthetic', styleName: 'Aesthetic',
+    cat: 'aesthetic', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/mirror-vanity.jpg',
+    prompt: 'Intimate vanity mirror selfie. Young woman with dark hair loosely pinned up, looking at her reflection in a round gold-framed mirror. Wearing a black lace camisole top with a delicate gold necklace. Warm candlelight and soft amber glow from candles and perfume bottles arranged on the vanity. Makeup brushes and beauty products in the foreground. Romantic, moody, warm-toned photography, film grain, 4K.',
+  },
+  {
+    id: '65', emoji: '🔥', label: 'Disaster Girl', style: 'Meme', styleName: 'Meme',
+    cat: 'meme', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/disaster-girl.jpg',
+    prompt: 'Person standing in the foreground of a dramatic scene — a house fully engulfed in massive orange flames behind them with thick black smoke rising, a fire truck number 38 visible, firefighters in the background trying to battle the blaze. The person in the foreground looks directly at the camera with a subtle knowing smirk — unbothered, almost pleased. Candid photo style, slightly overexposed, raw documentary photography look, 4K.',
+  },
+  {
+    id: '66', emoji: '😏', label: 'Devious Grin', style: 'Meme', styleName: 'Meme',
+    cat: 'meme', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/turtleneck-smirk.jpg',
+    prompt: 'Close-up studio portrait of a young man wearing a dark navy turtleneck sweater. Both hands raised up to chin level with fists touching the sweater collar, leaning slightly forward. Subtle devious smirk, piercing blue eyes looking directly at camera with a mischievous expression. Deep blue gradient studio background, soft professional lighting. Cinematic portrait photography, 4K.',
+  },
+  {
+    id: '67', emoji: '🎀', label: 'Coquette Room', style: 'Coquette', styleName: 'Coquette',
+    cat: 'aesthetic', isTrending: true, isNew: true, isPro: false, likes: 0, uses: 0, createdAt: NOW,
+    image: '/templates/coquette-room.jpg',
+    prompt: 'Coquette aesthetic bedroom selfie. Young woman taking a selfie in a dreamy pink room — wearing a pink floral cottagecore puff-sleeve dress, hair half-up with a pink satin bow scrunchie, golden hoop earrings and layered gold necklaces. Rosy blush makeup, soft natural skin. Background: white bed with pillows, pink roses, aesthetic photo wall collage with fairy string lights, trailing ivy vines. Warm sunlit soft glow, TikTok selfie style, 4K.',
+  },
 ];
 
 function isFirebaseUnconfigured(e: unknown): boolean {

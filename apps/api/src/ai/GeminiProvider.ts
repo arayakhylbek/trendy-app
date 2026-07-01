@@ -185,38 +185,51 @@ Output: the same photo, retouched to look like a professional cinematic photogra
   async personalizeImage(
     faceSwappedBase64: string,
     templatePrompt: string,
-    _userPhotoBase64?: string,
+    templateImageBase64?: string,
   ): Promise<string> {
     const swappedData = faceSwappedBase64.replace(/^data:[^;]+;base64,/, '');
 
-    const POSES = [
-      'body turned 3/4 to the left, face looking back over the left shoulder toward the camera, confident gaze',
-      'body turned 3/4 to the right, chin slightly raised, eyes directed straight at camera with a soft expression',
-      'slight side profile facing right, face angled toward camera, hair falling naturally to one side',
-      'facing camera directly, one hand lightly touching hair, relaxed candid expression',
-      'body angled left, weight on back foot, eyes looking at camera with a calm confident look',
-      'leaning slightly forward toward camera, intimate close framing, direct eye contact',
-      'low angle shot looking slightly upward at subject, subject looking down at camera with calm expression',
-      'body turned away slightly, glancing back at camera over the shoulder with a natural expression',
-    ];
-    const pose = POSES[Math.floor(Math.random() * POSES.length)]!;
-
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+
+    // Image 1: face-swap result (correct face already in the scene)
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: swappedData } });
+
+    if (templateImageBase64) {
+      // Image 2: original template — reference for facial expression
+      const templateData = templateImageBase64.startsWith('data:')
+        ? templateImageBase64.replace(/^data:[^;]+;base64,/, '')
+        : templateImageBase64;
+      const templateMime = templateImageBase64.match(/^data:([^;]+);/)?.[1] ?? 'image/jpeg';
+      parts.push({ inlineData: { mimeType: templateMime, data: templateData } });
+    }
+
+    const expressionInstruction = templateImageBase64
+      ? `- Facial expression: look at Image 2 (the original template) and copy the exact expression — winking, scared, smiling, serious, surprised, whatever it is. Eyes and mouth must match.`
+      : `- Facial expression: natural, relaxed, looking at camera.`;
+
     parts.push({
-      text: `You are a photo editor. Edit this photo by changing ONLY the body pose. Nothing else.
+      text: `You are a professional photo retoucher. This is a face-swap result — the face is already correct and must stay the same person.
 
-NEW POSE: ${pose}
+IMPROVE the photo quality:
+- Blend face edges into the scene more naturally (fix face-swap seams)
+- Match face color temperature and lighting to the scene
+- Reduce AI artifacts, improve skin texture and hair realism
+- Apply subtle cinematic color grading matching the scene mood
+- Sharpen details, reduce noise
 
-KEEP EVERYTHING ELSE EXACTLY AS IN THE INPUT PHOTO:
-- Background: identical, do not change anything in the scene
-- Outfit: same clothes, same colors, same every detail
-- Lighting: same direction, same shadows, same mood
-- Hair: same style, color, length
-- Face: same person, same features, same skin tone
-- Color grade: same tones
+ALSO ADJUST:
+${expressionInstruction}
 
-Do NOT regenerate or reimagine the scene. Do NOT change clothes, background, or any element other than the body pose. This is a minimal pose-only edit.`,
+ABSOLUTE RULES — DO NOT VIOLATE:
+- Do NOT change face identity, shape, or features
+- Do NOT change hairstyle, hair color, or length
+- Do NOT alter outfit, body, or pose
+- Do NOT change the background or scene
+- Do NOT regenerate anything — only retouch
+
+Scene: ${templatePrompt}
+
+Output: same photo, retouched to look like a professional cinematic photograph, with expression matching the template.`,
     });
 
     const result = await geminiPost('gemini-2.5-flash-image:generateContent', {

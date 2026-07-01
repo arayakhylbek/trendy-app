@@ -44,7 +44,7 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
 
       const gemini = new GeminiProvider();
       try {
-        imageDataUri = await gemini.personalizeImage(swapped, prompt);
+        imageDataUri = await gemini.personalizeImage(swapped, prompt, templateInput);
       } catch {
         imageDataUri = swapped;
       }

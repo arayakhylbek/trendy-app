@@ -81,8 +81,9 @@ router.get('/templates', async (req, res, next) => {
     let templates: Record<string, unknown>[] = firestoreTemplates;
 
     if (includeStatic) {
+      const firestoreIds = new Set(firestoreTemplates.map((t) => t['id'] as string));
       const staticTemplates = STATIC_TEMPLATES
-        .filter((t) => !hiddenIds.includes(t.id))
+        .filter((t) => !hiddenIds.includes(t.id) && !firestoreIds.has(t.id))
         .map((t) => ({ ...t, _isStatic: true }));
       templates = [...staticTemplates, ...firestoreTemplates];
     }
