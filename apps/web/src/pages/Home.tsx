@@ -204,7 +204,16 @@ export function Home() {
         <FilterModal
           filter={selectedFilter}
           onClose={() => setSelectedFilter(null)}
-          onResult={(img) => { setSelectedFilter(null); setResultImage(img); }}
+          onResult={(img) => {
+            setSelectedFilter(null);
+            setResultImage(img);
+            saveGen.mutate({
+              imageDataUri: img,
+              templateLabel: selectedFilter.label,
+              templateEmoji: selectedFilter.emoji,
+              createdAt: new Date().toISOString(),
+            });
+          }}
         />
       )}
 
