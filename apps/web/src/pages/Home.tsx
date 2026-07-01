@@ -6,6 +6,7 @@ import { TemplateModal } from '../components/generation/TemplateModal';
 import { CatLoadingScreen } from '../components/generation/CatLoadingScreen';
 import { ResultModal } from '../components/generation/ResultModal';
 import { AuthModal } from '../components/auth/AuthModal';
+import { FilterSidebar } from '../components/layout/FilterSidebar';
 import { useTemplates } from '../hooks/useTemplates';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useAuth } from '../hooks/useAuth';
@@ -27,6 +28,7 @@ export function Home() {
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: currentUser, refetch: refetchUser } = useCurrentUser();
@@ -84,6 +86,39 @@ export function Home() {
 
   return (
     <>
+      <FilterSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      {/* Hamburger toggle button */}
+      <button
+        onClick={() => setSidebarOpen((v) => !v)}
+        aria-label="Toggle filters"
+        style={{
+          position: 'fixed',
+          left: 16,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 39,
+          background: '#16161a',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 12,
+          width: 40,
+          height: 48,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 5,
+          cursor: 'pointer',
+          transition: 'border-color 0.2s, background 0.2s',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ff6b9d'; e.currentTarget.style.background = '#1e1e24'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.background = '#16161a'; }}
+      >
+        {[0, 1, 2].map((i) => (
+          <span key={i} style={{ display: 'block', width: 18, height: 2, background: '#888', borderRadius: 2 }} />
+        ))}
+      </button>
+
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="text-center mb-12">
           <h1 className="font-display text-5xl sm:text-6xl font-bold text-white mb-4">
