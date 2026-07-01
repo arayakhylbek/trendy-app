@@ -1,37 +1,50 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useSidebar } from '../../contexts/SidebarContext';
+import type { Template } from '@trendy/shared';
 
 interface FilterSidebarProps {
-  open: boolean;
-  onClose: () => void;
+  templates: Template[];
+  onSelectTemplate: (t: Template) => void;
 }
 
-export function FilterSidebar({ open, onClose }: FilterSidebarProps) {
-  // Close on Escape
+export function FilterSidebar({ templates, onSelectTemplate }: FilterSidebarProps) {
+  const { open, setOpen } = useSidebar();
+  const [panel, setPanel] = useState<'templates' | 'filters' | null>(null);
+
+  // Close panel when sidebar closes
+  useEffect(() => { if (!open) setPanel(null); }, [open]);
+
+  // Escape key
   useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') { setPanel(null); setOpen(false); } }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [setOpen]);
+
+  const menuItems = [
+    { key: 'templates' as const, icon: '🖼', label: 'Templates', sub: 'Browse AI templates' },
+    { key: 'filters' as const, icon: '✨', label: 'Filters', sub: 'Apply photo filters' },
+  ];
 
   return (
     <>
-      {/* Backdrop */}
+      {/* ── Backdrop ── */}
       <div
-        onClick={onClose}
+        onClick={() => { setPanel(null); setOpen(false); }}
         style={{
           position: 'fixed', inset: 0, zIndex: 40,
-          background: 'rgba(0,0,0,0.45)',
+          background: 'rgba(0,0,0,0.55)',
           opacity: open ? 1 : 0,
           pointerEvents: open ? 'auto' : 'none',
           transition: 'opacity 0.25s ease',
         }}
       />
 
-      {/* Sidebar panel */}
+      {/* ── Sidebar menu ── */}
       <div
         style={{
           position: 'fixed', top: 0, left: 0, bottom: 0,
-          width: 280,
+          width: 260,
           zIndex: 50,
           background: '#0e0e12',
           borderRight: '1px solid rgba(255,255,255,0.07)',
@@ -39,75 +52,173 @@ export function FilterSidebar({ open, onClose }: FilterSidebarProps) {
           flexDirection: 'column',
           transform: open ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform 0.28s cubic-bezier(0.4,0,0.2,1)',
-          overflowY: 'auto',
         }}
       >
         {/* Header */}
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '20px 20px 16px',
+          padding: '22px 20px 18px',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <span style={{ color: '#fff', fontSize: 15, fontWeight: 700, fontFamily: '"DM Sans", sans-serif' }}>
-            Filters & Styles
+          <span style={{
+            fontFamily: '"Playfair Display", serif',
+            fontSize: 18, fontWeight: 800, fontStyle: 'italic',
+            background: 'linear-gradient(to right, #f472b6, #a78bfa, #93c5fd)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>
+            Trendy
           </span>
           <button
-            onClick={onClose}
-            style={{
-              background: 'none', border: 'none', color: '#555', fontSize: 20,
-              cursor: 'pointer', lineHeight: 1, padding: 4,
-            }}
-          >
-            ✕
-          </button>
+            onClick={() => setOpen(false)}
+            style={{ background: 'none', border: 'none', color: '#555', fontSize: 18, cursor: 'pointer', padding: 4, lineHeight: 1 }}
+          >✕</button>
         </div>
 
-        {/* Content */}
-        <div style={{ flex: 1, padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 28 }}>
-
-          {/* Section: Filters */}
-          <Section title="Filters">
-            <Placeholder label="Coming soon..." />
-          </Section>
-
-          {/* Section: AI Styles */}
-          <Section title="AI Styles">
-            <Placeholder label="Coming soon..." />
-          </Section>
-
+        {/* Menu items */}
+        <div style={{ padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {menuItems.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => setPanel(item.key)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: '14px 16px', borderRadius: 14,
+                border: `1px solid ${panel === item.key ? 'rgba(255,107,157,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                background: panel === item.key ? 'rgba(255,107,157,0.08)' : 'rgba(255,255,255,0.02)',
+                cursor: 'pointer', textAlign: 'left', width: '100%',
+                transition: 'border-color .2s, background .2s',
+              }}
+              onMouseEnter={(e) => { if (panel !== item.key) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}}
+              onMouseLeave={(e) => { if (panel !== item.key) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}}
+            >
+              <span style={{ fontSize: 22, lineHeight: 1 }}>{item.icon}</span>
+              <div>
+                <div style={{ color: '#fff', fontSize: 14, fontWeight: 600, fontFamily: '"DM Sans", sans-serif' }}>{item.label}</div>
+                <div style={{ color: '#555', fontSize: 11, marginTop: 2, fontFamily: '"DM Sans", sans-serif' }}>{item.sub}</div>
+              </div>
+              <span style={{ marginLeft: 'auto', color: '#444', fontSize: 12 }}>›</span>
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* ── Templates full-screen overlay ── */}
+      {panel === 'templates' && (
+        <FullOverlay title="Templates" onClose={() => setPanel(null)}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+            gap: 14,
+            padding: '0 4px',
+          }}>
+            {templates.map((t) => (
+              <div
+                key={t.id}
+                onClick={() => { onSelectTemplate(t); setPanel(null); setOpen(false); }}
+                style={{
+                  aspectRatio: '3/4', borderRadius: 16, overflow: 'hidden',
+                  cursor: 'pointer', position: 'relative',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  transition: 'transform .18s, border-color .18s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+              >
+                {t.image
+                  ? <img src={t.image} alt={t.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                  : <div style={{ width: '100%', height: '100%', background: '#16161a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>{t.emoji}</div>
+                }
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  padding: '24px 10px 10px',
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)',
+                }}>
+                  <div style={{ color: '#fff', fontSize: 12, fontWeight: 600, fontFamily: '"DM Sans", sans-serif' }}>{t.emoji} {t.label}</div>
+                </div>
+                {t.isTrending && (
+                  <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(255,107,157,0.85)', borderRadius: 20, padding: '2px 8px', fontSize: 10, color: '#fff', fontWeight: 600 }}>🔥 Trend</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </FullOverlay>
+      )}
+
+      {/* ── Filters full-screen overlay ── */}
+      {panel === 'filters' && (
+        <FullOverlay title="Filters" onClose={() => setPanel(null)}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+            gap: 14,
+          }}>
+            {FILTER_PLACEHOLDERS.map((f) => (
+              <div
+                key={f.id}
+                style={{
+                  aspectRatio: '3/4', borderRadius: 16, overflow: 'hidden',
+                  position: 'relative', border: '1px solid rgba(255,255,255,0.06)',
+                  background: f.bg,
+                  display: 'flex', alignItems: 'flex-end',
+                  cursor: 'not-allowed',
+                  opacity: 0.7,
+                }}
+              >
+                <div style={{ padding: '24px 12px 12px', width: '100%', background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
+                  <div style={{ color: '#fff', fontSize: 12, fontWeight: 600, fontFamily: '"DM Sans", sans-serif' }}>{f.emoji} {f.label}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 2 }}>Coming soon</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </FullOverlay>
+      )}
     </>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function FullOverlay({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div>
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 60,
+      background: '#0a0a0e',
+      display: 'flex', flexDirection: 'column',
+      animation: 'slideUp 0.22s ease',
+    }}>
+      <style>{`@keyframes slideUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }`}</style>
+
+      {/* Overlay header */}
       <div style={{
-        fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
-        color: '#555', textTransform: 'uppercase',
-        marginBottom: 12, fontFamily: '"DM Sans", sans-serif',
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '18px 24px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        flexShrink: 0,
       }}>
-        {title}
+        <button
+          onClick={onClose}
+          style={{ background: 'none', border: 'none', color: '#666', fontSize: 20, cursor: 'pointer', lineHeight: 1, padding: '4px 8px 4px 0' }}
+        >
+          ‹
+        </button>
+        <h2 style={{ color: '#fff', fontSize: 18, fontWeight: 700, fontFamily: '"DM Sans", sans-serif', margin: 0 }}>{title}</h2>
       </div>
-      {children}
+
+      {/* Scrollable content */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px 40px' }}>
+        {children}
+      </div>
     </div>
   );
 }
 
-function Placeholder({ label }: { label: string }) {
-  return (
-    <div style={{
-      padding: '14px 16px',
-      borderRadius: 12,
-      border: '1px dashed rgba(255,255,255,0.08)',
-      color: '#444',
-      fontSize: 12,
-      fontFamily: '"DM Sans", sans-serif',
-      textAlign: 'center',
-    }}>
-      {label}
-    </div>
-  );
-}
+const FILTER_PLACEHOLDERS = [
+  { id: 'f1', emoji: '🌅', label: 'Golden Hour', bg: 'linear-gradient(160deg, #b45309, #92400e, #1c1917)' },
+  { id: 'f2', emoji: '🩵', label: 'Cool Tones', bg: 'linear-gradient(160deg, #0c4a6e, #1e3a5f, #0f172a)' },
+  { id: 'f3', emoji: '🖤', label: 'Noir', bg: 'linear-gradient(160deg, #1c1c1c, #0a0a0a, #111)' },
+  { id: 'f4', emoji: '🌸', label: 'Soft Pink', bg: 'linear-gradient(160deg, #9d174d, #be185d, #1c1015)' },
+  { id: 'f5', emoji: '🌿', label: 'Nature', bg: 'linear-gradient(160deg, #14532d, #166534, #0a1a0f)' },
+  { id: 'f6', emoji: '📼', label: 'VHS', bg: 'linear-gradient(160deg, #3b0764, #4a1942, #0d0012)' },
+  { id: 'f7', emoji: '☁️', label: 'Dreamy', bg: 'linear-gradient(160deg, #1e1b4b, #312e81, #0c0a1e)' },
+  { id: 'f8', emoji: '🔥', label: 'Warm Dark', bg: 'linear-gradient(160deg, #7c2d12, #9a3412, #1c0a00)' },
+];

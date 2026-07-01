@@ -4,6 +4,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
+import { useSidebar } from '../../contexts/SidebarContext';
 import { PLANS } from '@trendy/shared';
 
 export function Header() {
@@ -32,24 +33,43 @@ export function Header() {
   const remaining = limit !== null ? Math.max(0, limit - used) : null;
   const atLimit = !isOwner && remaining === 0;
 
+  const { setOpen: setSidebarOpen } = useSidebar();
+
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-bg/90 backdrop-blur border-b border-surface-border">
-      <Link
-        to="/"
-        style={{
-          fontFamily: '"Playfair Display", Georgia, serif',
-          fontSize: '1.6rem',
-          fontWeight: 800,
-          fontStyle: 'italic',
-          background: 'linear-gradient(to right, #f472b6, #a78bfa, #93c5fd)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          textDecoration: 'none',
-        }}
-      >
-        Trendy
-      </Link>
+      {/* Left: logo + hamburger stacked */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
+        <Link
+          to="/"
+          style={{
+            fontFamily: '"Playfair Display", Georgia, serif',
+            fontSize: '1.6rem',
+            fontWeight: 800,
+            fontStyle: 'italic',
+            background: 'linear-gradient(to right, #f472b6, #a78bfa, #93c5fd)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            textDecoration: 'none',
+            lineHeight: 1,
+          }}
+        >
+          Trendy
+        </Link>
+        <button
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            display: 'flex', flexDirection: 'column', gap: 4,
+            padding: '2px 0',
+          }}
+        >
+          {[0, 1, 2].map((i) => (
+            <span key={i} style={{ display: 'block', width: 20, height: 2, background: '#666', borderRadius: 2 }} />
+          ))}
+        </button>
+      </div>
 
       <nav className="flex items-center gap-3 text-sm">
         <button

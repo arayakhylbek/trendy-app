@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { Header } from './components/layout/Header';
+import { SidebarProvider } from './contexts/SidebarContext';
 import { Home } from './pages/Home';
 import { Pricing } from './pages/Pricing';
 import { Auth } from './pages/Auth';
@@ -11,6 +12,7 @@ import { ProtectedRoute } from './routes/ProtectedRoute';
 
 export function App() {
   return (
+    <SidebarProvider>
     <div className="min-h-screen bg-bg font-sans">
       <Header />
       <Routes>
@@ -45,5 +47,6 @@ export function App() {
       </Routes>
       <Analytics />
     </div>
+    </SidebarProvider>
   );
 }
