@@ -7,12 +7,12 @@ import { CatLoadingScreen } from '../components/generation/CatLoadingScreen';
 import { ResultModal } from '../components/generation/ResultModal';
 import { AuthModal } from '../components/auth/AuthModal';
 import { FilterSidebar } from '../components/layout/FilterSidebar';
+import { FilterModal } from '../components/generation/FilterModal';
 import { useTemplates } from '../hooks/useTemplates';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useAuth } from '../hooks/useAuth';
 import { useSaveGeneration } from '../hooks/useGallery';
 import { apiFetch, ApiError } from '../lib/api';
-import { applyFilter } from '../lib/applyFilter';
 import { PLANS } from '@trendy/shared';
 import type { Template } from '@trendy/shared';
 import { PricingSection } from '../components/PricingSection';
@@ -29,7 +29,7 @@ export function Home() {
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<{ id: string; emoji: string; label: string; sub: string } | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: currentUser, refetch: refetchUser } = useCurrentUser();
@@ -66,10 +66,7 @@ export function Home() {
           templateImageSrc: template.image,
         }),
       });
-      const finalImage = activeFilter
-        ? await applyFilter(result.image, activeFilter)
-        : result.image;
-      setResultImage(finalImage);
+      setResultImage(result.image);
       refetchUser();
       saveGen.mutate({
         imageDataUri: result.image,
@@ -97,8 +94,10 @@ export function Home() {
           if (atLimit) { setShowUpgrade(true); return; }
           setSelectedTemplate(t);
         }}
-        activeFilter={activeFilter}
-        onSelectFilter={setActiveFilter}
+        onClickFilter={(f) => {
+          if (!user) { setShowAuth(true); return; }
+          setSelectedFilter(f);
+        }}
       />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
@@ -198,6 +197,14 @@ export function Home() {
             setResultImage(null);
             navigate('/gallery');
           }}
+        />
+      )}
+
+      {selectedFilter && (
+        <FilterModal
+          filter={selectedFilter}
+          onClose={() => setSelectedFilter(null)}
+          onResult={(img) => { setSelectedFilter(null); setResultImage(img); }}
         />
       )}
 

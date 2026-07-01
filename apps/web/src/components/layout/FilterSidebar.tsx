@@ -5,11 +5,10 @@ import type { Template } from '@trendy/shared';
 interface FilterSidebarProps {
   templates: Template[];
   onSelectTemplate: (t: Template) => void;
-  activeFilter: string | null;
-  onSelectFilter: (id: string | null) => void;
+  onClickFilter: (filter: { id: string; emoji: string; label: string; sub: string }) => void;
 }
 
-export function FilterSidebar({ templates, onSelectTemplate, activeFilter, onSelectFilter }: FilterSidebarProps) {
+export function FilterSidebar({ templates, onSelectTemplate, onClickFilter }: FilterSidebarProps) {
   const { open, setOpen } = useSidebar();
   const [panel, setPanel] = useState<'templates' | 'filters' | null>(null);
 
@@ -150,14 +149,6 @@ export function FilterSidebar({ templates, onSelectTemplate, activeFilter, onSel
       {/* ── Filters full-screen overlay ── */}
       {panel === 'filters' && (
         <FullOverlay title="Filters" onClose={() => setPanel(null)}>
-          {activeFilter && (
-            <div style={{ marginBottom: 14, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,107,157,0.1)', border: '1px solid rgba(255,107,157,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ color: '#ff6b9d', fontSize: 12, fontWeight: 600 }}>
-                ✦ {FILTER_PLACEHOLDERS.find(f => f.id === activeFilter)?.label} active
-              </span>
-              <button onClick={() => onSelectFilter(null)} style={{ background: 'none', border: 'none', color: '#ff6b9d', fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>✕</button>
-            </div>
-          )}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
@@ -166,24 +157,20 @@ export function FilterSidebar({ templates, onSelectTemplate, activeFilter, onSel
             {FILTER_PLACEHOLDERS.map((f) => (
               <div
                 key={f.id}
-                onClick={() => f.ready && onSelectFilter(activeFilter === f.id ? null : f.id)}
+                onClick={() => { if (f.ready) { setPanel(null); setOpen(false); onClickFilter(f); } }}
                 style={{
                   aspectRatio: '3/4', borderRadius: 16, overflow: 'hidden',
                   position: 'relative',
-                  border: activeFilter === f.id
-                    ? '2px solid #ff6b9d'
-                    : '1px solid rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.06)',
                   background: f.bg,
                   display: 'flex', alignItems: 'flex-end',
                   cursor: f.ready ? 'pointer' : 'not-allowed',
                   opacity: f.ready ? 1 : 0.55,
-                  transform: activeFilter === f.id ? 'scale(1.03)' : 'scale(1)',
-                  transition: 'transform .15s, border-color .15s, opacity .15s',
+                  transition: 'transform .15s, opacity .15s',
                 }}
+                onMouseEnter={(e) => { if (f.ready) e.currentTarget.style.transform = 'scale(1.03)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
               >
-                {activeFilter === f.id && (
-                  <div style={{ position: 'absolute', top: 8, right: 8, background: '#ff6b9d', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>✓</div>
-                )}
                 <div style={{ padding: '28px 12px 12px', width: '100%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }}>
                   <div style={{ color: '#fff', fontSize: 12, fontWeight: 600, fontFamily: '"DM Sans", sans-serif' }}>{f.emoji} {f.label}</div>
                   <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, marginTop: 2 }}>{f.sub}</div>
