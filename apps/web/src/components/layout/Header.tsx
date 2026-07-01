@@ -36,9 +36,9 @@ export function Header() {
   const { setOpen: setSidebarOpen } = useSidebar();
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-bg/90 backdrop-blur border-b border-surface-border">
+    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-bg/90 backdrop-blur border-b border-surface-border">
       {/* Left: logo + hamburger stacked */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
         <Link
           to="/"
           style={{

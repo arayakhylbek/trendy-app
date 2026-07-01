@@ -15,6 +15,7 @@ export function App() {
     <SidebarProvider>
     <div className="min-h-screen bg-bg font-sans">
       <Header />
+      <div style={{ height: 88 }} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/pricing" element={<Pricing />} />
