@@ -7,6 +7,12 @@ interface Props {
 
 type TimerMode = 0 | 3 | 10;
 
+const ZOOM_STEPS = [
+  { scale: 1.0, mm: 30 },
+  { scale: 1.5, mm: 45 },
+  { scale: 2.0, mm: 60 },
+];
+
 export function CameraCapture({ onCapture, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -21,6 +27,9 @@ export function CameraCapture({ onCapture, onClose }: Props) {
   const [hasTorch, setHasTorch] = useState(false);
   const [timerMode, setTimerMode] = useState<TimerMode>(0);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [zoomIdx, setZoomIdx] = useState(0);
+
+  const zoom = ZOOM_STEPS[zoomIdx]!;
 
   useEffect(() => {
     startCamera(facingMode);
@@ -38,7 +47,7 @@ export function CameraCapture({ onCapture, onClose }: Props) {
     setTorchOn(false);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: mode, width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
       streamRef.current = stream;
       const track = stream.getVideoTracks()[0];
@@ -65,13 +74,15 @@ export function CameraCapture({ onCapture, onClose }: Props) {
     try {
       await track.applyConstraints({ advanced: [{ torch: next } as MediaTrackConstraintSet] });
       setTorchOn(next);
-    } catch {
-      // torch not supported on this device
-    }
+    } catch { /* not supported */ }
   }
 
   function cycleTimer() {
     setTimerMode((m) => (m === 0 ? 3 : m === 3 ? 10 : 0));
+  }
+
+  function cycleZoom() {
+    setZoomIdx((i) => (i + 1) % ZOOM_STEPS.length);
   }
 
   function doCapture() {
@@ -79,23 +90,27 @@ export function CameraCapture({ onCapture, onClose }: Props) {
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    const scale = zoom.scale;
+    // Crop center of frame to simulate zoom
+    const sw = video.videoWidth / scale;
+    const sh = video.videoHeight / scale;
+    const sx = (video.videoWidth - sw) / 2;
+    const sy = (video.videoHeight - sh) / 2;
+
+    canvas.width = Math.round(sw);
+    canvas.height = Math.round(sh);
     const ctx = canvas.getContext('2d')!;
+
     if (facingMode === 'user') {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
     }
-    ctx.drawImage(video, 0, 0);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
-    // Flash overlay
     const f = flashRef.current;
-    if (f) {
-      f.style.opacity = '1';
-      setTimeout(() => { if (f) f.style.opacity = '0'; }, 130);
-    }
+    if (f) { f.style.opacity = '1'; setTimeout(() => { if (f) f.style.opacity = '0'; }, 130); }
 
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
     const base64 = dataUrl.split(',')[1]!;
     stopCamera();
     onCapture(base64, dataUrl);
@@ -104,7 +119,6 @@ export function CameraCapture({ onCapture, onClose }: Props) {
   function handleShutter() {
     if (!ready || countdown !== null) return;
     if (timerMode === 0) { doCapture(); return; }
-
     let count = timerMode;
     setCountdown(count);
     countdownRef.current = setInterval(() => {
@@ -125,109 +139,256 @@ export function CameraCapture({ onCapture, onClose }: Props) {
     setCountdown(null);
   }
 
-  const timerLabel = timerMode === 0 ? 'Timer' : `${timerMode}s`;
+  const flip = () => setFacingMode((m) => m === 'user' ? 'environment' : 'user');
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: '#000', display: 'flex', flexDirection: 'column' }}>
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      background: '#000',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center',
+      userSelect: 'none',
+    }}>
       {/* Flash overlay */}
-      <div
-        ref={flashRef}
-        style={{ position: 'absolute', inset: 0, zIndex: 10, background: '#fff', opacity: 0, pointerEvents: 'none', transition: 'opacity 0.13s ease' }}
-      />
+      <div ref={flashRef} style={{
+        position: 'absolute', inset: 0, zIndex: 20,
+        background: '#fff', opacity: 0, pointerEvents: 'none',
+        transition: 'opacity 0.13s ease',
+      }} />
 
-      {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', flexShrink: 0, zIndex: 5 }}>
-        <button
-          onClick={() => { cancelCountdown(); stopCamera(); onClose(); }}
-          style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer', padding: '7px 14px', borderRadius: 20, fontFamily: '"DM Sans", sans-serif', fontWeight: 500 }}
-        >
-          ✕ Cancel
-        </button>
-        <span style={{ color: '#888', fontSize: 13, fontFamily: '"DM Sans", sans-serif' }}>Take a photo</span>
-        {/* spacer to keep title centered */}
-        <div style={{ width: 84 }} />
-      </div>
+      {/* Top spacer */}
+      <div style={{ height: 44, flexShrink: 0 }} />
 
-      {/* Video feed */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {error ? (
-          <div style={{ color: '#ef4444', textAlign: 'center', padding: 32, fontSize: 14, lineHeight: 1.6 }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📷</div>
-            {error}
-          </div>
-        ) : (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            style={{ width: '100%', height: '100%', objectFit: 'cover', transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
-          />
-        )}
-
-        {/* Vignette */}
-        {!error && (
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 60% 80% at 50% 40%, transparent 60%, rgba(0,0,0,0.4) 100%)' }} />
-        )}
-
-        {/* Countdown overlay */}
-        {countdown !== null && (
-          <div
-            onClick={cancelCountdown}
-            style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.35)', cursor: 'pointer' }}
-          >
-            <span style={{ fontSize: 96, fontWeight: 800, color: '#fff', fontFamily: '"DM Sans", sans-serif', textShadow: '0 0 40px rgba(255,255,255,0.6)', lineHeight: 1 }}>
-              {countdown}
-            </span>
-            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 12, fontFamily: '"DM Sans", sans-serif' }}>
-              Tap to cancel
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Bottom: controls + shutter */}
-      {!error && (
-        <div style={{ flexShrink: 0, paddingBottom: 48, zIndex: 5 }}>
-          {/* Control buttons */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, padding: '0 24px 22px' }}>
-            <CamControl
-              icon="🔄"
-              label="Rotate"
-              active={false}
-              onClick={() => setFacingMode((m) => m === 'user' ? 'environment' : 'user')}
-            />
-            <CamControl
-              icon={torchOn ? '⚡' : '🔦'}
-              label={torchOn ? 'On' : 'Flash'}
-              active={torchOn}
-              onClick={hasTorch ? toggleTorch : undefined}
-              disabled={!hasTorch}
-              title={hasTorch ? undefined : 'Flash not available'}
-            />
-            <CamControl
-              icon="⏱"
-              label={timerLabel}
-              active={timerMode !== 0}
-              onClick={cycleTimer}
-            />
-          </div>
-
-          {/* Shutter */}
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <button
-              onClick={handleShutter}
-              disabled={!ready || countdown !== null}
+      {/* Viewfinder */}
+      <div style={{
+        position: 'relative',
+        width: '88%', maxWidth: 420,
+        flexShrink: 0,
+      }}>
+        {/* Rounded frame with white border */}
+        <div style={{
+          position: 'relative',
+          aspectRatio: '3/4',
+          borderRadius: 22,
+          border: '2.5px solid rgba(255,255,255,0.88)',
+          overflow: 'hidden',
+          background: '#111',
+        }}>
+          {error ? (
+            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#ef4444', padding: 24, textAlign: 'center', fontSize: 13 }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>📷</div>
+              {error}
+            </div>
+          ) : (
+            <video
+              ref={videoRef}
+              autoPlay playsInline muted
               style={{
-                width: 72, height: 72, borderRadius: '50%',
-                background: ready && countdown === null ? '#fff' : '#555',
-                border: '4px solid rgba(255,255,255,0.3)',
-                cursor: ready && countdown === null ? 'pointer' : 'default',
-                boxShadow: ready && countdown === null ? '0 0 0 6px rgba(255,255,255,0.15)' : 'none',
-                transition: 'all .2s',
+                width: '100%', height: '100%', objectFit: 'cover',
+                transform: `${facingMode === 'user' ? 'scaleX(-1) ' : ''}scale(${zoom.scale})`,
+                transition: 'transform 0.2s ease',
               }}
             />
-          </div>
+          )}
+
+          {/* Top label: mm + menu */}
+          {!error && (
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0,
+              padding: '12px 14px 8px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <div style={{ width: 28 }} />
+              <span style={{
+                color: '#fff', fontSize: 13, fontWeight: 600,
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                letterSpacing: 0.3,
+                textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+              }}>
+                {zoom.mm}mm
+              </span>
+              <button
+                onClick={() => { cancelCountdown(); stopCamera(); onClose(); }}
+                style={{
+                  background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)',
+                  fontSize: 18, cursor: 'pointer', padding: 0, lineHeight: 1,
+                  fontFamily: 'system-ui', letterSpacing: 2,
+                }}
+              >
+                •••
+              </button>
+            </div>
+          )}
+
+          {/* Countdown overlay */}
+          {countdown !== null && (
+            <div onClick={cancelCountdown} style={{
+              position: 'absolute', inset: 0, zIndex: 5,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(0,0,0,0.3)', cursor: 'pointer',
+            }}>
+              <span style={{ fontSize: 100, fontWeight: 800, color: '#fff', lineHeight: 1, fontFamily: 'system-ui', textShadow: '0 0 40px rgba(255,255,255,0.5)' }}>
+                {countdown}
+              </span>
+            </div>
+          )}
+
+          {/* Bottom controls strip (Dazz Cam style) */}
+          {!error && (
+            <div style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0,
+              padding: '20px 14px 14px',
+              background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)',
+              display: 'flex', alignItems: 'center', gap: 10,
+            }}>
+              {/* Film icon pill */}
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'rgba(30,30,30,0.75)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <FilmIcon />
+              </div>
+
+              {/* Temperature pill */}
+              <div style={{
+                width: 40, height: 40, borderRadius: '50%',
+                background: 'rgba(230,215,195,0.9)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <TempIcon />
+              </div>
+
+              {/* Spacer */}
+              <div style={{ flex: 1 }} />
+
+              {/* Zoom mm value — tap to cycle */}
+              <button
+                onClick={cycleZoom}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px',
+                  color: '#fff', fontSize: 22, fontWeight: 700,
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+                  lineHeight: 1,
+                }}
+              >
+                {zoom.mm}
+              </button>
+
+              {/* Spacer */}
+              <div style={{ flex: 1 }} />
+
+              {/* Exposure: sun+A */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <ExposureIcon />
+                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 11, fontFamily: 'system-ui', fontWeight: 600 }}>A</span>
+              </div>
+
+              {/* Exposure value */}
+              <span style={{ color: '#fff', fontSize: 16, fontWeight: 600, fontFamily: 'system-ui', minWidth: 12, textAlign: 'center' }}>
+                0
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Gap */}
+      <div style={{ height: 20, flexShrink: 0 }} />
+
+      {/* 5 icon buttons */}
+      {!error && (
+        <div style={{
+          width: '88%', maxWidth: 420,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexShrink: 0,
+        }}>
+          {/* Gallery (disabled/decorative) */}
+          <IconBtn disabled>
+            <GalleryAddIcon />
+          </IconBtn>
+
+          {/* Frames (decorative) */}
+          <IconBtn disabled>
+            <FramesIcon />
+          </IconBtn>
+
+          {/* Timer */}
+          <IconBtn onClick={cycleTimer} active={timerMode !== 0}>
+            <TimerIcon active={timerMode !== 0} label={timerMode !== 0 ? `${timerMode}` : undefined} />
+          </IconBtn>
+
+          {/* Flash */}
+          <IconBtn onClick={hasTorch ? toggleTorch : undefined} active={torchOn} disabled={!hasTorch}>
+            <FlashIcon active={torchOn} />
+          </IconBtn>
+
+          {/* Rotate */}
+          <IconBtn onClick={flip}>
+            <RotateIcon />
+          </IconBtn>
+        </div>
+      )}
+
+      {/* Spacer grows to push shutter row to bottom */}
+      <div style={{ flex: 1 }} />
+
+      {/* Bottom row: close | shutter | rotate */}
+      {!error && (
+        <div style={{
+          width: '88%', maxWidth: 420,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          paddingBottom: 36,
+          flexShrink: 0,
+        }}>
+          {/* Close — styled like the thumbnail square */}
+          <button
+            onClick={() => { cancelCountdown(); stopCamera(); onClose(); }}
+            style={{
+              width: 56, height: 56, borderRadius: 14,
+              background: '#1a1a1a',
+              border: '1px solid rgba(255,255,255,0.12)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: 'rgba(255,255,255,0.65)', fontSize: 18,
+              fontFamily: 'system-ui',
+            }}
+          >
+            ✕
+          </button>
+
+          {/* Shutter */}
+          <button
+            onClick={handleShutter}
+            disabled={!ready || countdown !== null}
+            style={{
+              width: 76, height: 76, borderRadius: '50%',
+              background: ready && countdown === null ? '#fff' : 'rgba(255,255,255,0.35)',
+              border: '3px solid rgba(255,255,255,0.25)',
+              outline: '3px solid rgba(255,255,255,0.55)',
+              outlineOffset: 3,
+              cursor: ready && countdown === null ? 'pointer' : 'default',
+              transition: 'all .15s',
+              flexShrink: 0,
+            }}
+          />
+
+          {/* Camera/flip */}
+          <button
+            onClick={flip}
+            style={{
+              width: 56, height: 56, borderRadius: 14,
+              background: '#1a1a1a',
+              border: '1px solid rgba(255,255,255,0.12)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <CameraBodyIcon />
+          </button>
         </div>
       )}
 
@@ -236,32 +397,135 @@ export function CameraCapture({ onCapture, onClose }: Props) {
   );
 }
 
-function CamControl({
-  icon, label, active, onClick, disabled, title,
-}: {
-  icon: string; label: string; active: boolean;
-  onClick?: () => void; disabled?: boolean; title?: string;
+/* ── Icon components ─────────────────────────────────────────────────────── */
+
+function IconBtn({ children, onClick, active, disabled }: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  active?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      title={title}
       style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-        background: active ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
-        border: `1px solid ${active ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)'}`,
-        borderRadius: 16, padding: '10px 18px',
+        width: 42, height: 42,
+        background: 'none', border: 'none',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
         cursor: disabled ? 'default' : 'pointer',
-        opacity: disabled ? 0.3 : 1,
-        transition: 'background .15s, border-color .15s',
-        minWidth: 68,
+        opacity: disabled ? 0.28 : active ? 1 : 0.75,
+        padding: 0,
       }}
     >
-      <span style={{ fontSize: 22, lineHeight: 1 }}>{icon}</span>
-      <span style={{ color: active ? '#fff' : 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 600, fontFamily: '"DM Sans", sans-serif' }}>
-        {label}
-      </span>
+      {children}
     </button>
+  );
+}
+
+function FilmIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+      <line x1="7" y1="2" x2="7" y2="22"/>
+      <line x1="17" y1="2" x2="17" y2="22"/>
+      <line x1="2" y1="12" x2="22" y2="12"/>
+      <line x1="2" y1="7" x2="7" y2="7"/>
+      <line x1="2" y1="17" x2="7" y2="17"/>
+      <line x1="17" y1="17" x2="22" y2="17"/>
+      <line x1="17" y1="7" x2="22" y2="7"/>
+    </svg>
+  );
+}
+
+function TempIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(60,40,20,0.8)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+    </svg>
+  );
+}
+
+function ExposureIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/>
+      <line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  );
+}
+
+function GalleryAddIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="3"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/>
+      <polyline points="21 15 16 10 5 21"/>
+      <line x1="19" y1="3" x2="19" y2="7"/>
+      <line x1="17" y1="5" x2="21" y2="5"/>
+    </svg>
+  );
+}
+
+function FramesIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <rect x="7" y="7" width="10" height="10" rx="1"/>
+    </svg>
+  );
+}
+
+function TimerIcon({ active, label }: { active: boolean; label?: string }) {
+  return (
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={active ? '#fff' : 'rgba(255,255,255,0.75)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="13" r="8"/>
+        <polyline points="12 9 12 13 14.5 13"/>
+        <line x1="8" y1="3" x2="16" y2="3"/>
+      </svg>
+      {label && (
+        <span style={{
+          position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)',
+          color: '#fff', fontSize: 9, fontWeight: 700, fontFamily: 'system-ui',
+          background: 'rgba(255,107,157,0.85)', borderRadius: 4, padding: '1px 3px',
+          lineHeight: 1.2,
+        }}>{label}s</span>
+      )}
+    </div>
+  );
+}
+
+function FlashIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="26" viewBox="0 0 24 24" fill={active ? '#fff' : 'none'} stroke={active ? '#fff' : 'rgba(255,255,255,0.75)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+  );
+}
+
+function RotateIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="1 4 1 10 7 10"/>
+      <polyline points="23 20 23 14 17 14"/>
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+    </svg>
+  );
+}
+
+function CameraBodyIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
   );
 }
