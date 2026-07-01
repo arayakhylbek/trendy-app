@@ -204,32 +204,39 @@ Output: the same photo, retouched to look like a professional cinematic photogra
     }
 
     const expressionInstruction = templateImageBase64
-      ? `- Facial expression: look at Image 2 (the original template) and copy the exact expression — winking, scared, smiling, serious, surprised, whatever it is. Eyes and mouth must match.`
+      ? `- Facial expression: study Image 2 carefully and reproduce the exact expression on the face in Image 1 — if winking, make them wink; if smirking, match that smirk; if scared, show fear. Eyes, eyebrows, and mouth must all match.`
       : `- Facial expression: natural, relaxed, looking at camera.`;
 
     parts.push({
-      text: `You are a professional photo retoucher. This is a face-swap result — the face is already correct and must stay the same person.
+      text: `You are a world-class photo retoucher specializing in making composites look like real candid photographs. This image is a face-swap result — the face belongs to a real person and must remain exactly the same individual.
 
-IMPROVE the photo quality:
-- Blend face edges into the scene more naturally (fix face-swap seams)
-- Match face color temperature and lighting to the scene
-- Reduce AI artifacts, improve skin texture and hair realism
-- Apply subtle cinematic color grading matching the scene mood
-- Sharpen details, reduce noise
+MAKE THE FACE AND PERSON LOOK HYPER-REALISTIC:
+- Skin: add natural pores, subtle skin texture, fine hairs — eliminate any plastic or smooth AI look
+- Eyes: make them sharp, wet, and alive — real catchlights, natural iris detail, slight redness in whites if fitting
+- Face edges: seamlessly blend hairline, jaw, and neck into the scene — zero visible swap artifacts
+- Lighting on face: precisely match the direction, color temperature, and intensity of light from the scene — add realistic shadows under the nose, chin, and eye sockets
+- Skin tone: match the ambient color cast of the scene (warm firelight, cool studio, golden hour, etc.)
+- Hair: individual strands, natural flyaways, correct lighting per strand
+
+MAKE THE OVERALL PHOTO LOOK LIKE A REAL CANDID SHOT:
+- Add subtle film grain or sensor noise consistent with the scene
+- Apply cinematic color grade matching the scene mood
+- Ensure depth of field is consistent — face sharp, background at correct blur level
+- Remove any remaining AI artifacts, over-smoothing, or uncanny valley effects
 
 ALSO ADJUST:
 ${expressionInstruction}
 
 ABSOLUTE RULES — DO NOT VIOLATE:
-- Do NOT change face identity, shape, or features
+- Do NOT change the person's face shape, bone structure, or identity
 - Do NOT change hairstyle, hair color, or length
 - Do NOT alter outfit, body, or pose
-- Do NOT change the background or scene
-- Do NOT regenerate anything — only retouch
+- Do NOT change the background or scene elements
+- Do NOT regenerate or reimagine — only retouch what is there
 
-Scene: ${templatePrompt}
+Scene context: ${templatePrompt}
 
-Output: same photo, retouched to look like a professional cinematic photograph, with expression matching the template.`,
+Output: the same photo, retouched to look indistinguishable from a real photograph of that specific person in that scene.`,
     });
 
     const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
