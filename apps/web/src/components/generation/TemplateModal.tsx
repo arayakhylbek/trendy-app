@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import type { Template } from '@trendy/shared';
 import { compressImage } from '../../lib/compressImage';
+import { CameraCapture } from './CameraCapture';
 
 interface Props {
   template: Template | null;
@@ -19,10 +20,9 @@ const EMPTY_SLOT: PhotoSlot = { previewSrc: undefined, compressedBase64: undefin
 export function TemplateModal({ template, onClose, onGenerate }: Props) {
   const [slot1, setSlot1] = useState<PhotoSlot>(EMPTY_SLOT);
   const [slot2, setSlot2] = useState<PhotoSlot>(EMPTY_SLOT);
+  const [cameraSlot, setCameraSlot] = useState<1 | 2 | null>(null);
   const ref1 = useRef<HTMLInputElement>(null);
   const ref2 = useRef<HTMLInputElement>(null);
-  const cam1 = useRef<HTMLInputElement>(null);
-  const cam2 = useRef<HTMLInputElement>(null);
 
   if (!template) return null;
 
@@ -44,10 +44,29 @@ export function TemplateModal({ template, onClose, onGenerate }: Props) {
     reader.readAsDataURL(file);
   }
 
+  async function handleCameraCapture(base64: string, previewSrc: string) {
+    const compressed = await compressImage(previewSrc, 1024, 0.85);
+    const compressedBase64 = compressed.split(',')[1]!;
+    const update: PhotoSlot = { previewSrc, compressedBase64, ready: true };
+    if (cameraSlot === 1) setSlot1(update);
+    else if (cameraSlot === 2) setSlot2(update);
+    setCameraSlot(null);
+    void base64; // raw base64 unused, we use compressed
+  }
+
   function handleGenerate() {
     if (!canGenerate) return;
     onGenerate(template!, slot1.compressedBase64, isCouple ? slot2.compressedBase64 : undefined);
     onClose();
+  }
+
+  if (cameraSlot !== null) {
+    return (
+      <CameraCapture
+        onCapture={handleCameraCapture}
+        onClose={() => setCameraSlot(null)}
+      />
+    );
   }
 
   return (
@@ -74,14 +93,14 @@ export function TemplateModal({ template, onClose, onGenerate }: Props) {
               label="Her photo"
               emoji="👧"
               onGallery={() => ref1.current?.click()}
-              onCamera={() => cam1.current?.click()}
+              onCamera={() => setCameraSlot(1)}
             />
             <PhotoUploadSlot
               slot={slot2}
               label="His photo"
               emoji="👦"
               onGallery={() => ref2.current?.click()}
-              onCamera={() => cam2.current?.click()}
+              onCamera={() => setCameraSlot(2)}
             />
           </div>
         ) : (
@@ -112,19 +131,15 @@ export function TemplateModal({ template, onClose, onGenerate }: Props) {
                 <p className="text-text-muted text-sm">Add your photo</p>
                 <div style={{ display: 'flex', gap: 10, width: '100%' }}>
                   <ActionBtn icon="📁" label="Gallery" onClick={() => ref1.current?.click()} />
-                  <ActionBtn icon="📷" label="Camera" onClick={() => cam1.current?.click()} accent />
+                  <ActionBtn icon="📷" label="Camera" onClick={() => setCameraSlot(1)} accent />
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* Gallery inputs */}
         <input ref={ref1} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e, 1)} />
         <input ref={ref2} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e, 2)} />
-        {/* Camera capture inputs */}
-        <input ref={cam1} type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => handleFile(e, 1)} />
-        <input ref={cam2} type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => handleFile(e, 2)} />
 
         <button
           onClick={handleGenerate}
