@@ -5,9 +5,11 @@ import type { Template } from '@trendy/shared';
 interface FilterSidebarProps {
   templates: Template[];
   onSelectTemplate: (t: Template) => void;
+  activeFilter: string | null;
+  onSelectFilter: (id: string | null) => void;
 }
 
-export function FilterSidebar({ templates, onSelectTemplate }: FilterSidebarProps) {
+export function FilterSidebar({ templates, onSelectTemplate, activeFilter, onSelectFilter }: FilterSidebarProps) {
   const { open, setOpen } = useSidebar();
   const [panel, setPanel] = useState<'templates' | 'filters' | null>(null);
 
@@ -148,6 +150,14 @@ export function FilterSidebar({ templates, onSelectTemplate }: FilterSidebarProp
       {/* ── Filters full-screen overlay ── */}
       {panel === 'filters' && (
         <FullOverlay title="Filters" onClose={() => setPanel(null)}>
+          {activeFilter && (
+            <div style={{ marginBottom: 14, padding: '10px 14px', borderRadius: 12, background: 'rgba(255,107,157,0.1)', border: '1px solid rgba(255,107,157,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ color: '#ff6b9d', fontSize: 12, fontWeight: 600 }}>
+                ✦ {FILTER_PLACEHOLDERS.find(f => f.id === activeFilter)?.label} active
+              </span>
+              <button onClick={() => onSelectFilter(null)} style={{ background: 'none', border: 'none', color: '#ff6b9d', fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+            </div>
+          )}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
@@ -156,18 +166,27 @@ export function FilterSidebar({ templates, onSelectTemplate }: FilterSidebarProp
             {FILTER_PLACEHOLDERS.map((f) => (
               <div
                 key={f.id}
+                onClick={() => f.ready && onSelectFilter(activeFilter === f.id ? null : f.id)}
                 style={{
                   aspectRatio: '3/4', borderRadius: 16, overflow: 'hidden',
-                  position: 'relative', border: '1px solid rgba(255,255,255,0.06)',
+                  position: 'relative',
+                  border: activeFilter === f.id
+                    ? '2px solid #ff6b9d'
+                    : '1px solid rgba(255,255,255,0.06)',
                   background: f.bg,
                   display: 'flex', alignItems: 'flex-end',
-                  cursor: 'not-allowed',
-                  opacity: 0.7,
+                  cursor: f.ready ? 'pointer' : 'not-allowed',
+                  opacity: f.ready ? 1 : 0.55,
+                  transform: activeFilter === f.id ? 'scale(1.03)' : 'scale(1)',
+                  transition: 'transform .15s, border-color .15s, opacity .15s',
                 }}
               >
-                <div style={{ padding: '24px 12px 12px', width: '100%', background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
+                {activeFilter === f.id && (
+                  <div style={{ position: 'absolute', top: 8, right: 8, background: '#ff6b9d', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>✓</div>
+                )}
+                <div style={{ padding: '28px 12px 12px', width: '100%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }}>
                   <div style={{ color: '#fff', fontSize: 12, fontWeight: 600, fontFamily: '"DM Sans", sans-serif' }}>{f.emoji} {f.label}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 2 }}>Coming soon</div>
+                  <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, marginTop: 2 }}>{f.sub}</div>
                 </div>
               </div>
             ))}
@@ -213,12 +232,12 @@ function FullOverlay({ title, onClose, children }: { title: string; onClose: () 
 }
 
 const FILTER_PLACEHOLDERS = [
-  { id: 'f1', emoji: '🌅', label: 'Golden Hour', bg: 'linear-gradient(160deg, #b45309, #92400e, #1c1917)' },
-  { id: 'f2', emoji: '🩵', label: 'Cool Tones', bg: 'linear-gradient(160deg, #0c4a6e, #1e3a5f, #0f172a)' },
-  { id: 'f3', emoji: '🖤', label: 'Noir', bg: 'linear-gradient(160deg, #1c1c1c, #0a0a0a, #111)' },
-  { id: 'f4', emoji: '🌸', label: 'Soft Pink', bg: 'linear-gradient(160deg, #9d174d, #be185d, #1c1015)' },
-  { id: 'f5', emoji: '🌿', label: 'Nature', bg: 'linear-gradient(160deg, #14532d, #166534, #0a1a0f)' },
-  { id: 'f6', emoji: '📼', label: 'VHS', bg: 'linear-gradient(160deg, #3b0764, #4a1942, #0d0012)' },
-  { id: 'f7', emoji: '☁️', label: 'Dreamy', bg: 'linear-gradient(160deg, #1e1b4b, #312e81, #0c0a1e)' },
-  { id: 'f8', emoji: '🔥', label: 'Warm Dark', bg: 'linear-gradient(160deg, #7c2d12, #9a3412, #1c0a00)' },
+  { id: 'grdr',  emoji: '📷', label: 'GRD R',      sub: 'Dazz Cam · G7X vibe', bg: 'linear-gradient(160deg, #7c5230, #5c3d1e, #1a0f00)', ready: true  },
+  { id: 'f2',   emoji: '🩵', label: 'Cool Tones',  sub: 'Coming soon', bg: 'linear-gradient(160deg, #0c4a6e, #1e3a5f, #0f172a)', ready: false },
+  { id: 'f3',   emoji: '🖤', label: 'Noir',         sub: 'Coming soon', bg: 'linear-gradient(160deg, #1c1c1c, #0a0a0a, #111)',   ready: false },
+  { id: 'f4',   emoji: '🌸', label: 'Soft Pink',    sub: 'Coming soon', bg: 'linear-gradient(160deg, #9d174d, #be185d, #1c1015)', ready: false },
+  { id: 'f5',   emoji: '🌿', label: 'Nature',       sub: 'Coming soon', bg: 'linear-gradient(160deg, #14532d, #166534, #0a1a0f)', ready: false },
+  { id: 'f6',   emoji: '📼', label: 'VHS',          sub: 'Coming soon', bg: 'linear-gradient(160deg, #3b0764, #4a1942, #0d0012)', ready: false },
+  { id: 'f7',   emoji: '☁️', label: 'Dreamy',       sub: 'Coming soon', bg: 'linear-gradient(160deg, #1e1b4b, #312e81, #0c0a1e)', ready: false },
+  { id: 'f8',   emoji: '🔥', label: 'Warm Dark',    sub: 'Coming soon', bg: 'linear-gradient(160deg, #7c2d12, #9a3412, #1c0a00)', ready: false },
 ];
