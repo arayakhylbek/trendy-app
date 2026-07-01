@@ -21,6 +21,8 @@ export function TemplateModal({ template, onClose, onGenerate }: Props) {
   const [slot2, setSlot2] = useState<PhotoSlot>(EMPTY_SLOT);
   const ref1 = useRef<HTMLInputElement>(null);
   const ref2 = useRef<HTMLInputElement>(null);
+  const cam1 = useRef<HTMLInputElement>(null);
+  const cam2 = useRef<HTMLInputElement>(null);
 
   if (!template) return null;
 
@@ -71,39 +73,58 @@ export function TemplateModal({ template, onClose, onGenerate }: Props) {
               slot={slot1}
               label="Her photo"
               emoji="👧"
-              onClick={() => ref1.current?.click()}
+              onGallery={() => ref1.current?.click()}
+              onCamera={() => cam1.current?.click()}
             />
             <PhotoUploadSlot
               slot={slot2}
               label="His photo"
               emoji="👦"
-              onClick={() => ref2.current?.click()}
+              onGallery={() => ref2.current?.click()}
+              onCamera={() => cam2.current?.click()}
             />
           </div>
         ) : (
           /* Solo mode: single large slot */
           <div
-            className={`
-              relative rounded-xl overflow-hidden cursor-pointer border-2 border-dashed transition-colors mb-4
-              ${slot1.ready ? 'border-accent' : 'border-surface-border hover:border-white/20'}
-            `}
+            className={`relative rounded-xl overflow-hidden border-2 border-dashed transition-colors mb-4 ${slot1.ready ? 'border-accent' : 'border-surface-border'}`}
             style={{ aspectRatio: '3/4' }}
-            onClick={() => ref1.current?.click()}
           >
             {slot1.previewSrc ? (
-              <img src={slot1.previewSrc} alt="Your photo" className="w-full h-full object-cover" />
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <img src={slot1.previewSrc} alt="Your photo" className="w-full h-full object-cover" />
+                {/* Retake overlay */}
+                <button
+                  onClick={() => setSlot1(EMPTY_SLOT)}
+                  style={{
+                    position: 'absolute', top: 8, right: 8,
+                    background: 'rgba(0,0,0,0.6)', border: 'none',
+                    borderRadius: 20, padding: '4px 10px',
+                    color: '#fff', fontSize: 11, cursor: 'pointer',
+                  }}
+                >
+                  ✕ Retake
+                </button>
+              </div>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-text-muted gap-2">
-                <span className="text-4xl">📷</span>
-                <p className="text-sm">Upload your photo</p>
-                <span className="text-xs text-text-dim">Tap to choose</span>
+              <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-4">
+                <span className="text-4xl">🤳</span>
+                <p className="text-text-muted text-sm">Add your photo</p>
+                <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+                  <ActionBtn icon="📁" label="Gallery" onClick={() => ref1.current?.click()} />
+                  <ActionBtn icon="📷" label="Camera" onClick={() => cam1.current?.click()} accent />
+                </div>
               </div>
             )}
           </div>
         )}
 
+        {/* Gallery inputs */}
         <input ref={ref1} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e, 1)} />
         <input ref={ref2} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e, 2)} />
+        {/* Camera capture inputs */}
+        <input ref={cam1} type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => handleFile(e, 1)} />
+        <input ref={cam2} type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => handleFile(e, 2)} />
 
         <button
           onClick={handleGenerate}
@@ -126,35 +147,57 @@ export function TemplateModal({ template, onClose, onGenerate }: Props) {
 }
 
 function PhotoUploadSlot({
-  slot, label, emoji, onClick,
-}: { slot: PhotoSlot; label: string; emoji: string; onClick: () => void }) {
+  slot, label, emoji, onGallery, onCamera,
+}: { slot: PhotoSlot; label: string; emoji: string; onGallery: () => void; onCamera: () => void }) {
   return (
-    <div
-      onClick={onClick}
-      style={{
-        aspectRatio: '3/4',
-        borderRadius: 12,
-        border: `2px dashed ${slot.ready ? 'rgb(var(--color-accent, 255 107 157))' : 'rgba(255,255,255,0.1)'}`,
-        overflow: 'hidden',
-        cursor: 'pointer',
-        position: 'relative',
-        background: '#16161a',
-      }}
-    >
+    <div style={{
+      aspectRatio: '3/4', borderRadius: 12,
+      border: `2px dashed ${slot.ready ? '#ff6b9d' : 'rgba(255,255,255,0.1)'}`,
+      overflow: 'hidden', position: 'relative', background: '#16161a',
+    }}>
       {slot.previewSrc ? (
         <img src={slot.previewSrc} alt={label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       ) : (
-        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#666' }}>
-          <span style={{ fontSize: 28 }}>{emoji}</span>
-          <span style={{ fontSize: 11, textAlign: 'center', lineHeight: 1.3 }}>{label}</span>
-          <span style={{ fontSize: 10, color: '#444' }}>Tap to choose</span>
+        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 10 }}>
+          <span style={{ fontSize: 24 }}>{emoji}</span>
+          <span style={{ fontSize: 10, color: '#666', textAlign: 'center' }}>{label}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
+            <button onClick={onGallery} style={slotBtnStyle}>📁 Gallery</button>
+            <button onClick={onCamera} style={{ ...slotBtnStyle, background: 'rgba(255,107,157,0.12)', borderColor: 'rgba(255,107,157,0.3)', color: '#ff6b9d' }}>📷 Camera</button>
+          </div>
         </div>
       )}
       {slot.ready && (
-        <div style={{ position: 'absolute', bottom: 6, right: 6, background: 'rgba(0,0,0,0.7)', borderRadius: 20, padding: '2px 8px', fontSize: 10, color: '#4ade80' }}>
-          ✓
-        </div>
+        <div style={{ position: 'absolute', bottom: 6, right: 6, background: 'rgba(0,0,0,0.7)', borderRadius: 20, padding: '2px 8px', fontSize: 10, color: '#4ade80' }}>✓</div>
       )}
     </div>
+  );
+}
+
+const slotBtnStyle: React.CSSProperties = {
+  width: '100%', padding: '6px 4px', borderRadius: 8,
+  border: '1px solid rgba(255,255,255,0.1)',
+  background: 'rgba(255,255,255,0.04)',
+  color: '#888', fontSize: 10, cursor: 'pointer',
+  fontFamily: '"DM Sans", sans-serif',
+};
+
+function ActionBtn({ icon, label, onClick, accent }: { icon: string; label: string; onClick: () => void; accent?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        flex: 1, padding: '10px 8px', borderRadius: 12,
+        border: `1px solid ${accent ? 'rgba(255,107,157,0.35)' : 'rgba(255,255,255,0.1)'}`,
+        background: accent ? 'rgba(255,107,157,0.1)' : 'rgba(255,255,255,0.04)',
+        color: accent ? '#ff6b9d' : '#888',
+        fontSize: 13, cursor: 'pointer',
+        fontFamily: '"DM Sans", sans-serif',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+      }}
+    >
+      <span style={{ fontSize: 22 }}>{icon}</span>
+      <span style={{ fontSize: 11, fontWeight: 500 }}>{label}</span>
+    </button>
   );
 }
