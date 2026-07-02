@@ -157,7 +157,7 @@ export function FilterSidebar({ templates, onSelectTemplate, onClickFilter }: Fi
             {FILTER_PLACEHOLDERS.map((f) => (
               <div
                 key={f.id}
-                onClick={() => { if (f.ready) { setPanel(null); setOpen(false); onClickFilter(f); } }}
+                onClick={() => { if (f.ready) { onClickFilter(f); } }}
                 style={{
                   aspectRatio: '3/4', borderRadius: 16, overflow: 'hidden',
                   position: 'relative',

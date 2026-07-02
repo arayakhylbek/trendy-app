@@ -95,7 +95,7 @@ export function ResultModal({ imageUrl, templateEmoji, onClose, onNew, onViewGal
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-sm bg-surface rounded-2xl border border-surface-border overflow-hidden">
         <div className="relative" style={{ aspectRatio: '3/4' }}>
           {imageUrl ? (
