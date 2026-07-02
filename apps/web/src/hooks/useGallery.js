@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, orderBy, limit, getDocs, addDoc, deleteDoc, doc, } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { compressImage } from '../lib/compressImage';
+import { collection, query, orderBy, limit, getDocs, addDoc, deleteDoc, doc, getDoc, } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '../lib/firebase';
 export function useGallery(uid) {
     return useQuery({
         queryKey: ['gallery', uid],
@@ -20,11 +20,23 @@ export function useSaveGeneration(uid) {
         mutationFn: async (item) => {
             if (!uid)
                 throw new Error('Not authenticated');
-            // Compress aggressively: 400px max, 0.72 quality → ~40-60 KB base64 (well under Firestore 1MB limit)
-            const compressed = await compressImage(item.imageUrl, 400, 0.72);
+            // Convert base64 to blob — no compression, store full resolution
+            const res = await fetch(item.imageDataUri);
+            const blob = await res.blob();
+            const mimeType = blob.type || 'image/jpeg';
+            const ext = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+            // Upload to Firebase Storage
+            const storagePath = `users/${uid}/gallery/${Date.now()}.${ext}`;
+            const storageRef = ref(storage, storagePath);
+            await uploadBytes(storageRef, blob, { contentType: mimeType });
+            const imageUrl = await getDownloadURL(storageRef);
+            // Save only URL + metadata to Firestore
             await addDoc(collection(db, 'users', uid, 'generations'), {
-                ...item,
-                imageUrl: compressed,
+                imageUrl,
+                storagePath,
+                templateLabel: item.templateLabel,
+                templateEmoji: item.templateEmoji,
+                createdAt: item.createdAt,
             });
         },
         onSuccess: () => {
@@ -41,7 +53,20 @@ export function useDeleteGeneration(uid) {
         mutationFn: async (genId) => {
             if (!uid)
                 throw new Error('Not authenticated');
-            await deleteDoc(doc(db, 'users', uid, 'generations', genId));
+            // Get storagePath before deleting Firestore doc
+            const docRef = doc(db, 'users', uid, 'generations', genId);
+            const snap = await getDoc(docRef);
+            const storagePath = snap.data()?.['storagePath'];
+            // Delete from Storage
+            if (storagePath) {
+                try {
+                    await deleteObject(ref(storage, storagePath));
+                }
+                catch {
+                    // File may already be gone — don't block the Firestore delete
+                }
+            }
+            await deleteDoc(docRef);
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['gallery', uid] });
