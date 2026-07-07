@@ -185,58 +185,38 @@ Output: the same photo, retouched to look like a professional cinematic photogra
   async personalizeImage(
     faceSwappedBase64: string,
     templatePrompt: string,
-    templateImageBase64?: string,
+    _userPhotoBase64?: string,
   ): Promise<string> {
     const swappedData = faceSwappedBase64.replace(/^data:[^;]+;base64,/, '');
 
+    const POSES = [
+      'body turned 3/4 to the left, face looking back over the left shoulder toward the camera, confident gaze',
+      'body turned 3/4 to the right, chin slightly raised, eyes directed straight at camera with a soft expression',
+      'slight side profile facing right, face angled toward camera, hair falling naturally to one side',
+      'facing camera directly, one hand lightly touching hair, relaxed candid expression',
+      'body angled left, weight on back foot, eyes looking at camera with a calm confident look',
+      'leaning slightly forward toward camera, intimate close framing, direct eye contact',
+      'low angle shot looking slightly upward at subject, subject looking down at camera with calm expression',
+      'body turned away slightly, glancing back at camera over the shoulder with a natural expression',
+    ];
+    const pose = POSES[Math.floor(Math.random() * POSES.length)]!;
+
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
-
-    // Image 1: face-swap result (correct face already in the scene)
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: swappedData } });
-
-    if (templateImageBase64) {
-      // Image 2: original template — reference for facial expression
-      const templateData = templateImageBase64.startsWith('data:')
-        ? templateImageBase64.replace(/^data:[^;]+;base64,/, '')
-        : templateImageBase64;
-      const templateMime = templateImageBase64.match(/^data:([^;]+);/)?.[1] ?? 'image/jpeg';
-      parts.push({ inlineData: { mimeType: templateMime, data: templateData } });
-    }
-
-    const expressionInstruction = templateImageBase64
-      ? `- Facial expression: study Image 2 carefully and reproduce the exact expression on the face in Image 1 — if winking, make them wink; if smirking, match that smirk; if scared, show fear. Eyes, eyebrows, and mouth must all match.`
-      : `- Facial expression: natural, relaxed, looking at camera.`;
-
     parts.push({
-      text: `You are a world-class photo retoucher specializing in making composites look like real candid photographs. This image is a face-swap result — the face belongs to a real person and must remain exactly the same individual.
+      text: `You are a photo editor. Edit this photo by changing ONLY the body pose. Nothing else.
 
-MAKE THE FACE AND PERSON LOOK HYPER-REALISTIC:
-- Skin: add natural pores, subtle skin texture, fine hairs — eliminate any plastic or smooth AI look
-- Eyes: make them sharp, wet, and alive — real catchlights, natural iris detail, slight redness in whites if fitting
-- Face edges: seamlessly blend hairline, jaw, and neck into the scene — zero visible swap artifacts
-- Lighting on face: precisely match the direction, color temperature, and intensity of light from the scene — add realistic shadows under the nose, chin, and eye sockets
-- Skin tone: match the ambient color cast of the scene (warm firelight, cool studio, golden hour, etc.)
-- Hair: individual strands, natural flyaways, correct lighting per strand
+NEW POSE: ${pose}
 
-MAKE THE OVERALL PHOTO LOOK LIKE A REAL CANDID SHOT:
-- Add subtle film grain or sensor noise consistent with the scene
-- Apply cinematic color grade matching the scene mood
-- Ensure depth of field is consistent — face sharp, background at correct blur level
-- Remove any remaining AI artifacts, over-smoothing, or uncanny valley effects
+KEEP EVERYTHING ELSE EXACTLY AS IN THE INPUT PHOTO:
+- Background: identical, do not change anything in the scene
+- Outfit: same clothes, same colors, same every detail
+- Lighting: same direction, same shadows, same mood
+- Hair: same style, color, length
+- Face: same person, same features, same skin tone
+- Color grade: same tones
 
-ALSO ADJUST:
-${expressionInstruction}
-
-ABSOLUTE RULES — DO NOT VIOLATE:
-- Do NOT change the person's face shape, bone structure, or identity
-- Do NOT change hairstyle, hair color, or length
-- Do NOT alter outfit, body, or pose
-- Do NOT change the background or scene elements
-- Do NOT regenerate or reimagine — only retouch what is there
-
-Scene context: ${templatePrompt}
-
-Output: the same photo, retouched to look indistinguishable from a real photograph of that specific person in that scene.`,
+Do NOT regenerate or reimagine the scene. Do NOT change clothes, background, or any element other than the body pose. This is a minimal pose-only edit.`,
     });
 
     const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
