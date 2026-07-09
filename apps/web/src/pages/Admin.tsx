@@ -61,6 +61,36 @@ function AdminInner() {
   const [sportsFiles, setSportsFiles] = useState<Record<number, File>>({});
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [photoMsg, setPhotoMsg] = useState<string | null>(null);
+  const [quickFiles, setQuickFiles] = useState<File[]>([]);
+  const [quickUploading, setQuickUploading] = useState(false);
+  const [quickMsg, setQuickMsg] = useState<string | null>(null);
+
+  async function uploadQuickPhotos() {
+    if (quickFiles.length === 0) return;
+    setQuickUploading(true);
+    setQuickMsg(null);
+    let done = 0;
+    const errors: string[] = [];
+    for (const file of quickFiles) {
+      try {
+        const imageBase64 = await readFileAsDataUri(file);
+        await apiFetch('/api/admin/templates/quick-upload', {
+          method: 'POST',
+          body: JSON.stringify({ imageBase64 }),
+        });
+        done++;
+      } catch (e) {
+        errors.push((e as Error).message);
+      }
+    }
+    setQuickMsg(errors.length === 0
+      ? `✅ ${done} photo(s) uploaded — waiting in Pending for review.`
+      : `⚠️ ${done} uploaded, ${errors.length} failed: ${errors.join(' | ')}`
+    );
+    setQuickFiles([]);
+    setQuickUploading(false);
+    qc.invalidateQueries({ queryKey: ['admin-templates'] });
+  }
 
   async function uploadSportsPhotos() {
     const entries = Object.entries(sportsFiles);
@@ -320,6 +350,36 @@ function AdminInner() {
           ))}
         </div>
       )}
+
+      {/* Quick Upload — just drop photos, Claude names them later */}
+      <div style={{ marginTop: '3rem', padding: '1.5rem', background: '#16161a', borderRadius: 16, border: '1px solid rgba(255,107,157,0.2)' }}>
+        <h3 style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 4 }}>📥 Quick Upload</h3>
+        <p style={{ color: '#666', fontSize: 12, marginBottom: 14 }}>
+          Drop photos here — no need to fill anything in. They land in the Pending tab; Claude reviews, names, and publishes them.
+        </p>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => setQuickFiles(Array.from(e.target.files ?? []))}
+          style={{ fontSize: 12, color: '#888' }}
+        />
+        <div>
+          <button
+            onClick={uploadQuickPhotos}
+            disabled={quickUploading || quickFiles.length === 0}
+            style={{
+              marginTop: 14, padding: '9px 20px', borderRadius: 10, border: 'none',
+              background: quickUploading ? '#222' : 'linear-gradient(135deg, #ff6b9d, #c084fc)',
+              color: quickUploading ? '#555' : '#fff', fontSize: 13, fontWeight: 600,
+              cursor: quickUploading ? 'default' : 'pointer',
+            }}
+          >
+            {quickUploading ? '⏳ Uploading…' : `📤 Upload ${quickFiles.length || ''} Photo(s)`}
+          </button>
+        </div>
+        {quickMsg && <p style={{ marginTop: 10, fontSize: 12, color: quickMsg.startsWith('✅') ? '#4ade80' : '#ef4444' }}>{quickMsg}</p>}
+      </div>
 
       {/* Upload Sports Photos */}
       <div style={{ marginTop: '3rem', padding: '1.5rem', background: '#16161a', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>

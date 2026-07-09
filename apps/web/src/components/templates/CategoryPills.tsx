@@ -1,15 +1,17 @@
 const CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'trending', label: '🔥 Trending' },
-  { id: 'couple', label: '💑 Couples' },
-  { id: 'carfit', label: '🚗 Car Fit' },
+  { id: 'sports', label: '🏆 Sports' },
+  { id: 'leisure', label: '🌴 Leisure' },
+  { id: 'meme', label: '😂 Memes' },
   { id: 'backrooms', label: '🟡 Backrooms' },
   { id: 'kdrama', label: 'K-Drama' },
   { id: 'gossipgirl', label: 'Gossip Girl' },
   { id: 'anime', label: 'Anime' },
+  { id: 'fantasy', label: '🧝 Fantasy' },
+  { id: 'urban', label: '🧥 Urban' },
   { id: 'aesthetic', label: 'Aesthetic' },
   { id: 'vintage', label: 'Vintage' },
-  { id: 'sports', label: '🏆 Sports' },
 ];
 
 interface Props {

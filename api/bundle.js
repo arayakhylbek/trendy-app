@@ -1620,12 +1620,19 @@ var PLANS = {
     monthlyLimit: 2,
     features: ["2 generations / month", "Limited template library", "Standard quality"]
   },
+  lite: {
+    id: "lite",
+    label: "Lite",
+    price: 0.99,
+    monthlyLimit: 10,
+    features: ["10 generations / month", "Full template library", "HD downloads"]
+  },
   pro: {
     id: "pro",
     label: "Pro",
-    price: 19,
-    monthlyLimit: 200,
-    features: ["200 generations / month", "Full daily template library", "HD downloads"]
+    price: 2.22,
+    monthlyLimit: 20,
+    features: ["20 generations / month", "Full daily template library", "HD downloads"]
   },
   studio: {
     id: "studio",
@@ -1642,13 +1649,14 @@ var PLANS = {
 
 // packages/shared/src/schemas.ts
 var import_zod = require("zod");
-var PlanIdSchema = import_zod.z.enum(["free", "pro", "studio"]);
+var PlanIdSchema = import_zod.z.enum(["free", "lite", "pro", "studio"]);
 var UserDocSchema = import_zod.z.object({
   uid: import_zod.z.string(),
   email: import_zod.z.string().email(),
   displayName: import_zod.z.string().nullable().default(null),
   tier: PlanIdSchema.default("free"),
   generationsUsed: import_zod.z.number().int().nonnegative().default(0),
+  bonusGenerations: import_zod.z.number().int().nonnegative().optional(),
   generationsResetAt: import_zod.z.string().datetime().optional(),
   polarCustomerId: import_zod.z.string().optional(),
   createdAt: import_zod.z.string().datetime(),
@@ -1685,7 +1693,7 @@ var WebhookEventSchema = import_zod.z.object({
   processedAt: import_zod.z.string().datetime()
 });
 var CheckoutRequestSchema = import_zod.z.object({
-  planId: import_zod.z.enum(["pro", "studio"])
+  planId: import_zod.z.enum(["lite", "pro", "studio"])
 });
 var GenerateRequestSchema = import_zod.z.object({
   prompt: import_zod.z.string().min(1).max(2e3),
@@ -1793,11 +1801,13 @@ var adminStorage = new Proxy({}, {
 
 // apps/api/src/lib/polarConfig.ts
 var POLAR_PRODUCT_IDS = {
+  lite: process.env["POLAR_PRODUCT_LITE"] ?? "",
   pro: process.env["POLAR_PRODUCT_PRO"] ?? "",
   studio: process.env["POLAR_PRODUCT_STUDIO"] ?? ""
 };
 function getPlanByProductId(productId) {
   if (!productId) return void 0;
+  if (POLAR_PRODUCT_IDS.lite && POLAR_PRODUCT_IDS.lite === productId) return "lite";
   if (POLAR_PRODUCT_IDS.pro && POLAR_PRODUCT_IDS.pro === productId) return "pro";
   if (POLAR_PRODUCT_IDS.studio && POLAR_PRODUCT_IDS.studio === productId) return "studio";
   return void 0;
@@ -1977,7 +1987,7 @@ var STATIC_TEMPLATES = [
     likes: 0,
     uses: 0,
     createdAt: NOW,
-    image: "/templates/Gemini_Generated_Image_mp2jsfmp2jsfmp2j.png",
+    image: "/templates/Gemini_Generated_Image_mp2jsfmp2jsfmp2j.jpg",
     prompt: "Photorealistic broadcast TV camera screenshot of a young woman accidentally caught on live Korean baseball KBO broadcast camera, she notices the camera and gives a soft natural smile directly into the lens, relaxed and candid moment. She is seated in stadium bleachers wearing a dark navy Doosan Bears jersey. She is holding red thunder sticks loosely in her lap. Background is softly blurred \u2014 a few calm seated fans behind her, no chaos or movement. Stadium lighting is cool blue-tinted LED floodlights, cinematic night game atmosphere. Shallow depth of field, subject is sharp and in focus. Framed as a live TV broadcast screenshot: scoreboard graphic overlay in top-left corner with Korean team names and score, fictional Korean sports channel logo top-right corner reading 'KSBN LIVE' in clean broadcast font. Lower-third Korean text subtitle visible at bottom. The overall feel is calm, beautiful, intimate \u2014 like a quiet moment caught by the broadcast camera. Hyper-realistic, 4K broadcast quality, film grain, cinematic."
   },
   {
@@ -1993,7 +2003,7 @@ var STATIC_TEMPLATES = [
     likes: 0,
     uses: 0,
     createdAt: NOW,
-    image: "/templates/Gemini_Generated_Image_7aatlu7aatlu7aat.png",
+    image: "/templates/Gemini_Generated_Image_7aatlu7aatlu7aat.jpg",
     prompt: "Ultra-stylish fashion editorial photo transformed into a living doll aesthetic. Subject styled as a hyper-glamorous Y2K fashion doll \u2014 flawless porcelain skin, big sparkling eyes with lash extensions, glossy pink lips, perfectly sculpted cheekbones. Wearing a chic pink mini dress with satin ribbon details, pearl accessories, and platform heels. Background is a dreamy pastel pink studio with soft bokeh. Lighting is high-key fashion photography with ring light catchlights in the eyes. The overall feel is playful, luxurious, and fashion-forward \u2014 like a Barbie come to life. Hyper-realistic, editorial quality, 4K, fashion magazine cover aesthetic."
   },
   {
@@ -2009,7 +2019,7 @@ var STATIC_TEMPLATES = [
     likes: 0,
     uses: 0,
     createdAt: NOW,
-    image: "/templates/Gemini_Generated_Image_b5jmleb5jmleb5jm.png",
+    image: "/templates/Gemini_Generated_Image_b5jmleb5jmleb5jm.jpg",
     prompt: "Hyper-realistic high-fashion magazine cover photo shoot. Subject transformed into a stunning editorial model on the cover of a prestigious fashion magazine. Flawless retouched skin, dramatic makeup \u2014 sharp contour, bold lip, sculpted brows. Wearing a couture designer outfit \u2014 structured blazer or avant-garde dress in bold color. Shot against a clean studio background or iconic cityscape. Lighting is dramatic fashion photography \u2014 strong key light, sculpted shadows, magazine-quality retouching. Magazine logo in bold serif font at the top, cover lines with fashion headlines overlaid. The overall feel is powerful, glamorous, and iconic \u2014 a real magazine cover moment. Hyper-realistic, 4K, Vogue/Harper's Bazaar editorial quality."
   },
   {
@@ -2025,7 +2035,7 @@ var STATIC_TEMPLATES = [
     likes: 0,
     uses: 0,
     createdAt: NOW,
-    image: "/templates/Gemini_Generated_Image_w4se3zw4se3zw4se.png",
+    image: "/templates/Gemini_Generated_Image_w4se3zw4se3zw4se.jpg",
     prompt: "Cinematic outdoor portrait on a beautifully windy day. Subject's hair flowing naturally in the breeze, candid and carefree expression. Soft natural daylight with scattered clouds creating dynamic shadow play. Subject wearing a light flowy dress or oversized jacket. Background is an open field, coastal cliff, or city street with leaves drifting past. The wind adds movement and life to every element of the frame \u2014 hair, fabric, surrounding foliage. Shallow depth of field, warm-toned color grade, film photography aesthetic. The overall mood is free-spirited, romantic, and effortlessly beautiful. Hyper-realistic, 4K, editorial outdoor photography."
   },
   {
@@ -2041,7 +2051,7 @@ var STATIC_TEMPLATES = [
     likes: 0,
     uses: 0,
     createdAt: NOW,
-    image: "/templates/Gemini_Generated_Image_x0qd5xx0qd5xx0qd.png",
+    image: "/templates/Gemini_Generated_Image_x0qd5xx0qd5xx0qd.jpg",
     prompt: "Stunning golden hour portrait bathed in warm sunset light. Subject glowing with the magical hour light \u2014 skin luminous with warm orange and amber tones, soft rim lighting creating a natural halo effect. Shot outdoors \u2014 open field, rooftop, beach, or hilltop. The sun is low on the horizon creating long shadows and lens flares. Subject is relaxed and radiant, wearing something light and airy. Background sky is a gradient of deep orange, pink, and purple. The overall mood is dreamy, warm, and cinematic \u2014 the perfect end-of-day glow. Hyper-realistic, 4K, golden hour photography."
   },
   {
@@ -2057,7 +2067,7 @@ var STATIC_TEMPLATES = [
     likes: 0,
     uses: 0,
     createdAt: NOW,
-    image: "/templates/Gemini_Generated_Image_y38do0y38do0y38d.png",
+    image: "/templates/Gemini_Generated_Image_y38do0y38do0y38d.jpg",
     prompt: "Soft and luminous morning portrait in the first light of day. Subject waking up to gentle sunrise light streaming through sheer curtains or captured outdoors at dawn. Skin looks dewy and naturally glowing \u2014 warm peachy tones, minimal makeup, fresh-faced beauty. Wearing a cozy oversized sweater, silk robe, or simple white outfit. Background is soft and airy \u2014 bedroom window, balcony, or misty morning landscape. Light is diffused and golden, creating an ethereal haze. The overall mood is calm, intimate, and beautifully soft \u2014 the quiet magic of early morning. Hyper-realistic, 4K, soft morning light photography."
   },
   {
@@ -2073,7 +2083,7 @@ var STATIC_TEMPLATES = [
     likes: 0,
     uses: 0,
     createdAt: NOW,
-    image: "/templates/Gemini_Generated_Image_aqvtgtaqvtgtaqvt.png",
+    image: "/templates/Gemini_Generated_Image_aqvtgtaqvtgtaqvt.jpg",
     prompt: "Ultra-glamorous luxury hotel room portrait. Subject looking effortlessly chic in a five-star hotel setting \u2014 marble bathroom, plush king-size bed with crisp white linens, floor-to-ceiling windows with city skyline view. Dressed in a silk slip dress or elegant loungewear. Makeup is polished and glam \u2014 glossy lips, defined eyes. Lighting is a mix of warm bedside lamps and cool ambient window light creating a moody, luxurious atmosphere. The vibe is aspirational travel content meets fashion editorial \u2014 rich textures, opulent details, cinematic color grade. Hyper-realistic, 4K, luxury lifestyle photography."
   },
   {
@@ -2089,7 +2099,7 @@ var STATIC_TEMPLATES = [
     likes: 0,
     uses: 0,
     createdAt: NOW,
-    image: "/templates/Gemini_Generated_Image_a3rcpta3rcpta3rc.png",
+    image: "/templates/Gemini_Generated_Image_a3rcpta3rcpta3rc.jpg",
     prompt: "Cinematic horror movie still inspired by classic slasher films. Subject styled as the iconic final girl \u2014 wide frightened eyes, disheveled hair, torn or blood-splattered clothing. Scene set at night in a dark suburban street, haunted house, or dimly lit corridor. Dramatic chiaroscuro lighting with harsh shadows and a single flickering light source. Color grade is desaturated with deep blues and harsh white highlights \u2014 classic horror film look. The overall atmosphere is terrifying, suspenseful, and cinematic \u2014 like a frame from a 90s horror blockbuster. Hyper-realistic, 4K, horror film cinematography."
   },
   {
@@ -2178,7 +2188,7 @@ var STATIC_TEMPLATES = [
     label: "Maldives Lunch",
     style: "Luxury",
     styleName: "Luxury",
-    cat: "aesthetic",
+    cat: "leisure",
     isTrending: true,
     isNew: true,
     isPro: false,
@@ -2566,6 +2576,87 @@ var STATIC_TEMPLATES = [
     createdAt: NOW,
     image: "/templates/backrooms-suburb.jpg",
     prompt: "Young person standing in the middle of an endless suburban street lined with identical colorful pastel houses \u2014 red, pink, green, yellow, blue siding \u2014 stretching to the horizon. Perfectly manicured lawns, no people. Deep blue cloudless sky. Uncanny too-perfect empty neighborhood. Liminal space, digital film grain, photorealistic, 4K."
+  },
+  // Meme / Viral
+  {
+    id: "63",
+    emoji: "\u{1F604}",
+    label: "Pink Shirt Guy",
+    style: "Meme",
+    styleName: "Meme",
+    cat: "meme",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/pink-shirt.jpg",
+    prompt: "Cheerful heavyset man standing in a bright studio, wearing a pink plaid button-up shirt with rolled cuffs, dark blue jeans and brown shoes. Hands clasped in front, big warm friendly smile, relaxed posture. Clean light grey studio background. Professional portrait photography, soft studio lighting, 4K."
+  },
+  {
+    id: "64",
+    emoji: "\u{1FA9E}",
+    label: "Vanity Glow",
+    style: "Aesthetic",
+    styleName: "Aesthetic",
+    cat: "aesthetic",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/mirror-vanity.jpg",
+    prompt: "Intimate vanity mirror selfie. Young woman with dark hair loosely pinned up, looking at her reflection in a round gold-framed mirror. Wearing a black lace camisole top with a delicate gold necklace. Warm candlelight and soft amber glow from candles and perfume bottles arranged on the vanity. Makeup brushes and beauty products in the foreground. Romantic, moody, warm-toned photography, film grain, 4K."
+  },
+  {
+    id: "65",
+    emoji: "\u{1F525}",
+    label: "Disaster Girl",
+    style: "Meme",
+    styleName: "Meme",
+    cat: "meme",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/disaster-girl.jpg",
+    prompt: "Person standing in the foreground of a dramatic scene \u2014 a house fully engulfed in massive orange flames behind them with thick black smoke rising, a fire truck number 38 visible, firefighters in the background trying to battle the blaze. The person in the foreground looks directly at the camera with a subtle knowing smirk \u2014 unbothered, almost pleased. Candid photo style, slightly overexposed, raw documentary photography look, 4K."
+  },
+  {
+    id: "66",
+    emoji: "\u{1F60F}",
+    label: "Devious Grin",
+    style: "Meme",
+    styleName: "Meme",
+    cat: "meme",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/turtleneck-smirk.jpg",
+    prompt: "Close-up studio portrait of a young man wearing a dark navy turtleneck sweater. Both hands raised up to chin level with fists touching the sweater collar, leaning slightly forward. Subtle devious smirk, piercing blue eyes looking directly at camera with a mischievous expression. Deep blue gradient studio background, soft professional lighting. Cinematic portrait photography, 4K."
+  },
+  {
+    id: "67",
+    emoji: "\u{1F380}",
+    label: "Coquette Room",
+    style: "Coquette",
+    styleName: "Coquette",
+    cat: "aesthetic",
+    isTrending: true,
+    isNew: true,
+    isPro: false,
+    likes: 0,
+    uses: 0,
+    createdAt: NOW,
+    image: "/templates/coquette-room.jpg",
+    prompt: "Coquette aesthetic bedroom selfie. Young woman taking a selfie in a dreamy pink room \u2014 wearing a pink floral cottagecore puff-sleeve dress, hair half-up with a pink satin bow scrunchie, golden hoop earrings and layered gold necklaces. Rosy blush makeup, soft natural skin. Background: white bed with pillows, pink roses, aesthetic photo wall collage with fairy string lights, trailing ivy vines. Warm sunlit soft glow, TikTok selfie style, 4K."
   }
 ];
 function isFirebaseUnconfigured(e) {
@@ -2729,7 +2820,7 @@ var import_express6 = require("express");
 var import_firestore2 = require("firebase-admin/firestore");
 
 // apps/api/src/middleware/quota.ts
-var OWNER_EMAIL = "araiakhylbek78@gmail.com";
+var ADMIN_EMAILS = ["araiakhylbek78@gmail.com", "potizhmoti@gmail.com"];
 async function checkQuota(req, _res, next) {
   try {
     const userRef = db.collection("users").doc(req.uid);
@@ -2737,14 +2828,16 @@ async function checkQuota(req, _res, next) {
       const snap = await t.get(userRef);
       if (!snap.exists) throw new NotFoundError("User");
       const user = snap.data();
-      if (user["email"]?.toLowerCase() === OWNER_EMAIL) {
+      if (ADMIN_EMAILS.includes(user["email"]?.toLowerCase() ?? "")) {
         return true;
       }
       const tier = user["tier"] ?? "free";
       const plan = PLANS[tier] ?? PLANS.free;
       if (plan.monthlyLimit === Infinity) return true;
       const used = user["generationsUsed"] ?? 0;
-      if (used >= plan.monthlyLimit) return false;
+      const bonus = user["bonusGenerations"] ?? 0;
+      const effectiveLimit = plan.monthlyLimit + bonus;
+      if (used >= effectiveLimit) return false;
       t.update(userRef, {
         generationsUsed: used + 1,
         updatedAt: (/* @__PURE__ */ new Date()).toISOString()
@@ -2928,7 +3021,7 @@ Output: the same photo, retouched to look like a professional cinematic photogra
     const { mimeType, data: outData } = imagePart.inlineData;
     return `data:${mimeType};base64,${outData}`;
   }
-  async personalizeImage(faceSwappedBase64, templatePrompt, _userPhotoBase64) {
+  async personalizeImage(faceSwappedBase64, templatePrompt) {
     const swappedData = faceSwappedBase64.replace(/^data:[^;]+;base64,/, "");
     const POSES = [
       "body turned 3/4 to the left, face looking back over the left shoulder toward the camera, confident gaze",
@@ -2937,35 +3030,41 @@ Output: the same photo, retouched to look like a professional cinematic photogra
       "facing camera directly, one hand lightly touching hair, relaxed candid expression",
       "body angled left, weight on back foot, eyes looking at camera with a calm confident look",
       "leaning slightly forward toward camera, intimate close framing, direct eye contact",
-      "low angle shot looking slightly upward at subject, subject looking down at camera with calm expression",
-      "body turned away slightly, glancing back at camera over the shoulder with a natural expression"
+      "low camera angle looking slightly upward at the subject, subject looking down toward camera with a calm expression",
+      "body turned away slightly, glancing back at camera over the shoulder with a natural expression",
+      "camera positioned slightly higher than eye level, shooting down at a gentle angle, subject looking up toward the lens",
+      "wider framing shot from a few steps back showing more of the body and scene, subject turned slightly to one side",
+      "close-up crop from chest height, camera at eye level, subject looking directly into the lens",
+      "dynamic low angle from hip height looking up, subject glancing down toward camera, editorial energy"
     ];
     const pose = POSES[Math.floor(Math.random() * POSES.length)];
     const parts = [];
     parts.push({ inlineData: { mimeType: "image/jpeg", data: swappedData } });
     parts.push({
-      text: `You are given a portrait photo where a person's face has been placed into a styled scene.
+      text: `The attached image is one frame from a professional photo shoot of a real person. Generate the NEXT frame from the same shoot: the photographer has asked the subject to change position, and moved the camera.
 
-YOUR TASK: Recreate this as a new high-quality editorial portrait \u2014 same person, same scene style, but with a COMPLETELY DIFFERENT pose and camera angle.
+THE NEW SHOT \u2014 this is the whole point of the task:
+${pose}
 
-\u2501\u2501\u2501 FACE IDENTITY (most important) \u2501\u2501\u2501
-\u2022 Reproduce this exact person's face: same skin tone, eye shape, nose, lips, jawline, bone structure
-\u2022 Keep same hair color, length, and texture from the input
-\u2022 The person must be 100% recognizable as the same individual
+The new frame MUST be composed clearly differently from the attached one. If the output has the same pose, same framing, and same camera angle as the input, the task has FAILED. Move the body, move the camera, re-compose.
 
-\u2501\u2501\u2501 REQUIRED POSE \u2014 YOU MUST USE THIS EXACTLY \u2501\u2501\u2501
-\u2192 ${pose}
-\u2022 The pose in the input photo must NOT be copied \u2014 use the new pose above
-\u2022 This is mandatory, not optional
+SAME SHOOT, SAME EVERYTHING ELSE:
+- Same person: identical face, bone structure, skin tone, identity \u2014 this is a real individual and must stay recognizably them
+- Same outfit: identical clothes, colors, accessories
+- Same location and lighting setup: the same environment and mood, naturally seen from the new camera position
+- Same hairstyle, hair color, and length
 
-\u2501\u2501\u2501 SCENE & QUALITY \u2501\u2501\u2501
-\u2022 Same background, setting, atmosphere, outfit style, and lighting mood as the input
-\u2022 Fix any face-swap blending seams, match face lighting to scene
-\u2022 Photorealistic skin, cinematic color grade, 4K quality
+PHOTOGRAPHIC QUALITY \u2014 render the new frame hyper-realistically:
+- Skin: natural pores, texture, fine hairs, faint imperfections \u2014 no plastic, waxy, or airbrushed AI look
+- Eyes: sharp, wet, alive \u2014 real catchlights matching the scene's light sources, natural iris detail, visible eyelashes
+- Face: seamlessly lit and integrated \u2014 lighting direction, color temperature, and shadows (nose, chin, cheekbones, eye sockets) must match the scene from the new angle
+- Hair: individual strands, natural flyaways, per-strand lighting
+- Lens realism: subtle film grain, natural depth of field, cinematic color grade matching the scene mood
+- Sharpness: crisp high-resolution detail on face and clothing \u2014 no softness, blur, warping, or AI artifacts
 
-Scene: ${templatePrompt}
+Scene context: ${templatePrompt}
 
-Output: one portrait. New pose. Same person. Same scene.`
+Output: a single photorealistic photograph \u2014 the next frame of the same person, same outfit, same scene, in the new pose and camera angle.`
     });
     const result = await geminiPost("gemini-2.5-flash-image:generateContent", {
       contents: [{ parts }],
@@ -2974,6 +3073,10 @@ Output: one portrait. New pose. Same person. Same scene.`
     const responseParts = result.candidates?.[0]?.content?.parts ?? [];
     const imagePart = responseParts.find((p) => p.inlineData);
     if (!imagePart?.inlineData) {
+      const textPart = responseParts.find((p) => p.text);
+      console.warn(
+        `personalizeImage: Gemini returned no image (text: ${textPart?.text?.slice(0, 200) ?? "none"}) \u2014 falling back to enhance-only (pose will NOT change)`
+      );
       return this.enhanceImage(faceSwappedBase64);
     }
     const { mimeType, data: outData } = imagePart.inlineData;
@@ -3085,6 +3188,16 @@ async function fetchResultAsBase64(url) {
   const buffer = await response.arrayBuffer();
   return `data:image/jpeg;base64,${Buffer.from(buffer).toString("base64")}`;
 }
+async function upscaleImage(imageBase64) {
+  const replicate = getClient();
+  const imageUrl = await toReplicateUrl(replicate, imageBase64);
+  const output = await replicate.run("nightmareai/real-esrgan", {
+    input: { image: imageUrl, scale: 2, face_enhance: true }
+  });
+  const resultUrl = Array.isArray(output) ? output[0] : output;
+  if (!resultUrl) throw new AppError("REPLICATE_EMPTY", "Upscale returned no output", 502);
+  return fetchResultAsBase64(resultUrl);
+}
 async function faceSwap(templateInput, userPhotoBase64) {
   const replicate = getClient();
   const [templateUrl, userUrl] = await Promise.all([
@@ -3125,10 +3238,25 @@ router5.post("/", ensureAuth, rateLimit(10), checkQuota, async (req, res, next) 
       const swapped1 = await faceSwap(templateInput, imageBase64);
       const swapped = imageBase64_2 ? await faceSwap(swapped1, imageBase64_2) : swapped1;
       const gemini = new GeminiProvider();
-      imageDataUri = await gemini.personalizeImage(swapped, prompt);
+      try {
+        imageDataUri = await gemini.personalizeImage(swapped, prompt);
+      } catch (firstErr) {
+        try {
+          imageDataUri = await gemini.personalizeImage(swapped, prompt);
+        } catch (retryErr) {
+          console.warn(
+            `personalizeImage failed twice, returning raw face-swap (template pose unchanged): ${firstErr.message} | retry: ${retryErr.message}`
+          );
+          imageDataUri = swapped;
+        }
+      }
     } else {
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, void 0, void 0);
+    }
+    try {
+      imageDataUri = await upscaleImage(imageDataUri);
+    } catch {
     }
     res.json({ image: imageDataUri, prompt });
   } catch (e) {
@@ -3146,7 +3274,7 @@ var generate_default = router5;
 
 // apps/api/src/routes/generateTemplate.ts
 var import_express7 = require("express");
-var ADMIN_EMAIL = "araiakhylbek78@gmail.com";
+var ADMIN_EMAILS2 = ["araiakhylbek78@gmail.com", "potizhmoti@gmail.com"];
 var THEMES = [
   "stadium cam",
   "magazine cover",
@@ -3168,7 +3296,7 @@ var router6 = (0, import_express7.Router)();
 router6.post("/", ensureAuth, async (req, res, next) => {
   try {
     const userRecord = await adminAuth.getUser(req.uid);
-    if (userRecord.email !== ADMIN_EMAIL) {
+    if (!ADMIN_EMAILS2.includes(userRecord.email ?? "")) {
       return next(new AppError("FORBIDDEN", "Admin only", 403));
     }
     const theme = THEMES[Math.floor(Math.random() * THEMES.length)];
@@ -3499,13 +3627,13 @@ var cron_default = router7;
 var import_express9 = require("express");
 
 // apps/api/src/middleware/ensureOwner.ts
-var OWNER_EMAIL2 = "araiakhylbek78@gmail.com";
+var ADMIN_EMAILS3 = ["araiakhylbek78@gmail.com", "potizhmoti@gmail.com"];
 async function ensureOwner(req, _res, next) {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) return next(new UnauthorizedError("Missing token"));
   try {
     const decoded = await adminAuth.verifyIdToken(header.slice(7));
-    if (decoded.email?.toLowerCase() !== OWNER_EMAIL2) {
+    if (!ADMIN_EMAILS3.includes(decoded.email?.toLowerCase() ?? "")) {
       return next(new UnauthorizedError("Owner only"));
     }
     req.uid = decoded.uid;
@@ -3615,6 +3743,70 @@ var STYLED_PROMPTS = [
     style: "Aesthetic",
     cat: "aesthetic",
     prompt: "Dreamy moonlit night editorial portrait. Woman in a silver satin evening gown standing on a coastal cliff at night with a full moon over the ocean behind her. Moonlight illuminating her face and dress, silver and navy tones. Photorealistic cinematic photography, 4K."
+  },
+  // Sports / senior-photo aesthetic
+  {
+    emoji: "\u{1F3BE}",
+    label: "Tennis Ace",
+    style: "Sporty",
+    cat: "sports",
+    prompt: "Photorealistic sporty editorial portrait. Young woman sitting on a tennis court, one leg extended, wearing an all-white tennis fit \u2014 ribbed tank top, pleated tennis skirt, matching headband, white sneakers and crew socks. Tennis racket and two tennis balls resting beside her on the court. Court is bold blue and green with white sideline markings, tennis net visible behind her. Bright, clean daylight, high-fashion sports editorial lighting. Confident, relaxed pose, subtle smile. Hyper-realistic, 4K, professional sports lifestyle photography."
+  },
+  {
+    emoji: "\u{1F3D0}",
+    label: "Volleyball Star",
+    style: "Sporty",
+    cat: "sports",
+    prompt: "Dramatic photorealistic sports portrait. Young woman leaning against a volleyball net, wearing a long-sleeve blue volleyball jersey with a bold number and team lettering, knee pads, holding a volleyball at her hip. Backlit rim lighting cutting through the net, dark moody gym background with subtle lens flare. Intense, focused expression, athletic confident stance. Hyper-realistic, 4K, dramatic senior sports photography."
+  },
+  {
+    emoji: "\u{1F3C0}",
+    label: "Hoop Dreams",
+    style: "Sporty",
+    cat: "sports",
+    prompt: "Photorealistic studio sports portrait. Young woman crouching low, dribbling a basketball, wearing a yellow and navy basketball uniform, hair in double braids, basketball sneakers. Clean bright white studio background, soft even lighting with subtle shadow. Confident, powerful athletic pose, direct gaze at camera. Hyper-realistic, 4K, professional sports studio photography."
+  },
+  {
+    emoji: "\u{1F3D0}",
+    label: "Varsity Volleyball",
+    style: "Sporty",
+    cat: "sports",
+    prompt: "Photorealistic senior sports portrait. Young woman standing side-on against a plain dark studio backdrop, wearing a navy volleyball uniform with an arm sleeve and bold number, holding a volleyball against her hip, warm confident smile, long hair loose. Soft dramatic side lighting with a subtle rim light. Hyper-realistic, 4K, professional senior sports photography."
+  },
+  {
+    emoji: "\u26F3",
+    label: "Country Club Cart",
+    style: "Preppy",
+    cat: "sports",
+    prompt: "Photorealistic preppy lifestyle portrait. Young woman sitting in a golf cart on a sunny golf course, wearing a white sports-bra top, matching pleated skirt, cream knit cardigan, and white visor, one hand adjusting the visor. Golf clubs visible in the bag beside her, lush green fairway and trees in the background. Bright natural daylight, clean aspirational lifestyle photography. Relaxed, chic pose. Hyper-realistic, 4K, editorial lifestyle photography."
+  },
+  {
+    emoji: "\u{1F3BE}",
+    label: "Clay Court Glow",
+    style: "Sporty",
+    cat: "sports",
+    prompt: "Photorealistic golden hour tennis portrait. Young woman standing at the net on a red clay tennis court, wearing a fitted white halter tennis dress and white visor, holding a tennis racket, warm low sunlight creating soft flare and glow. Elegant, poised stance, looking off to the side. Hyper-realistic, 4K, editorial sports lifestyle photography."
+  },
+  {
+    emoji: "\u{1F3BE}",
+    label: "Match Point Smile",
+    style: "Sporty",
+    cat: "sports",
+    prompt: "Photorealistic sporty portrait. Young woman standing on an outdoor tennis court, wearing a white zip-up tennis polo and holding a tennis racket over her shoulder and a tennis ball in hand, bright genuine smile, long wavy hair. Soft overcast daylight, clean green court background. Hyper-realistic, 4K, professional sports lifestyle photography."
+  },
+  {
+    emoji: "\u{1F3C0}",
+    label: "Fire on the Court",
+    style: "Sporty",
+    cat: "sports",
+    prompt: "Cinematic dramatic sports portrait. Young woman sitting on a folding chair on a basketball court surrounded by basketballs, wearing a white and red basketball uniform with an arm sleeve, resting a basketball on her lap, one foot propped on a ball. Thick orange smoke and dramatic rim lighting fill the background, moody gym atmosphere. Hyper-realistic, 4K, dramatic senior sports photography."
+  },
+  {
+    emoji: "\u26F3",
+    label: "Fairway Glam",
+    style: "Preppy",
+    cat: "sports",
+    prompt: "Photorealistic glamorous golf lifestyle portrait. Young woman lounging playfully in a golf cart, wearing a fitted white sleeveless golf dress and white cap, legs draped over the seat, playful joyful smile, golf clubs and bag beside her. Warm bright sunny daylight on a manicured golf course. Hyper-realistic, 4K, aspirational lifestyle photography."
   }
 ];
 router8.get("/templates", async (req, res, next) => {
@@ -3632,10 +3824,71 @@ router8.get("/templates", async (req, res, next) => {
     const hiddenIds = hiddenSnap.data()?.["ids"] ?? [];
     let templates = firestoreTemplates;
     if (includeStatic) {
-      const staticTemplates = STATIC_TEMPLATES.filter((t) => !hiddenIds.includes(t.id)).map((t) => ({ ...t, _isStatic: true }));
+      const firestoreIds = new Set(firestoreTemplates.map((t) => t["id"]));
+      const staticTemplates = STATIC_TEMPLATES.filter((t) => !hiddenIds.includes(t.id) && !firestoreIds.has(t.id)).map((t) => ({ ...t, _isStatic: true }));
       templates = [...staticTemplates, ...firestoreTemplates];
     }
     res.json({ templates, total: templates.length });
+  } catch (e) {
+    next(e);
+  }
+});
+router8.post("/templates/upload-photo", async (req, res, next) => {
+  try {
+    const { emoji, label, style, cat, prompt, imageBase64 } = req.body;
+    if (!emoji || !label || !cat || !prompt || !imageBase64) {
+      throw new AppError("BAD_REQUEST", "emoji, label, cat, prompt, imageBase64 required", 400);
+    }
+    const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
+    const imageUrl = await uploadTemplateImage(buffer, label);
+    const docRef = await db.collection("templates").add({
+      emoji,
+      label,
+      style: style ?? label,
+      styleName: style ?? label,
+      cat,
+      prompt,
+      image: imageUrl,
+      isTrending: false,
+      isNew: true,
+      isPro: false,
+      likes: 0,
+      uses: 0,
+      status: "published",
+      createdAt: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    res.json({ ok: true, id: docRef.id, image: imageUrl });
+  } catch (e) {
+    next(e);
+  }
+});
+router8.post("/templates/quick-upload", async (req, res, next) => {
+  try {
+    const { imageBase64 } = req.body;
+    if (!imageBase64) {
+      throw new AppError("BAD_REQUEST", "imageBase64 required", 400);
+    }
+    const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, "");
+    const buffer = Buffer.from(base64Data, "base64");
+    const imageUrl = await uploadTemplateImage(buffer, `quick-${Date.now()}`);
+    const docRef = await db.collection("templates").add({
+      emoji: "\u{1F4E5}",
+      label: "Untitled (needs review)",
+      style: "Pending",
+      styleName: "Pending",
+      cat: "pending",
+      prompt: "",
+      image: imageUrl,
+      isTrending: false,
+      isNew: true,
+      isPro: false,
+      likes: 0,
+      uses: 0,
+      status: "pending",
+      createdAt: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    res.json({ ok: true, id: docRef.id, image: imageUrl });
   } catch (e) {
     next(e);
   }
@@ -3674,12 +3927,18 @@ router8.delete("/templates/:id", async (req, res, next) => {
 });
 router8.post("/generate-styled", async (req, res, next) => {
   try {
-    const count = Math.min(Number(req.query["count"]) || 3, 6);
+    const cat = typeof req.query["cat"] === "string" ? req.query["cat"] : void 0;
     const gemini = new GeminiProvider();
-    const offset = Math.floor(Date.now() / 6e4) % STYLED_PROMPTS.length;
-    const selected = [];
-    for (let i = 0; i < count; i++) {
-      selected.push(STYLED_PROMPTS[(offset + i) % STYLED_PROMPTS.length]);
+    let selected;
+    if (cat) {
+      selected = STYLED_PROMPTS.filter((p) => p.cat === cat);
+    } else {
+      const count = Math.min(Number(req.query["count"]) || 3, 6);
+      const offset = Math.floor(Date.now() / 6e4) % STYLED_PROMPTS.length;
+      selected = [];
+      for (let i = 0; i < count; i++) {
+        selected.push(STYLED_PROMPTS[(offset + i) % STYLED_PROMPTS.length]);
+      }
     }
     let generated = 0;
     const errors = [];
@@ -3757,6 +4016,27 @@ router8.post("/users/grant-credits", async (req, res, next) => {
     const newUsed = Math.max(0, current - credits);
     await doc.ref.update({ generationsUsed: newUsed, updatedAt: (/* @__PURE__ */ new Date()).toISOString() });
     res.json({ ok: true, email, before: current, after: newUsed, granted: credits });
+  } catch (e) {
+    next(e);
+  }
+});
+router8.post("/users/grant-bonus", async (req, res, next) => {
+  try {
+    const { email, bonus } = req.body;
+    if (!email || bonus === void 0 || bonus < 0) {
+      throw new AppError("BAD_REQUEST", "email and bonus (>=0) required", 400);
+    }
+    const snap = await db.collection("users").where("email", "==", email.toLowerCase().trim()).limit(1).get();
+    if (snap.empty) {
+      throw new AppError("NOT_FOUND", `User not found: ${email}`, 404);
+    }
+    const doc = snap.docs[0];
+    await doc.ref.update({
+      bonusGenerations: bonus,
+      generationsUsed: 0,
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    res.json({ ok: true, email, bonusGenerations: bonus });
   } catch (e) {
     next(e);
   }

@@ -234,7 +234,7 @@ export const STATIC_TEMPLATES = [
     label: 'Maldives Lunch',
     style: 'Luxury',
     styleName: 'Luxury',
-    cat: 'aesthetic',
+    cat: 'leisure',
     isTrending: true,
     isNew: true,
     isPro: false,

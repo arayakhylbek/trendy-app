@@ -185,10 +185,10 @@ Output: the same photo, retouched to look like a professional cinematic photogra
   async personalizeImage(
     faceSwappedBase64: string,
     templatePrompt: string,
-    _userPhotoBase64?: string,
   ): Promise<string> {
     const swappedData = faceSwappedBase64.replace(/^data:[^;]+;base64,/, '');
 
+    // Mix of body-pose changes and camera-angle changes so results vary in more than one way
     const POSES = [
       'body turned 3/4 to the left, face looking back over the left shoulder toward the camera, confident gaze',
       'body turned 3/4 to the right, chin slightly raised, eyes directed straight at camera with a soft expression',
@@ -196,38 +196,42 @@ Output: the same photo, retouched to look like a professional cinematic photogra
       'facing camera directly, one hand lightly touching hair, relaxed candid expression',
       'body angled left, weight on back foot, eyes looking at camera with a calm confident look',
       'leaning slightly forward toward camera, intimate close framing, direct eye contact',
-      'low angle shot looking slightly upward at subject, subject looking down at camera with calm expression',
+      'low camera angle looking slightly upward at the subject, subject looking down toward camera with a calm expression',
       'body turned away slightly, glancing back at camera over the shoulder with a natural expression',
+      'camera positioned slightly higher than eye level, shooting down at a gentle angle, subject looking up toward the lens',
+      'wider framing shot from a few steps back showing more of the body and scene, subject turned slightly to one side',
+      'close-up crop from chest height, camera at eye level, subject looking directly into the lens',
+      'dynamic low angle from hip height looking up, subject glancing down toward camera, editorial energy',
     ];
     const pose = POSES[Math.floor(Math.random() * POSES.length)]!;
 
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: swappedData } });
     parts.push({
-      text: `You are a world-class photo retoucher and editor. This image is a face-swap composite — the face belongs to a real person and must remain exactly that same individual.
+      text: `The attached image is one frame from a professional photo shoot of a real person. Generate the NEXT frame from the same shoot: the photographer has asked the subject to change position, and moved the camera.
 
-FIRST, ADJUST THE POSE:
-NEW POSE: ${pose}
-Keep the same person, outfit, and scene — only change the body position/angle as described above.
+THE NEW SHOT — this is the whole point of the task:
+${pose}
 
-THEN, MAKE THE FACE AND PERSON LOOK HYPER-REALISTIC:
-- Skin: add natural pores, subtle texture, fine hairs — eliminate any plastic or smooth AI look
-- Eyes: make them sharp, wet, and alive — real catchlights, natural iris detail
-- Face edges: seamlessly blend hairline, jaw, and neck into the scene — zero visible swap artifacts
-- Lighting on face: precisely match the direction, color temperature, and intensity of light from the scene — add realistic shadows under the nose, chin, and eye sockets
-- Hair: individual strands, natural flyaways, correct lighting per strand
-- Add subtle film grain or sensor noise consistent with the scene, and a cinematic color grade matching the scene mood
-- Remove any remaining AI artifacts, over-smoothing, or uncanny valley effects
+The new frame MUST be composed clearly differently from the attached one. If the output has the same pose, same framing, and same camera angle as the input, the task has FAILED. Move the body, move the camera, re-compose.
 
-KEEP UNCHANGED:
-- The person's identity, face shape, bone structure, and skin tone
-- Outfit, clothes, and colors
-- Background and every scene element
-- Hairstyle, hair color, and length
+SAME SHOOT, SAME EVERYTHING ELSE:
+- Same person: identical face, bone structure, skin tone, identity — this is a real individual and must stay recognizably them
+- Same outfit: identical clothes, colors, accessories
+- Same location and lighting setup: the same environment and mood, naturally seen from the new camera position
+- Same hairstyle, hair color, and length
+
+PHOTOGRAPHIC QUALITY — render the new frame hyper-realistically:
+- Skin: natural pores, texture, fine hairs, faint imperfections — no plastic, waxy, or airbrushed AI look
+- Eyes: sharp, wet, alive — real catchlights matching the scene's light sources, natural iris detail, visible eyelashes
+- Face: seamlessly lit and integrated — lighting direction, color temperature, and shadows (nose, chin, cheekbones, eye sockets) must match the scene from the new angle
+- Hair: individual strands, natural flyaways, per-strand lighting
+- Lens realism: subtle film grain, natural depth of field, cinematic color grade matching the scene mood
+- Sharpness: crisp high-resolution detail on face and clothing — no softness, blur, warping, or AI artifacts
 
 Scene context: ${templatePrompt}
 
-Output: the same photo with the new pose, retouched to look indistinguishable from a real, high-quality candid photograph of that specific person in that scene.`,
+Output: a single photorealistic photograph — the next frame of the same person, same outfit, same scene, in the new pose and camera angle.`,
     });
 
     const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
@@ -238,6 +242,10 @@ Output: the same photo with the new pose, retouched to look indistinguishable fr
     const responseParts = result.candidates?.[0]?.content?.parts ?? [];
     const imagePart = responseParts.find((p) => p.inlineData);
     if (!imagePart?.inlineData) {
+      const textPart = responseParts.find((p) => p.text);
+      console.warn(
+        `personalizeImage: Gemini returned no image (text: ${textPart?.text?.slice(0, 200) ?? 'none'}) — falling back to enhance-only (pose will NOT change)`,
+      );
       return this.enhanceImage(faceSwappedBase64);
     }
     const { mimeType, data: outData } = imagePart.inlineData;

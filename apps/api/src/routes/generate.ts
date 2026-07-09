@@ -44,9 +44,19 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
 
       const gemini = new GeminiProvider();
       try {
-        imageDataUri = await gemini.personalizeImage(swapped, prompt, templateInput);
-      } catch {
-        imageDataUri = swapped;
+        imageDataUri = await gemini.personalizeImage(swapped, prompt);
+      } catch (firstErr) {
+        // Retry once — Gemini image edits fail transiently fairly often
+        try {
+          imageDataUri = await gemini.personalizeImage(swapped, prompt);
+        } catch (retryErr) {
+          console.warn(
+            `personalizeImage failed twice, returning raw face-swap (template pose unchanged): ${
+              (firstErr as Error).message
+            } | retry: ${(retryErr as Error).message}`,
+          );
+          imageDataUri = swapped;
+        }
       }
     } else {
       const gemini = new GeminiProvider();

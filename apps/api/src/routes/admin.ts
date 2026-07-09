@@ -152,6 +152,43 @@ router.post('/templates/upload-photo', async (req, res, next) => {
   }
 });
 
+// POST /api/admin/templates/quick-upload { imageBase64 }
+// Drops a raw photo into the pending queue with placeholder metadata — Claude fills in
+// emoji/label/cat/prompt afterward via the Admin SDK and flips status to 'published'.
+router.post('/templates/quick-upload', async (req, res, next) => {
+  try {
+    const { imageBase64 } = req.body as { imageBase64?: string };
+    if (!imageBase64) {
+      throw new AppError('BAD_REQUEST', 'imageBase64 required', 400);
+    }
+
+    const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    const imageUrl = await uploadTemplateImage(buffer, `quick-${Date.now()}`);
+
+    const docRef = await db.collection('templates').add({
+      emoji: '📥',
+      label: 'Untitled (needs review)',
+      style: 'Pending',
+      styleName: 'Pending',
+      cat: 'pending',
+      prompt: '',
+      image: imageUrl,
+      isTrending: false,
+      isNew: true,
+      isPro: false,
+      likes: 0,
+      uses: 0,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    });
+
+    res.json({ ok: true, id: docRef.id, image: imageUrl });
+  } catch (e) {
+    next(e);
+  }
+});
+
 // PATCH /api/admin/templates/:id  { status: 'published' }
 router.patch('/templates/:id', async (req, res, next) => {
   try {
