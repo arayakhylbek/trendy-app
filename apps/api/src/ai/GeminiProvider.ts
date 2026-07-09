@@ -204,19 +204,30 @@ Output: the same photo, retouched to look like a professional cinematic photogra
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: swappedData } });
     parts.push({
-      text: `You are a photo editor. Edit this photo by changing ONLY the body pose. Nothing else.
+      text: `You are a world-class photo retoucher and editor. This image is a face-swap composite — the face belongs to a real person and must remain exactly that same individual.
 
+FIRST, ADJUST THE POSE:
 NEW POSE: ${pose}
+Keep the same person, outfit, and scene — only change the body position/angle as described above.
 
-KEEP EVERYTHING ELSE EXACTLY AS IN THE INPUT PHOTO:
-- Background: identical, do not change anything in the scene
-- Outfit: same clothes, same colors, same every detail
-- Lighting: same direction, same shadows, same mood
-- Hair: same style, color, length
-- Face: same person, same features, same skin tone
-- Color grade: same tones
+THEN, MAKE THE FACE AND PERSON LOOK HYPER-REALISTIC:
+- Skin: add natural pores, subtle texture, fine hairs — eliminate any plastic or smooth AI look
+- Eyes: make them sharp, wet, and alive — real catchlights, natural iris detail
+- Face edges: seamlessly blend hairline, jaw, and neck into the scene — zero visible swap artifacts
+- Lighting on face: precisely match the direction, color temperature, and intensity of light from the scene — add realistic shadows under the nose, chin, and eye sockets
+- Hair: individual strands, natural flyaways, correct lighting per strand
+- Add subtle film grain or sensor noise consistent with the scene, and a cinematic color grade matching the scene mood
+- Remove any remaining AI artifacts, over-smoothing, or uncanny valley effects
 
-Do NOT regenerate or reimagine the scene. Do NOT change clothes, background, or any element other than the body pose. This is a minimal pose-only edit.`,
+KEEP UNCHANGED:
+- The person's identity, face shape, bone structure, and skin tone
+- Outfit, clothes, and colors
+- Background and every scene element
+- Hairstyle, hair color, and length
+
+Scene context: ${templatePrompt}
+
+Output: the same photo with the new pose, retouched to look indistinguishable from a real, high-quality candid photograph of that specific person in that scene.`,
     });
 
     const result = await geminiPost('gemini-2.5-flash-image:generateContent', {

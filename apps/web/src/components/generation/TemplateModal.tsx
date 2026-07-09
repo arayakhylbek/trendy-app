@@ -35,7 +35,7 @@ export function TemplateModal({ template, onClose, onGenerate }: Props) {
     const reader = new FileReader();
     reader.onload = async (ev) => {
       const src = ev.target?.result as string;
-      const compressed = await compressImage(src, 1024, 0.85);
+      const compressed = await compressImage(src, 2048, 0.92);
       const base64 = compressed.split(',')[1];
       const update: PhotoSlot = { previewSrc: src, compressedBase64: base64, ready: true };
       if (slot === 1) setSlot1(update);
@@ -45,7 +45,7 @@ export function TemplateModal({ template, onClose, onGenerate }: Props) {
   }
 
   async function handleCameraCapture(base64: string, previewSrc: string) {
-    const compressed = await compressImage(previewSrc, 1024, 0.85);
+    const compressed = await compressImage(previewSrc, 2048, 0.92);
     const compressedBase64 = compressed.split(',')[1]!;
     const update: PhotoSlot = { previewSrc, compressedBase64, ready: true };
     if (cameraSlot === 1) setSlot1(update);

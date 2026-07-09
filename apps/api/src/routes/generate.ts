@@ -6,7 +6,7 @@ import { rateLimit } from '../middleware/rateLimit.js';
 import { db } from '../lib/firebase.js';
 import { GenerateRequestSchema, ValidationError, AppError } from '@trendy/shared';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
-import { faceSwap } from '../services/replicateService.js';
+import { faceSwap, upscaleImage } from '../services/replicateService.js';
 
 const router: ReturnType<typeof Router> = Router();
 
@@ -51,6 +51,12 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     } else {
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, undefined, undefined);
+    }
+
+    try {
+      imageDataUri = await upscaleImage(imageDataUri);
+    } catch {
+      // Upscale is best-effort — fall back to the pre-upscale image on failure
     }
 
     res.json({ image: imageDataUri, prompt });

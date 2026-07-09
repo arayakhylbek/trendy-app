@@ -59,6 +59,23 @@ export async function fluxKontextFaceInsert(
   return fetchResultAsBase64(resultUrl);
 }
 
+/**
+ * Real-ESRGAN + GFPGAN face enhance — upscales the final image and sharpens
+ * facial detail after Gemini's ~1024px generation ceiling.
+ */
+export async function upscaleImage(imageBase64: string): Promise<string> {
+  const replicate = getClient();
+  const imageUrl = await toReplicateUrl(replicate, imageBase64);
+
+  const output = (await replicate.run('nightmareai/real-esrgan', {
+    input: { image: imageUrl, scale: 2, face_enhance: true },
+  })) as string | string[];
+
+  const resultUrl = Array.isArray(output) ? output[0] : output;
+  if (!resultUrl) throw new AppError('REPLICATE_EMPTY', 'Upscale returned no output', 502);
+  return fetchResultAsBase64(resultUrl);
+}
+
 /** Legacy face-swap — kept as fallback */
 export async function faceSwap(
   templateInput: string,
