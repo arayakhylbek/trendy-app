@@ -114,6 +114,44 @@ router.get('/templates', async (req, res, next) => {
   }
 });
 
+// POST /api/admin/templates/upload-photo { emoji, label, style, cat, prompt, imageBase64 }
+// Publishes a template using a real supplied photo instead of an AI-generated preview
+router.post('/templates/upload-photo', async (req, res, next) => {
+  try {
+    const { emoji, label, style, cat, prompt, imageBase64 } = req.body as {
+      emoji?: string; label?: string; style?: string; cat?: string; prompt?: string; imageBase64?: string;
+    };
+    if (!emoji || !label || !cat || !prompt || !imageBase64) {
+      throw new AppError('BAD_REQUEST', 'emoji, label, cat, prompt, imageBase64 required', 400);
+    }
+
+    const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    const imageUrl = await uploadTemplateImage(buffer, label);
+
+    const docRef = await db.collection('templates').add({
+      emoji,
+      label,
+      style: style ?? label,
+      styleName: style ?? label,
+      cat,
+      prompt,
+      image: imageUrl,
+      isTrending: false,
+      isNew: true,
+      isPro: false,
+      likes: 0,
+      uses: 0,
+      status: 'published',
+      createdAt: new Date().toISOString(),
+    });
+
+    res.json({ ok: true, id: docRef.id, image: imageUrl });
+  } catch (e) {
+    next(e);
+  }
+});
+
 // PATCH /api/admin/templates/:id  { status: 'published' }
 router.patch('/templates/:id', async (req, res, next) => {
   try {

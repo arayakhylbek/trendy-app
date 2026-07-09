@@ -9,6 +9,38 @@ const ADMIN_EMAILS = ['araiakhylbek78@gmail.com', 'potizhmoti@gmail.com'];
 
 type AdminTemplate = Template & { id: string; status?: string; trendTopic?: string; _isStatic?: boolean };
 
+// Same 9 concepts as the "sports" entries in apps/api/src/routes/admin.ts STYLED_PROMPTS —
+// paired here with a real supplied photo instead of an AI-generated preview.
+const SPORTS_PHOTO_SLOTS: Array<{ emoji: string; label: string; style: string; cat: string; prompt: string }> = [
+  { emoji: '🎾', label: 'Tennis Ace', style: 'Sporty', cat: 'sports',
+    prompt: 'Photorealistic sporty editorial portrait. Young woman sitting on a tennis court, one leg extended, wearing an all-white tennis fit — ribbed tank top, pleated tennis skirt, matching headband, white sneakers and crew socks. Tennis racket and two tennis balls resting beside her on the court. Court is bold blue and green with white sideline markings, tennis net visible behind her. Bright, clean daylight, high-fashion sports editorial lighting. Confident, relaxed pose, subtle smile. Hyper-realistic, 4K, professional sports lifestyle photography.' },
+  { emoji: '🏐', label: 'Volleyball Star', style: 'Sporty', cat: 'sports',
+    prompt: 'Dramatic photorealistic sports portrait. Young woman leaning against a volleyball net, wearing a long-sleeve blue volleyball jersey with a bold number and team lettering, knee pads, holding a volleyball at her hip. Backlit rim lighting cutting through the net, dark moody gym background with subtle lens flare. Intense, focused expression, athletic confident stance. Hyper-realistic, 4K, dramatic senior sports photography.' },
+  { emoji: '🏀', label: 'Hoop Dreams', style: 'Sporty', cat: 'sports',
+    prompt: 'Photorealistic studio sports portrait. Young woman crouching low, dribbling a basketball, wearing a yellow and navy basketball uniform, hair in double braids, basketball sneakers. Clean bright white studio background, soft even lighting with subtle shadow. Confident, powerful athletic pose, direct gaze at camera. Hyper-realistic, 4K, professional sports studio photography.' },
+  { emoji: '🏐', label: 'Varsity Volleyball', style: 'Sporty', cat: 'sports',
+    prompt: 'Photorealistic senior sports portrait. Young woman standing side-on against a plain dark studio backdrop, wearing a navy volleyball uniform with an arm sleeve and bold number, holding a volleyball against her hip, warm confident smile, long hair loose. Soft dramatic side lighting with a subtle rim light. Hyper-realistic, 4K, professional senior sports photography.' },
+  { emoji: '⛳', label: 'Country Club Cart', style: 'Preppy', cat: 'sports',
+    prompt: 'Photorealistic preppy lifestyle portrait. Young woman sitting in a golf cart on a sunny golf course, wearing a white sports-bra top, matching pleated skirt, cream knit cardigan, and white visor, one hand adjusting the visor. Golf clubs visible in the bag beside her, lush green fairway and trees in the background. Bright natural daylight, clean aspirational lifestyle photography. Relaxed, chic pose. Hyper-realistic, 4K, editorial lifestyle photography.' },
+  { emoji: '🎾', label: 'Clay Court Glow', style: 'Sporty', cat: 'sports',
+    prompt: 'Photorealistic golden hour tennis portrait. Young woman standing at the net on a red clay tennis court, wearing a fitted white halter tennis dress and white visor, holding a tennis racket, warm low sunlight creating soft flare and glow. Elegant, poised stance, looking off to the side. Hyper-realistic, 4K, editorial sports lifestyle photography.' },
+  { emoji: '🎾', label: 'Match Point Smile', style: 'Sporty', cat: 'sports',
+    prompt: 'Photorealistic sporty portrait. Young woman standing on an outdoor tennis court, wearing a white zip-up tennis polo and holding a tennis racket over her shoulder and a tennis ball in hand, bright genuine smile, long wavy hair. Soft overcast daylight, clean green court background. Hyper-realistic, 4K, professional sports lifestyle photography.' },
+  { emoji: '🏀', label: 'Fire on the Court', style: 'Sporty', cat: 'sports',
+    prompt: 'Cinematic dramatic sports portrait. Young woman sitting on a folding chair on a basketball court surrounded by basketballs, wearing a white and red basketball uniform with an arm sleeve, resting a basketball on her lap, one foot propped on a ball. Thick orange smoke and dramatic rim lighting fill the background, moody gym atmosphere. Hyper-realistic, 4K, dramatic senior sports photography.' },
+  { emoji: '⛳', label: 'Fairway Glam', style: 'Preppy', cat: 'sports',
+    prompt: 'Photorealistic glamorous golf lifestyle portrait. Young woman lounging playfully in a golf cart, wearing a fitted white sleeveless golf dress and white cap, legs draped over the seat, playful joyful smile, golf clubs and bag beside her. Warm bright sunny daylight on a manicured golf course. Hyper-realistic, 4K, aspirational lifestyle photography.' },
+];
+
+function readFileAsDataUri(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export function Admin() {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -26,6 +58,38 @@ function AdminInner() {
   const [creditEmail, setCreditEmail] = useState('');
   const [creditAmount, setCreditAmount] = useState('3');
   const [creditMsg, setCreditMsg] = useState<string | null>(null);
+  const [sportsFiles, setSportsFiles] = useState<Record<number, File>>({});
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [photoMsg, setPhotoMsg] = useState<string | null>(null);
+
+  async function uploadSportsPhotos() {
+    const entries = Object.entries(sportsFiles);
+    if (entries.length === 0) return;
+    setUploadingPhotos(true);
+    setPhotoMsg(null);
+    let done = 0;
+    const errors: string[] = [];
+    for (const [idxStr, file] of entries) {
+      const slot = SPORTS_PHOTO_SLOTS[Number(idxStr)]!;
+      try {
+        const imageBase64 = await readFileAsDataUri(file);
+        await apiFetch('/api/admin/templates/upload-photo', {
+          method: 'POST',
+          body: JSON.stringify({ ...slot, imageBase64 }),
+        });
+        done++;
+      } catch (e) {
+        errors.push(`${slot.label}: ${(e as Error).message}`);
+      }
+    }
+    setPhotoMsg(errors.length === 0
+      ? `✅ ${done} photo template(s) published!`
+      : `⚠️ ${done} published, ${errors.length} failed: ${errors.join(' | ')}`
+    );
+    setSportsFiles({});
+    setUploadingPhotos(false);
+    qc.invalidateQueries({ queryKey: ['admin-templates'] });
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-templates', tab],
@@ -256,6 +320,50 @@ function AdminInner() {
           ))}
         </div>
       )}
+
+      {/* Upload Sports Photos */}
+      <div style={{ marginTop: '3rem', padding: '1.5rem', background: '#16161a', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+        <h3 style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Upload Sports Photos</h3>
+        <p style={{ color: '#666', fontSize: 12, marginBottom: 14 }}>
+          Assign a real photo to each concept — published as-is, no AI generation.
+        </p>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {SPORTS_PHOTO_SLOTS.map((slot, i) => (
+            <div key={slot.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ width: 190, fontSize: 13, color: '#ccc', flexShrink: 0 }}>
+                {slot.emoji} {slot.label}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  setSportsFiles((prev) => {
+                    const next = { ...prev };
+                    if (file) next[i] = file;
+                    else delete next[i];
+                    return next;
+                  });
+                }}
+                style={{ fontSize: 12, color: '#888', flex: 1 }}
+              />
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={uploadSportsPhotos}
+          disabled={uploadingPhotos || Object.keys(sportsFiles).length === 0}
+          style={{
+            marginTop: 14, padding: '9px 20px', borderRadius: 10, border: 'none',
+            background: uploadingPhotos ? '#222' : 'linear-gradient(135deg, #ff6b9d, #c084fc)',
+            color: uploadingPhotos ? '#555' : '#fff', fontSize: 13, fontWeight: 600,
+            cursor: uploadingPhotos ? 'default' : 'pointer',
+          }}
+        >
+          {uploadingPhotos ? '⏳ Uploading…' : `📷 Upload ${Object.keys(sportsFiles).length || ''} Photo(s)`}
+        </button>
+        {photoMsg && <p style={{ marginTop: 10, fontSize: 12, color: photoMsg.startsWith('✅') ? '#4ade80' : '#ef4444' }}>{photoMsg}</p>}
+      </div>
 
       {/* Grant Credits */}
       <div style={{ marginTop: '3rem', padding: '1.5rem', background: '#16161a', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
