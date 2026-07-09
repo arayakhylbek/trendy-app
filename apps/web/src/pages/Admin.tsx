@@ -21,6 +21,7 @@ function AdminInner() {
   const [tab, setTab] = useState<'all' | 'pending'>('all');
   const [generating, setGenerating] = useState(false);
   const [generatingTrend, setGeneratingTrend] = useState(false);
+  const [generatingSports, setGeneratingSports] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [creditEmail, setCreditEmail] = useState('');
   const [creditAmount, setCreditAmount] = useState('3');
@@ -63,6 +64,22 @@ function AdminInner() {
     finally { setGenerating(false); }
   }
 
+  async function generateSports() {
+    setGeneratingSports(true);
+    setMsg('⏳ Generating sports templates… ~2–3 min');
+    try {
+      const result = await apiFetch<{ generated: number; errors: string[] | null }>(
+        '/api/admin/generate-styled?cat=sports', { method: 'POST' },
+      );
+      setMsg(result.generated > 0
+        ? `✅ ${result.generated} sports templates added live!`
+        : `⚠️ 0 generated. ${result.errors?.join(' | ') ?? ''}`
+      );
+      qc.invalidateQueries({ queryKey: ['admin-templates'] });
+    } catch (e) { setMsg(`❌ ${(e as Error).message}`); }
+    finally { setGeneratingSports(false); }
+  }
+
   async function generateTrend() {
     setGeneratingTrend(true);
     setMsg('⏳ Generating trend-based templates… ~2–4 min');
@@ -93,7 +110,7 @@ function AdminInner() {
   }
 
   const templates = data?.templates ?? [];
-  const busy = generating || generatingTrend;
+  const busy = generating || generatingTrend || generatingSports;
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1rem' }}>
@@ -132,6 +149,20 @@ function AdminInner() {
             }}
           >
             {generatingTrend ? '⏳ Generating…' : '⚡ Trend-Based'}
+          </button>
+          <button
+            onClick={generateSports}
+            disabled={busy}
+            style={{
+              padding: '10px 20px', borderRadius: 12,
+              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'transparent',
+              color: busy ? '#555' : '#aaa', fontSize: 13, fontWeight: 600,
+              cursor: busy ? 'default' : 'pointer', fontFamily: '"DM Sans", sans-serif',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {generatingSports ? '⏳ Generating…' : '🏆 Generate Sports (9)'}
           </button>
         </div>
       </div>

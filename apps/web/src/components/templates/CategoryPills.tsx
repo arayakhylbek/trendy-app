@@ -9,6 +9,7 @@ const CATEGORIES = [
   { id: 'anime', label: 'Anime' },
   { id: 'aesthetic', label: 'Aesthetic' },
   { id: 'vintage', label: 'Vintage' },
+  { id: 'sports', label: '🏆 Sports' },
 ];
 
 interface Props {

@@ -56,6 +56,26 @@ const STYLED_PROMPTS: Array<{ emoji: string; label: string; style: string; cat: 
     prompt: 'Cottagecore aesthetic editorial portrait. Woman in a vintage floral prairie dress with puffed sleeves, standing in a wildflower meadow at golden hour. Holding a wicker basket with flowers. Soft warm backlighting, bokeh flowers, earthy tones. Photorealistic, professional photography, 4K.' },
   { emoji: '🌙', label: 'Moonlit Night', style: 'Aesthetic', cat: 'aesthetic',
     prompt: 'Dreamy moonlit night editorial portrait. Woman in a silver satin evening gown standing on a coastal cliff at night with a full moon over the ocean behind her. Moonlight illuminating her face and dress, silver and navy tones. Photorealistic cinematic photography, 4K.' },
+
+  // Sports / senior-photo aesthetic
+  { emoji: '🎾', label: 'Tennis Ace', style: 'Sporty', cat: 'sports',
+    prompt: 'Photorealistic sporty editorial portrait. Young woman sitting on a tennis court, one leg extended, wearing an all-white tennis fit — ribbed tank top, pleated tennis skirt, matching headband, white sneakers and crew socks. Tennis racket and two tennis balls resting beside her on the court. Court is bold blue and green with white sideline markings, tennis net visible behind her. Bright, clean daylight, high-fashion sports editorial lighting. Confident, relaxed pose, subtle smile. Hyper-realistic, 4K, professional sports lifestyle photography.' },
+  { emoji: '🏐', label: 'Volleyball Star', style: 'Sporty', cat: 'sports',
+    prompt: 'Dramatic photorealistic sports portrait. Young woman leaning against a volleyball net, wearing a long-sleeve blue volleyball jersey with a bold number and team lettering, knee pads, holding a volleyball at her hip. Backlit rim lighting cutting through the net, dark moody gym background with subtle lens flare. Intense, focused expression, athletic confident stance. Hyper-realistic, 4K, dramatic senior sports photography.' },
+  { emoji: '🏀', label: 'Hoop Dreams', style: 'Sporty', cat: 'sports',
+    prompt: 'Photorealistic studio sports portrait. Young woman crouching low, dribbling a basketball, wearing a yellow and navy basketball uniform, hair in double braids, basketball sneakers. Clean bright white studio background, soft even lighting with subtle shadow. Confident, powerful athletic pose, direct gaze at camera. Hyper-realistic, 4K, professional sports studio photography.' },
+  { emoji: '🏐', label: 'Varsity Volleyball', style: 'Sporty', cat: 'sports',
+    prompt: 'Photorealistic senior sports portrait. Young woman standing side-on against a plain dark studio backdrop, wearing a navy volleyball uniform with an arm sleeve and bold number, holding a volleyball against her hip, warm confident smile, long hair loose. Soft dramatic side lighting with a subtle rim light. Hyper-realistic, 4K, professional senior sports photography.' },
+  { emoji: '⛳', label: 'Country Club Cart', style: 'Preppy', cat: 'sports',
+    prompt: 'Photorealistic preppy lifestyle portrait. Young woman sitting in a golf cart on a sunny golf course, wearing a white sports-bra top, matching pleated skirt, cream knit cardigan, and white visor, one hand adjusting the visor. Golf clubs visible in the bag beside her, lush green fairway and trees in the background. Bright natural daylight, clean aspirational lifestyle photography. Relaxed, chic pose. Hyper-realistic, 4K, editorial lifestyle photography.' },
+  { emoji: '🎾', label: 'Clay Court Glow', style: 'Sporty', cat: 'sports',
+    prompt: 'Photorealistic golden hour tennis portrait. Young woman standing at the net on a red clay tennis court, wearing a fitted white halter tennis dress and white visor, holding a tennis racket, warm low sunlight creating soft flare and glow. Elegant, poised stance, looking off to the side. Hyper-realistic, 4K, editorial sports lifestyle photography.' },
+  { emoji: '🎾', label: 'Match Point Smile', style: 'Sporty', cat: 'sports',
+    prompt: 'Photorealistic sporty portrait. Young woman standing on an outdoor tennis court, wearing a white zip-up tennis polo and holding a tennis racket over her shoulder and a tennis ball in hand, bright genuine smile, long wavy hair. Soft overcast daylight, clean green court background. Hyper-realistic, 4K, professional sports lifestyle photography.' },
+  { emoji: '🏀', label: 'Fire on the Court', style: 'Sporty', cat: 'sports',
+    prompt: 'Cinematic dramatic sports portrait. Young woman sitting on a folding chair on a basketball court surrounded by basketballs, wearing a white and red basketball uniform with an arm sleeve, resting a basketball on her lap, one foot propped on a ball. Thick orange smoke and dramatic rim lighting fill the background, moody gym atmosphere. Hyper-realistic, 4K, dramatic senior sports photography.' },
+  { emoji: '⛳', label: 'Fairway Glam', style: 'Preppy', cat: 'sports',
+    prompt: 'Photorealistic glamorous golf lifestyle portrait. Young woman lounging playfully in a golf cart, wearing a fitted white sleeveless golf dress and white cap, legs draped over the seat, playful joyful smile, golf clubs and bag beside her. Warm bright sunny daylight on a manicured golf course. Hyper-realistic, 4K, aspirational lifestyle photography.' },
 ];
 
 // GET /api/admin/templates?status=pending|published|all
@@ -135,16 +155,23 @@ router.delete('/templates/:id', async (req, res, next) => {
 });
 
 // POST /api/admin/generate-styled?count=3 — generate trend-based styled templates
+// POST /api/admin/generate-styled?cat=sports — generate ALL prompts in that category (no rotation)
 router.post('/generate-styled', async (req, res, next) => {
   try {
-    const count = Math.min(Number(req.query['count']) || 3, 6);
+    const cat = typeof req.query['cat'] === 'string' ? req.query['cat'] : undefined;
     const gemini = new GeminiProvider();
 
-    // Rotate through prompts so each call gives different templates
-    const offset = Math.floor(Date.now() / 60000) % STYLED_PROMPTS.length;
-    const selected: typeof STYLED_PROMPTS = [];
-    for (let i = 0; i < count; i++) {
-      selected.push(STYLED_PROMPTS[(offset + i) % STYLED_PROMPTS.length]!);
+    let selected: typeof STYLED_PROMPTS;
+    if (cat) {
+      selected = STYLED_PROMPTS.filter((p) => p.cat === cat);
+    } else {
+      const count = Math.min(Number(req.query['count']) || 3, 6);
+      // Rotate through prompts so each call gives different templates
+      const offset = Math.floor(Date.now() / 60000) % STYLED_PROMPTS.length;
+      selected = [];
+      for (let i = 0; i < count; i++) {
+        selected.push(STYLED_PROMPTS[(offset + i) % STYLED_PROMPTS.length]!);
+      }
     }
 
     let generated = 0;
