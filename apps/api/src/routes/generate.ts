@@ -6,9 +6,9 @@ import { rateLimit } from '../middleware/rateLimit.js';
 import { db } from '../lib/firebase.js';
 import { GenerateRequestSchema, ValidationError, AppError } from '@trendy/shared';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
-// Legacy Replicate pipeline — restore this import to roll back:
-// import { faceSwap, upscaleImage } from '../services/replicateService.js';
-import { recomposeTemplate, faceSwap, upscaleImage } from '../services/geminiImageService.js';
+import { faceSwap, upscaleImage } from '../services/replicateService.js';
+// Nano Banana Pro chain (recomposeTemplate + faceSwap + upscaleImage, ~$0.27/gen) —
+// swap the import back to '../services/geminiImageService.js' to restore it.
 
 const router: ReturnType<typeof Router> = Router();
 
@@ -41,46 +41,38 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
 
       if (!templateInput) throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
 
-      // Legacy 3-step chain (faceSwap → personalizeImage → upscaleImage) — restore to roll back:
-      // const swapped1 = await faceSwap(templateInput, imageBase64);
-      // const swapped = imageBase64_2 ? await faceSwap(swapped1, imageBase64_2) : swapped1;
-      // const gemini = new GeminiProvider();
-      // try {
-      //   imageDataUri = await gemini.personalizeImage(swapped, prompt);
-      // } catch (firstErr) {
-      //   try {
-      //     imageDataUri = await gemini.personalizeImage(swapped, prompt);
-      //   } catch (retryErr) {
-      //     console.warn(`personalizeImage failed twice, returning raw face-swap: ${(firstErr as Error).message} | retry: ${(retryErr as Error).message}`);
-      //     imageDataUri = swapped;
-      //   }
-      // }
-      // ... plus the post-branch upscaleImage(imageDataUri) call.
+      // Cheap chain: dedicated Replicate face swap (literal face insert), then
+      // Nano Banana (gemini-2.5-flash-image) reworks pose/angle/framing/quality,
+      // then Real-ESRGAN upscales past Flash's ~1K ceiling. ~$0.07/gen total.
+      const swapped1 = await faceSwap(templateInput, imageBase64);
+      const swapped = imageBase64_2 ? await faceSwap(swapped1, imageBase64_2) : swapped1;
 
-      // Two Nano Banana Pro calls, face LAST so nothing re-renders it:
-      // 1) recompose the template (new pose/angle/framing, 2K) without the user photo,
-      // 2) strict face swap of the user's face onto the recomposed frame.
-      const runChain = async (): Promise<string> => {
-        const recomposed = await recomposeTemplate(templateInput, prompt);
-        const swapped1 = await faceSwap(recomposed, imageBase64);
-        return imageBase64_2 ? faceSwap(swapped1, imageBase64_2) : swapped1;
-      };
+      const gemini = new GeminiProvider();
       try {
-        imageDataUri = await runChain();
+        imageDataUri = await gemini.personalizeImage(swapped, prompt);
       } catch (firstErr) {
-        // Retry once — image generations fail transiently fairly often
-        console.warn(`generation chain failed, retrying once: ${(firstErr as Error).message}`);
-        imageDataUri = await runChain();
+        // Retry once — Gemini image edits fail transiently fairly often
+        try {
+          imageDataUri = await gemini.personalizeImage(swapped, prompt);
+        } catch (retryErr) {
+          console.warn(
+            `personalizeImage failed twice, returning raw face-swap (template pose unchanged): ${
+              (firstErr as Error).message
+            } | retry: ${(retryErr as Error).message}`,
+          );
+          imageDataUri = swapped;
+        }
       }
     } else {
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, undefined, undefined);
-      // Text-only path still renders at ~1K on Flash — upscale is best-effort
-      try {
-        imageDataUri = await upscaleImage(imageDataUri);
-      } catch {
-        // fall back to the pre-upscale image on failure
-      }
+    }
+
+    // Real-ESRGAN + face enhance — cheap best-effort quality/resolution boost
+    try {
+      imageDataUri = await upscaleImage(imageDataUri);
+    } catch {
+      // fall back to the pre-upscale image on failure
     }
 
     res.json({ image: imageDataUri, prompt });

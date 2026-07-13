@@ -189,7 +189,7 @@ Output: the same photo, retouched to look like a professional cinematic photogra
     const swappedData = faceSwappedBase64.replace(/^data:[^;]+;base64,/, '');
 
     // Independent variation axes — one random pick from each, so two users on the
-    // same template land on the same combination only ~1 time in 500
+    // same template land on the same combination only ~1 time in 1200
     const POSES = [
       'body turned 3/4 to the left, face looking back over the left shoulder toward the camera',
       'body turned 3/4 to the right, chin slightly raised, eyes directed straight at camera',
@@ -232,7 +232,7 @@ Output: the same photo, retouched to look like a professional cinematic photogra
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: swappedData } });
     parts.push({
-      text: `The attached image is a REFERENCE ONLY. It shows a real person: use it solely to learn their identity (face), their outfit, and the location. Do NOT copy its composition.
+      text: `The attached image is a REFERENCE ONLY. It shows a real person whose face has just been placed by a face-swap tool: the face is CORRECT and is the most precious thing in the image. Use the reference solely to learn their identity (face), their outfit, and the location. Do NOT copy its composition.
 
 Your task: shoot a brand-new photograph of this same person, in this same outfit and location, as if a professional photographer captured a completely different frame during the same session.
 
@@ -240,15 +240,17 @@ THE NEW SHOT — compose it exactly like this:
 - Pose: ${pose}
 - Camera: ${angle}
 - Framing: ${framing}
-- Expression: ${expression}
+- Expression: ${expression} — rendered as THIS specific person making that expression; the expression must never warp or genericize their facial features
 
 The output must be clearly a DIFFERENT photograph from the reference. If the pose, framing, and camera angle all match the reference, the task has FAILED. Recompose from scratch around the specs above.
 
-WHAT TO PRESERVE FROM THE REFERENCE:
-- Identity: the exact same face, bone structure, skin tone — a real individual who must stay unmistakably recognizable
-- Outfit: same clothes, colors, and accessories, naturally rearranged to fit the new pose
+IDENTITY — the most important rule. The face must survive the recomposition 1:1: a face-recognition system, or the person's own mother, must identify the output as the SAME person as the reference. Preserve exactly: face geometry (shape, jawline, chin, cheekbones), eyes (shape, size, spacing, iris color, eyebrows), nose (bridge, length, tip), lips (volume, shape, philtrum), skin tone and undertone, and every distinguishing mark — moles, freckles, dimples in the same spots. Do NOT beautify, idealize, or genericize the face. A "similar looking" person is a FAILED task.
+
+ALSO PRESERVE FROM THE REFERENCE:
+- Outfit: same clothes, colors, and accessories, naturally rearranged to fit the new pose; if a garment is only partially visible, extend it plausibly in the same style
 - Location and mood: the same environment and lighting character, seen naturally from the new camera position — background elements may shift, reveal, or blur as the real camera move would cause
 - Hair: same style, color, and length, falling naturally for the new pose
+- Text and graphics: if the reference contains text, logos, or overlays (e.g. a magazine cover), reproduce them EXACTLY, character-for-character, in the same fonts, colors, and layout — including stylized or fictional brand names. Do not correct, translate, or substitute any word
 
 QUALITY — the output must EXCEED the reference. Treat the reference as a lower-quality draft that may contain compositing seams, softness, or AI artifacts; do not inherit any of its flaws. Render the new frame at flagship-camera, magazine-cover quality:
 - Skin: natural pores, texture, fine hairs, faint imperfections — no plastic, waxy, or airbrushed AI look
