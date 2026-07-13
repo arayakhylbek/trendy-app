@@ -101,7 +101,7 @@ export async function generateFromPrompt(
   const text = `${promptText}
 
 STRICT RULES:
-- The attached photo is the reference of the real person. Preserve their exact facial features, identity, and skin tone with maximum accuracy — the output must be unmistakably the same person.
+- The attached photo(s) are the identity reference(s) of the real person/people (in order: reference image 1, then 2). Preserve each person's exact facial features, identity, and skin tone with maximum accuracy — every person in the output must be unmistakably the same as their reference.
 - Follow the description above EXACTLY. Do not invent, add, or change anything that is not written in it — no extra objects, props, accessories, text, people, or background elements of your own.
 - Use only the pose, framing, outfit, and scene described above. Do not restage or reinterpret it, and do not change the pose beyond what is written.
 - Output aspect ratio: 9:16 vertical (TikTok / Instagram Reels). Compose the whole scene to fill a tall 9:16 frame.`;

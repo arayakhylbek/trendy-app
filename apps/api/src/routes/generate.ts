@@ -42,7 +42,17 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
         const tpl = snap.data();
         if (tpl?.['promptOnly'] === true) {
           const genPrompt = (tpl['genPrompt'] as string | undefined) ?? prompt;
-          imageDataUri = await generateFromPrompt(genPrompt, imageBase64, imageBase64_2);
+          // Optional fixed second reference stored with the template (e.g. a
+          // celebrity's face). The user uploads only their own photo; this
+          // reference is sent as the second identity so the user never has to
+          // provide it. Falls back to a second user upload if there's no fixed ref.
+          const refImg = tpl['referenceImage'] as string | undefined;
+          const secondRef = refImg
+            ? refImg.startsWith('http')
+              ? refImg
+              : `${appBaseUrl}${refImg}`
+            : imageBase64_2;
+          imageDataUri = await generateFromPrompt(genPrompt, imageBase64, secondRef);
           res.json({ image: imageDataUri, prompt: genPrompt });
           return;
         }
