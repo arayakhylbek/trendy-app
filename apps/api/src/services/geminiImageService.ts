@@ -20,6 +20,7 @@ interface InteractionResponse {
 async function interactionsPost(
   input: InputPart[],
   imageSize: '1K' | '2K' | '4K' = '2K',
+  aspectRatio: '3:4' | '9:16' | '1:1' | '16:9' | '4:3' = '3:4',
 ): Promise<string> {
   const apiKey = process.env['GEMINI_API_KEY'];
   if (!apiKey) throw new AppError('MISSING_CONFIG', 'GEMINI_API_KEY not configured', 500);
@@ -33,7 +34,12 @@ async function interactionsPost(
     body: JSON.stringify({
       model: IMAGE_MODEL,
       input,
-      response_format: { type: 'image', mime_type: 'image/jpeg', image_size: imageSize },
+      response_format: {
+        type: 'image',
+        mime_type: 'image/jpeg',
+        image_size: imageSize,
+        aspect_ratio: aspectRatio,
+      },
     }),
     signal: AbortSignal.timeout(120000),
   });
@@ -97,7 +103,8 @@ export async function generateFromPrompt(
 STRICT RULES:
 - The attached photo is the reference of the real person. Preserve their exact facial features, identity, and skin tone with maximum accuracy — the output must be unmistakably the same person.
 - Follow the description above EXACTLY. Do not invent, add, or change anything that is not written in it — no extra objects, props, accessories, text, people, or background elements of your own.
-- Use only the pose, framing, outfit, and scene described above. Do not restage or reinterpret it, and do not change the pose beyond what is written.`;
+- Use only the pose, framing, outfit, and scene described above. Do not restage or reinterpret it, and do not change the pose beyond what is written.
+- Output aspect ratio: 3:4 vertical portrait. Ignore any other aspect ratio mentioned in the description above; compose the whole scene to fit a 3:4 frame.`;
 
   const input: InputPart[] = [{ type: 'text', text }, userPart];
   if (user2Part) input.push(user2Part);
