@@ -12,7 +12,9 @@ const ConfigSchema = z.object({
   POLAR_PRODUCT_STUDIO: z.string().min(1),
   GEMINI_API_KEY: z.string().min(1),
   ANTHROPIC_API_KEY: z.string().min(1),
-  REPLICATE_TOKEN: z.string().min(1),
+  // Legacy — Replicate replaced by Gemini Nano Banana Pro (geminiImageService.ts).
+  // Optional so the var can be removed from envs; restore .min(1) on rollback.
+  REPLICATE_TOKEN: z.string().optional(),
   APP_BASE_URL: z.string().url(),
   CRON_SECRET: z.string().min(16),
 });

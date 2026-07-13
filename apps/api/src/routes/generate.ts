@@ -6,7 +6,9 @@ import { rateLimit } from '../middleware/rateLimit.js';
 import { db } from '../lib/firebase.js';
 import { GenerateRequestSchema, ValidationError, AppError } from '@trendy/shared';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
-import { faceSwap, upscaleImage } from '../services/replicateService.js';
+// Legacy Replicate pipeline — restore this import to roll back:
+// import { faceSwap, upscaleImage } from '../services/replicateService.js';
+import { generatePersonalizedShot, upscaleImage } from '../services/geminiImageService.js';
 
 const router: ReturnType<typeof Router> = Router();
 
@@ -39,34 +41,39 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
 
       if (!templateInput) throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
 
-      const swapped1 = await faceSwap(templateInput, imageBase64);
-      const swapped = imageBase64_2 ? await faceSwap(swapped1, imageBase64_2) : swapped1;
+      // Legacy 3-step chain (faceSwap → personalizeImage → upscaleImage) — restore to roll back:
+      // const swapped1 = await faceSwap(templateInput, imageBase64);
+      // const swapped = imageBase64_2 ? await faceSwap(swapped1, imageBase64_2) : swapped1;
+      // const gemini = new GeminiProvider();
+      // try {
+      //   imageDataUri = await gemini.personalizeImage(swapped, prompt);
+      // } catch (firstErr) {
+      //   try {
+      //     imageDataUri = await gemini.personalizeImage(swapped, prompt);
+      //   } catch (retryErr) {
+      //     console.warn(`personalizeImage failed twice, returning raw face-swap: ${(firstErr as Error).message} | retry: ${(retryErr as Error).message}`);
+      //     imageDataUri = swapped;
+      //   }
+      // }
+      // ... plus the post-branch upscaleImage(imageDataUri) call.
 
-      const gemini = new GeminiProvider();
+      // Single Nano Banana Pro call: face insert + pose/angle variation + 2K quality
       try {
-        imageDataUri = await gemini.personalizeImage(swapped, prompt);
+        imageDataUri = await generatePersonalizedShot(templateInput, imageBase64, imageBase64_2, prompt);
       } catch (firstErr) {
-        // Retry once — Gemini image edits fail transiently fairly often
-        try {
-          imageDataUri = await gemini.personalizeImage(swapped, prompt);
-        } catch (retryErr) {
-          console.warn(
-            `personalizeImage failed twice, returning raw face-swap (template pose unchanged): ${
-              (firstErr as Error).message
-            } | retry: ${(retryErr as Error).message}`,
-          );
-          imageDataUri = swapped;
-        }
+        // Retry once — image generations fail transiently fairly often
+        console.warn(`generatePersonalizedShot failed, retrying once: ${(firstErr as Error).message}`);
+        imageDataUri = await generatePersonalizedShot(templateInput, imageBase64, imageBase64_2, prompt);
       }
     } else {
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, undefined, undefined);
-    }
-
-    try {
-      imageDataUri = await upscaleImage(imageDataUri);
-    } catch {
-      // Upscale is best-effort — fall back to the pre-upscale image on failure
+      // Text-only path still renders at ~1K on Flash — upscale is best-effort
+      try {
+        imageDataUri = await upscaleImage(imageDataUri);
+      } catch {
+        // fall back to the pre-upscale image on failure
+      }
     }
 
     res.json({ image: imageDataUri, prompt });
