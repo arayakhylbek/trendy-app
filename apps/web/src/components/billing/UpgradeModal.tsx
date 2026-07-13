@@ -36,6 +36,8 @@ export function UpgradeModal({ onClose }: Props) {
       <div style={{
         width: '100%',
         maxWidth: 580,
+        maxHeight: '90vh',
+        overflowY: 'auto',
         background: '#0e0e12',
         borderRadius: 24,
         border: '1px solid rgba(255,255,255,0.08)',
@@ -57,7 +59,7 @@ export function UpgradeModal({ onClose }: Props) {
           <p style={{ fontSize: 13, color: '#888' }}>Upgrade to keep creating — cancel anytime</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
           {/* LITE */}
           <div style={{
             background: 'linear-gradient(135deg, rgba(255,107,157,0.08), rgba(192,132,252,0.08))',
