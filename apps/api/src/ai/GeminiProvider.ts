@@ -188,50 +188,79 @@ Output: the same photo, retouched to look like a professional cinematic photogra
   ): Promise<string> {
     const swappedData = faceSwappedBase64.replace(/^data:[^;]+;base64,/, '');
 
-    // Mix of body-pose changes and camera-angle changes so results vary in more than one way
+    // Independent variation axes — one random pick from each, so two users on the
+    // same template land on the same combination only ~1 time in 500
     const POSES = [
-      'body turned 3/4 to the left, face looking back over the left shoulder toward the camera, confident gaze',
-      'body turned 3/4 to the right, chin slightly raised, eyes directed straight at camera with a soft expression',
+      'body turned 3/4 to the left, face looking back over the left shoulder toward the camera',
+      'body turned 3/4 to the right, chin slightly raised, eyes directed straight at camera',
       'slight side profile facing right, face angled toward camera, hair falling naturally to one side',
-      'facing camera directly, one hand lightly touching hair, relaxed candid expression',
-      'body angled left, weight on back foot, eyes looking at camera with a calm confident look',
-      'leaning slightly forward toward camera, intimate close framing, direct eye contact',
-      'low camera angle looking slightly upward at the subject, subject looking down toward camera with a calm expression',
-      'body turned away slightly, glancing back at camera over the shoulder with a natural expression',
-      'camera positioned slightly higher than eye level, shooting down at a gentle angle, subject looking up toward the lens',
-      'wider framing shot from a few steps back showing more of the body and scene, subject turned slightly to one side',
-      'close-up crop from chest height, camera at eye level, subject looking directly into the lens',
-      'dynamic low angle from hip height looking up, subject glancing down toward camera, editorial energy',
+      'facing camera directly, one hand lightly touching hair',
+      'body angled left, weight shifted onto the back foot, relaxed stance',
+      'leaning slightly forward toward the camera, engaged posture',
+      'body turned away slightly, glancing back at the camera over the shoulder',
+      'mid-motion candid — caught adjusting clothing or hair, natural unposed body language',
+      'arms loosely crossed, shoulders relaxed, head tilted a few degrees',
+      'one hand in pocket or resting at the hip, casual editorial stance',
     ];
-    const pose = POSES[Math.floor(Math.random() * POSES.length)]!;
+    const ANGLES = [
+      'camera at eye level, straight-on',
+      'low camera angle from chest height looking slightly upward at the subject',
+      'camera slightly above eye level, shooting down at a gentle angle, subject looking up toward the lens',
+      'camera offset to the side, shooting at a 30-degree angle across the subject',
+      'dynamic low angle from hip height looking up, editorial energy',
+      'camera at eye level but rotated a few degrees for a subtle dutch tilt',
+    ];
+    const FRAMINGS = [
+      'tight close-up crop from the chest up',
+      'classic half-body portrait framing',
+      'wider framing from a few steps back showing most of the body and more of the scene',
+      'medium shot cropped mid-thigh, subject slightly off-center for a natural editorial composition',
+    ];
+    const EXPRESSIONS = [
+      'confident direct gaze',
+      'soft relaxed expression with the hint of a smile',
+      'calm neutral editorial expression',
+      'genuine warm smile',
+      'candid mid-laugh moment, eyes slightly narrowed',
+    ];
+    const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]!;
+    const pose = pick(POSES);
+    const angle = pick(ANGLES);
+    const framing = pick(FRAMINGS);
+    const expression = pick(EXPRESSIONS);
 
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: swappedData } });
     parts.push({
-      text: `The attached image is one frame from a professional photo shoot of a real person. Generate the NEXT frame from the same shoot: the photographer has asked the subject to change position, and moved the camera.
+      text: `The attached image is a REFERENCE ONLY. It shows a real person: use it solely to learn their identity (face), their outfit, and the location. Do NOT copy its composition.
 
-THE NEW SHOT — this is the whole point of the task:
-${pose}
+Your task: shoot a brand-new photograph of this same person, in this same outfit and location, as if a professional photographer captured a completely different frame during the same session.
 
-The new frame MUST be composed clearly differently from the attached one. If the output has the same pose, same framing, and same camera angle as the input, the task has FAILED. Move the body, move the camera, re-compose.
+THE NEW SHOT — compose it exactly like this:
+- Pose: ${pose}
+- Camera: ${angle}
+- Framing: ${framing}
+- Expression: ${expression}
 
-SAME SHOOT, SAME EVERYTHING ELSE:
-- Same person: identical face, bone structure, skin tone, identity — this is a real individual and must stay recognizably them
-- Same outfit: identical clothes, colors, accessories
-- Same location and lighting setup: the same environment and mood, naturally seen from the new camera position
-- Same hairstyle, hair color, and length
+The output must be clearly a DIFFERENT photograph from the reference. If the pose, framing, and camera angle all match the reference, the task has FAILED. Recompose from scratch around the specs above.
 
-PHOTOGRAPHIC QUALITY — render the new frame hyper-realistically:
+WHAT TO PRESERVE FROM THE REFERENCE:
+- Identity: the exact same face, bone structure, skin tone — a real individual who must stay unmistakably recognizable
+- Outfit: same clothes, colors, and accessories, naturally rearranged to fit the new pose
+- Location and mood: the same environment and lighting character, seen naturally from the new camera position — background elements may shift, reveal, or blur as the real camera move would cause
+- Hair: same style, color, and length, falling naturally for the new pose
+
+QUALITY — the output must EXCEED the reference. Treat the reference as a lower-quality draft that may contain compositing seams, softness, or AI artifacts; do not inherit any of its flaws. Render the new frame at flagship-camera, magazine-cover quality:
 - Skin: natural pores, texture, fine hairs, faint imperfections — no plastic, waxy, or airbrushed AI look
 - Eyes: sharp, wet, alive — real catchlights matching the scene's light sources, natural iris detail, visible eyelashes
-- Face: seamlessly lit and integrated — lighting direction, color temperature, and shadows (nose, chin, cheekbones, eye sockets) must match the scene from the new angle
+- Lighting: fully coherent from the new camera position — direction, color temperature, and shadows (nose, chin, cheekbones) consistent with the scene's light sources
 - Hair: individual strands, natural flyaways, per-strand lighting
-- Lens realism: subtle film grain, natural depth of field, cinematic color grade matching the scene mood
-- Sharpness: crisp high-resolution detail on face and clothing — no softness, blur, warping, or AI artifacts
+- Lens realism: subtle film grain, natural depth of field appropriate to the framing, cinematic color grade matching the scene mood
+- Sharpness: crisp high-resolution detail on the face and clothing — no blur, warping, or artifacts
 
 Scene context: ${templatePrompt}
 
-Output: a single photorealistic photograph — the next frame of the same person, same outfit, same scene, in the new pose and camera angle.`,
+Output: one photorealistic photograph — the same person, same outfit, same location, in the new pose, angle, and framing specified above.`,
     });
 
     const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
