@@ -144,8 +144,15 @@ export async function generatePersonalizedShot(
 ${subjectLines}
 The LAST image is the TARGET TEMPLATE.
 
-STEP 1 — REPLACE THE FACE:
-Take the template photo and completely replace the face of the person in it with the face from the source photo: exact facial features, bone structure, eye shape, nose, lips, jawline, and skin tone of the SOURCE person. The template person's face is DELETED — none of their facial features may survive into the output, no matter how clear or prominent their face is. If the output face resembles the template's person or a blend of the two people, the task has FAILED. Keep the template's hairstyle, adapted naturally to the new face.
+STEP 1 — REPLACE THE FACE (highest priority — overrides every other instruction):
+Take the template photo and completely replace the face of the person in it with the face from the source photo. This is a 1:1 identity transfer, as exact as a professional face-swap: the output face must be so faithful that a face-recognition system — or the person's own mother — would identify it as the SAME person as in the source photo. Copy exactly:
+- Face geometry: overall face shape, jawline, chin, cheekbones, forehead height, hairline
+- Eyes: shape, size, spacing, eyelid type, iris color; eyebrows — thickness, arch, and position
+- Nose: bridge width, length, tip shape, nostrils
+- Lips: volume, shape, proportions, philtrum
+- Skin: exact tone and undertone, texture, and every distinguishing mark — moles, freckles, beauty marks, dimples in the same spots
+- Age, gender, and ethnicity must read identical to the source photo
+The template person's face is DELETED — none of their facial features may survive into the output, no matter how clear or prominent their face is. If the output face resembles the template's person, a blend of the two people, or a generically "beautified" version of the source, the task has FAILED. Scene lighting and the template's makeup style may be applied on top, but they must never alter the underlying facial features. Keep the template's hairstyle, adapted naturally to the new face.
 
 STEP 2 — KEEP THE TEMPLATE'S WORLD:
 - Outfit: the EXACT clothing from the template — same garments, colors, fabrics, accessories. Do not invent or substitute clothing; if a garment is only partially visible, extend it plausibly in the same style
@@ -156,7 +163,7 @@ STEP 3 — RECOMPOSE THE SHOT (do NOT copy the template's pose and framing):
 - Pose: ${pose}
 - Camera: ${angle}
 - Framing: ${framing}
-- Expression: ${expression}
+- Expression: ${expression} — rendered as THIS specific person making that expression; the expression must never warp or genericize their facial features
 The background may naturally shift, reveal, or blur as this camera move would cause.
 
 QUALITY — render at flagship-camera, magazine-cover level; do not inherit any flaws or artifacts from the input images:
@@ -171,7 +178,7 @@ Scene context: ${scenePrompt}
 
 Output: one photorealistic photograph — the source person's face, in the template's outfit and world, in the new pose, angle, and framing specified above.
 
-FINAL CHECK before you output: compare the face in your result against the SOURCE face (the FIRST image). It must be the SAME person — same eyes, nose, lips, jawline, and skin tone. Not the template's person, not a blend.`;
+FINAL CHECK before you output: place your result next to the SOURCE face (the FIRST image) and compare feature by feature — eyes, eyebrows, nose, lips, jawline, skin tone, distinguishing marks. A stranger seeing both photos side by side must immediately say "same person". Not the template's person, not a blend, not a beautified approximation.`;
 
   const input: InputPart[] = [{ type: 'text', text }, userPart];
   if (user2Part) input.push(user2Part);
