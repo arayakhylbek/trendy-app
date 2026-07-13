@@ -1,0 +1,97 @@
+{
+  "savedAt": "2026-07-13T12:25:46.405Z",
+  "priorHiddenStaticIds": [
+    "46",
+    "47",
+    "48",
+    "49",
+    "44",
+    "51",
+    "25",
+    "33",
+    "54",
+    "55",
+    "56",
+    "42",
+    "26",
+    "52",
+    "34",
+    "37",
+    "35",
+    "63",
+    "62",
+    "59",
+    "60",
+    "61"
+  ],
+  "firestoreStatuses": [
+    {
+      "id": "1rgAkbN9EnhiAGljw1Ny",
+      "status": null
+    },
+    {
+      "id": "24",
+      "status": null
+    },
+    {
+      "id": "26",
+      "status": null
+    },
+    {
+      "id": "27",
+      "status": null
+    },
+    {
+      "id": "28",
+      "status": null
+    },
+    {
+      "id": "29",
+      "status": null
+    },
+    {
+      "id": "30",
+      "status": null
+    },
+    {
+      "id": "31",
+      "status": null
+    },
+    {
+      "id": "3ldEG0XOxHf85bJqKWv7",
+      "status": "published"
+    },
+    {
+      "id": "47YVUBQbYiUT5FLNm7uA",
+      "status": "published"
+    },
+    {
+      "id": "9Y4VF5hzInuBlKX7JZF1",
+      "status": "published"
+    },
+    {
+      "id": "OQAbSptTCGsDUmQZ7Wsd",
+      "status": "published"
+    },
+    {
+      "id": "ZnON2Knz8yKytXNQFOes",
+      "status": "published"
+    },
+    {
+      "id": "cvoaFcKV9JLXkOTj2gmE",
+      "status": "published"
+    },
+    {
+      "id": "iIxdo27K09ff0ThkY4Cc",
+      "status": "published"
+    },
+    {
+      "id": "jAXNpHLsatM5hIoXqAxl",
+      "status": "published"
+    },
+    {
+      "id": "ycKNhUrktRy2ixulbIKu",
+      "status": "published"
+    }
+  ]
+}
