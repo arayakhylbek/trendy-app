@@ -12,6 +12,17 @@ import { faceSwap, upscaleImage } from '../services/replicateService.js';
 
 const router: ReturnType<typeof Router> = Router();
 
+// Gemini needs the image inline — fetch http(s) templates into a data URI
+async function toDataUri(input: string): Promise<string> {
+  if (input.startsWith('data:')) return input;
+  if (!input.startsWith('http')) return `data:image/jpeg;base64,${input}`;
+  const res = await fetch(input, { signal: AbortSignal.timeout(30000) });
+  if (!res.ok) throw new AppError('IMAGE_FETCH', `Failed to fetch template: ${res.status}`, 502);
+  const mime = res.headers.get('content-type')?.split(';')[0] ?? 'image/jpeg';
+  const buffer = await res.arrayBuffer();
+  return `data:${mime};base64,${Buffer.from(buffer).toString('base64')}`;
+}
+
 router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) => {
   try {
     const parsed = GenerateRequestSchema.safeParse(req.body);
@@ -41,28 +52,34 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
 
       if (!templateInput) throw new AppError('NO_TEMPLATE', 'Could not resolve template image', 400);
 
-      // Cheap chain: dedicated Replicate face swap (literal face insert), then
-      // Nano Banana (gemini-2.5-flash-image) reworks pose/angle/framing/quality,
-      // then Real-ESRGAN upscales past Flash's ~1K ceiling. ~$0.07/gen total.
-      const swapped1 = await faceSwap(templateInput, imageBase64);
-      const swapped = imageBase64_2 ? await faceSwap(swapped1, imageBase64_2) : swapped1;
+      // Face LAST so nothing re-renders it (a generative pass after the swap
+      // always destroys likeness — verified in prod):
+      // 1) Nano Banana (gemini-2.5-flash-image) recomposes the template alone
+      //    (new pose/angle/framing, user photo not involved),
+      // 2) dedicated Replicate face swap pastes the user's face onto the result.
+      // ~$0.07/gen total.
+      const templateDataUri = await toDataUri(templateInput);
 
       const gemini = new GeminiProvider();
+      let recomposed: string;
       try {
-        imageDataUri = await gemini.personalizeImage(swapped, prompt);
+        recomposed = await gemini.personalizeImage(templateDataUri, prompt);
       } catch (firstErr) {
         // Retry once — Gemini image edits fail transiently fairly often
         try {
-          imageDataUri = await gemini.personalizeImage(swapped, prompt);
+          recomposed = await gemini.personalizeImage(templateDataUri, prompt);
         } catch (retryErr) {
           console.warn(
-            `personalizeImage failed twice, returning raw face-swap (template pose unchanged): ${
+            `personalizeImage failed twice, swapping onto the original template (pose unchanged): ${
               (firstErr as Error).message
             } | retry: ${(retryErr as Error).message}`,
           );
-          imageDataUri = swapped;
+          recomposed = templateDataUri;
         }
       }
+
+      const swapped1 = await faceSwap(recomposed, imageBase64);
+      imageDataUri = imageBase64_2 ? await faceSwap(swapped1, imageBase64_2) : swapped1;
     } else {
       const gemini = new GeminiProvider();
       imageDataUri = await gemini.generateUserImage(prompt, undefined, undefined);

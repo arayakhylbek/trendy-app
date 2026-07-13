@@ -232,37 +232,23 @@ Output: the same photo, retouched to look like a professional cinematic photogra
     const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
     parts.push({ inlineData: { mimeType: 'image/jpeg', data: swappedData } });
     parts.push({
-      text: `The attached image is a REFERENCE ONLY. It shows a real person whose face has just been placed by a face-swap tool: the face is CORRECT and is the most precious thing in the image. Use the reference solely to learn their identity (face), their outfit, and the location. Do NOT copy its composition.
+      text: `The attached photo is one frame from a professional photo shoot. Create the NEXT frame from the same shoot — the photographer changed the composition:
 
-Your task: shoot a brand-new photograph of this same person, in this same outfit and location, as if a professional photographer captured a completely different frame during the same session.
-
-THE NEW SHOT — compose it exactly like this:
 - Pose: ${pose}
-- Camera: ${angle}
+- Camera angle: ${angle}
 - Framing: ${framing}
-- Expression: ${expression} — rendered as THIS specific person making that expression; the expression must never warp or genericize their facial features
+- Expression: ${expression}
 
-The output must be clearly a DIFFERENT photograph from the reference. If the pose, framing, and camera angle all match the reference, the task has FAILED. Recompose from scratch around the specs above.
+The new frame must look clearly different from the attached one (different pose, angle, framing). Everything else stays exactly the same:
+- same person, same face
+- same outfit and accessories
+- same hairstyle
+- same location, props and lighting
+- any text or logos reproduced exactly, letter for letter
 
-IDENTITY — the most important rule. The face must survive the recomposition 1:1: a face-recognition system, or the person's own mother, must identify the output as the SAME person as the reference. Preserve exactly: face geometry (shape, jawline, chin, cheekbones), eyes (shape, size, spacing, iris color, eyebrows), nose (bridge, length, tip), lips (volume, shape, philtrum), skin tone and undertone, and every distinguishing mark — moles, freckles, dimples in the same spots. Do NOT beautify, idealize, or genericize the face. A "similar looking" person is a FAILED task.
+Scene: ${templatePrompt}
 
-ALSO PRESERVE FROM THE REFERENCE:
-- Outfit: same clothes, colors, and accessories, naturally rearranged to fit the new pose; if a garment is only partially visible, extend it plausibly in the same style
-- Location and mood: the same environment and lighting character, seen naturally from the new camera position — background elements may shift, reveal, or blur as the real camera move would cause
-- Hair: same style, color, and length, falling naturally for the new pose
-- Text and graphics: if the reference contains text, logos, or overlays (e.g. a magazine cover), reproduce them EXACTLY, character-for-character, in the same fonts, colors, and layout — including stylized or fictional brand names. Do not correct, translate, or substitute any word
-
-QUALITY — the output must EXCEED the reference. Treat the reference as a lower-quality draft that may contain compositing seams, softness, or AI artifacts; do not inherit any of its flaws. Render the new frame at flagship-camera, magazine-cover quality:
-- Skin: natural pores, texture, fine hairs, faint imperfections — no plastic, waxy, or airbrushed AI look
-- Eyes: sharp, wet, alive — real catchlights matching the scene's light sources, natural iris detail, visible eyelashes
-- Lighting: fully coherent from the new camera position — direction, color temperature, and shadows (nose, chin, cheekbones) consistent with the scene's light sources
-- Hair: individual strands, natural flyaways, per-strand lighting
-- Lens realism: subtle film grain, natural depth of field appropriate to the framing, cinematic color grade matching the scene mood
-- Sharpness: crisp high-resolution detail on the face and clothing — no blur, warping, or artifacts
-
-Scene context: ${templatePrompt}
-
-Output: one photorealistic photograph — the same person, same outfit, same location, in the new pose, angle, and framing specified above.`,
+Make it look like a real photo from a professional camera: natural skin texture, sharp detailed eyes, detailed hair, realistic lighting, high sharpness, no AI artifacts.`,
     });
 
     const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
