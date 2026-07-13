@@ -248,7 +248,8 @@ The new frame must look clearly different from the attached one (different pose,
 
 Scene: ${templatePrompt}
 
-Make it look like a real photo from a professional camera: natural skin texture, sharp detailed eyes, detailed hair, realistic lighting, high sharpness, no AI artifacts.`,
+Make it look like a real photo from a professional camera: natural skin texture, sharp detailed eyes, detailed hair, realistic lighting, high sharpness, no AI artifacts.
+The face especially must look like real photography: visible skin pores, fine facial hairs, subtle natural imperfections, real catchlights in the eyes — no smoothing, no airbrushed or beauty-filter look.`,
     });
 
     const result = await geminiPost('gemini-2.5-flash-image:generateContent', {
