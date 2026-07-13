@@ -76,6 +76,32 @@ async function toImagePart(input: string): Promise<InputPart> {
   return { type: 'image', mime_type: 'image/jpeg', data: input };
 }
 
+/**
+ * Prompt-only generation on Nano Banana Pro: the template's stored text prompt
+ * + the user's face photo(s). The template image is never sent — only one face
+ * reaches the model, which is what keeps the likeness high (same technique as
+ * generating in the Gemini chat app). Used for templates with promptOnly=true.
+ */
+export async function generateFromPrompt(
+  promptText: string,
+  userPhotoBase64: string,
+  userPhoto2Base64?: string,
+): Promise<string> {
+  const [userPart, user2Part] = await Promise.all([
+    toImagePart(userPhotoBase64),
+    userPhoto2Base64 ? toImagePart(userPhoto2Base64) : Promise.resolve(undefined),
+  ]);
+
+  const text = `${promptText}
+
+The attached photo is the reference image of the real person. Preserve their exact facial features, identity, and skin tone with maximum accuracy — the output must be unmistakably the same person as in the attached photo.`;
+
+  const input: InputPart[] = [{ type: 'text', text }, userPart];
+  if (user2Part) input.push(user2Part);
+
+  return interactionsPost(input, '2K');
+}
+
 // Independent variation axes — one random pick from each, so two users on the
 // same template land on the same combination only ~1 time in 1200
 const POSES = [

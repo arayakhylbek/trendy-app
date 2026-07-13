@@ -7,8 +7,7 @@ import { db } from '../lib/firebase.js';
 import { GenerateRequestSchema, ValidationError, AppError } from '@trendy/shared';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
 import { faceSwap, upscaleImage } from '../services/replicateService.js';
-// Nano Banana Pro chain (recomposeTemplate + faceSwap + upscaleImage, ~$0.27/gen) —
-// swap the import back to '../services/geminiImageService.js' to restore it.
+import { generateFromPrompt } from '../services/geminiImageService.js';
 
 const router: ReturnType<typeof Router> = Router();
 
@@ -35,6 +34,20 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
     let imageDataUri: string;
 
     if (imageBase64) {
+      // Prompt-only templates: the stored text prompt + the user's face go to
+      // Nano Banana Pro directly; the template image is never sent, so only one
+      // face reaches the model (maximum likeness, Gemini-chat-style result).
+      if (templateId) {
+        const snap = await db.collection('templates').doc(templateId).get();
+        const tpl = snap.data();
+        if (tpl?.['promptOnly'] === true) {
+          const genPrompt = (tpl['genPrompt'] as string | undefined) ?? prompt;
+          imageDataUri = await generateFromPrompt(genPrompt, imageBase64, imageBase64_2);
+          res.json({ image: imageDataUri, prompt: genPrompt });
+          return;
+        }
+      }
+
       let templateInput: string | undefined = templateBase64;
 
       if (!templateInput) {
