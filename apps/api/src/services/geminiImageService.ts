@@ -94,7 +94,10 @@ export async function generateFromPrompt(
 
   const text = `${promptText}
 
-The attached photo is the reference image of the real person. Preserve their exact facial features, identity, and skin tone with maximum accuracy — the output must be unmistakably the same person as in the attached photo.`;
+STRICT RULES:
+- The attached photo is the reference of the real person. Preserve their exact facial features, identity, and skin tone with maximum accuracy — the output must be unmistakably the same person.
+- Follow the description above EXACTLY. Do not invent, add, or change anything that is not written in it — no extra objects, props, accessories, text, people, or background elements of your own.
+- Use only the pose, framing, outfit, and scene described above. Do not restage or reinterpret it, and do not change the pose beyond what is written.`;
 
   const input: InputPart[] = [{ type: 'text', text }, userPart];
   if (user2Part) input.push(user2Part);
