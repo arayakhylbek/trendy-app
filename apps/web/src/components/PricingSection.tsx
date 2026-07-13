@@ -9,8 +9,8 @@ interface Props {
 
 const FEATURES = {
   free: ['2 AI photo generations', 'All 8 templates', 'Standard quality', 'No watermark removal', 'Priority processing'],
-  lite: ['10 generations / month', 'All templates + new drops', 'HD quality output', 'No watermark', 'Priority processing'],
-  pro:  ['20 generations / month', 'All templates + early access', '4K quality output', 'No watermark', 'Priority processing'],
+  lite: ['5 generations / month', 'All templates + new drops', 'HD quality output', 'No watermark', 'Priority processing'],
+  pro:  ['10 generations / month', 'All templates + early access', '4K quality output', 'No watermark', 'Priority processing'],
 };
 
 const DISABLED = {

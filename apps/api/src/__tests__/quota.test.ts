@@ -63,15 +63,15 @@ describe('checkQuota middleware', () => {
     expect(callArg?.code).toBe('QUOTA_EXCEEDED');
   });
 
-  it('allows pro user below the 20-generation limit', async () => {
-    setupUser(userSnap('pro', 19));
+  it('allows pro user below the 10-generation limit', async () => {
+    setupUser(userSnap('pro', 9));
     const next = mockNext();
     await checkQuota(mockRequest('uid') as Request, {} as Response, next);
     expect(next).toHaveBeenCalledWith();
   });
 
-  it('blocks pro user at the 20-generation limit', async () => {
-    setupUser(userSnap('pro', 20));
+  it('blocks pro user at the 10-generation limit', async () => {
+    setupUser(userSnap('pro', 10));
     const next = mockNext();
     await checkQuota(mockRequest('uid') as Request, {} as Response, next);
     const callArg = (next as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];

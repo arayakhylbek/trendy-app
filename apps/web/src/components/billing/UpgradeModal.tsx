@@ -83,7 +83,7 @@ export function UpgradeModal({ onClose }: Props) {
             </div>
             <div style={{ fontSize: 12, color: '#888', marginBottom: 14 }}>/ month</div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 20, flex: 1 }}>
-              {['10 generations / month', 'All templates', 'HD quality', 'No watermark'].map(f => (
+              {['5 generations / month', 'All templates', 'HD quality', 'No watermark'].map(f => (
                 <li key={f} style={{ fontSize: 12, color: '#bbb', display: 'flex', alignItems: 'center', gap: 7 }}>
                   <span style={{ color: '#ff6b9d', fontSize: 9 }}>✦</span>{f}
                 </li>
