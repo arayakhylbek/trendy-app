@@ -8,7 +8,7 @@ import { GenerateRequestSchema, ValidationError, AppError } from '@trendy/shared
 import { GeminiProvider } from '../ai/GeminiProvider.js';
 // Legacy Replicate pipeline — restore this import to roll back:
 // import { faceSwap, upscaleImage } from '../services/replicateService.js';
-import { generatePersonalizedShot, upscaleImage } from '../services/geminiImageService.js';
+import { recomposeTemplate, faceSwap, upscaleImage } from '../services/geminiImageService.js';
 
 const router: ReturnType<typeof Router> = Router();
 
@@ -57,13 +57,20 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
       // }
       // ... plus the post-branch upscaleImage(imageDataUri) call.
 
-      // Single Nano Banana Pro call: face insert + pose/angle variation + 2K quality
+      // Two Nano Banana Pro calls, face LAST so nothing re-renders it:
+      // 1) recompose the template (new pose/angle/framing, 2K) without the user photo,
+      // 2) strict face swap of the user's face onto the recomposed frame.
+      const runChain = async (): Promise<string> => {
+        const recomposed = await recomposeTemplate(templateInput, prompt);
+        const swapped1 = await faceSwap(recomposed, imageBase64);
+        return imageBase64_2 ? faceSwap(swapped1, imageBase64_2) : swapped1;
+      };
       try {
-        imageDataUri = await generatePersonalizedShot(templateInput, imageBase64, imageBase64_2, prompt);
+        imageDataUri = await runChain();
       } catch (firstErr) {
         // Retry once — image generations fail transiently fairly often
-        console.warn(`generatePersonalizedShot failed, retrying once: ${(firstErr as Error).message}`);
-        imageDataUri = await generatePersonalizedShot(templateInput, imageBase64, imageBase64_2, prompt);
+        console.warn(`generation chain failed, retrying once: ${(firstErr as Error).message}`);
+        imageDataUri = await runChain();
       }
     } else {
       const gemini = new GeminiProvider();

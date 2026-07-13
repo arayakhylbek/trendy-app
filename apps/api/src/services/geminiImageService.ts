@@ -114,9 +114,57 @@ const EXPRESSIONS = [
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]!;
 
 /**
+ * Recomposes the template alone (no user photo): new pose, camera angle,
+ * framing, and expression at 2K, keeping the template's person, outfit,
+ * scene, and any text intact. The user's face is swapped in afterwards by
+ * faceSwap() as the final step, so nothing re-renders it.
+ */
+export async function recomposeTemplate(
+  templateInput: string,
+  scenePrompt: string,
+): Promise<string> {
+  const templatePart = await toImagePart(templateInput);
+
+  const pose = pick(POSES);
+  const angle = pick(ANGLES);
+  const framing = pick(FRAMINGS);
+  const expression = pick(EXPRESSIONS);
+
+  const text = `The attached image is one frame from a professional photo shoot. Generate the NEXT frame from the same shoot: the photographer asked the subject to change position and moved the camera.
+
+THE NEW SHOT — compose it exactly like this:
+- Pose: ${pose}
+- Camera: ${angle}
+- Framing: ${framing}
+- Expression: ${expression}
+
+The new frame MUST be composed clearly differently from the attached one. If the output has the same pose, same framing, and same camera angle as the input, the task has FAILED.
+
+SAME SHOOT, SAME EVERYTHING ELSE:
+- Same person: identical face, identity, skin tone
+- Same outfit: identical garments, colors, fabrics, accessories; if a garment is only partially visible, extend it plausibly in the same style
+- Same hairstyle, hair color, and length
+- Same location, props, lighting character, and color mood — seen naturally from the new camera position; the background may shift, reveal, or blur as the camera move would cause
+- Text and graphics: if the image contains text, logos, or overlays (e.g. a magazine cover), reproduce them EXACTLY, character-for-character, in the same fonts, colors, and layout — including stylized or fictional brand names. Do not correct, translate, or substitute any word
+
+QUALITY — render at flagship-camera, magazine-cover level; do not inherit any flaws or artifacts from the input:
+- Skin: natural pores and texture — no plastic, waxy, or airbrushed AI look
+- Eyes: sharp and alive, real catchlights matching the scene's light sources
+- Hair: individual strands, natural flyaways
+- Lens realism: subtle film grain, natural depth of field, cinematic color grade matching the scene mood
+- Sharpness: crisp high-resolution detail — no blur, warping, or artifacts
+
+Scene context: ${scenePrompt}
+
+Output: one photorealistic photograph — the next frame of the same shoot, recomposed per the specs above.`;
+
+  return interactionsPost([{ type: 'text', text }, templatePart], '2K');
+}
+
+/**
  * Single-call generation on Nano Banana Pro: template + user face photo(s) →
- * finished personalized shot at 2K. Replaces the legacy 3-step chain
- * (faceSwap → personalizeImage → upscaleImage) with one request.
+ * finished personalized shot at 2K. Kept as an alternative path; the main
+ * route now uses recomposeTemplate() + faceSwap() for literal face fidelity.
  */
 export async function generatePersonalizedShot(
   templateInput: string,
@@ -205,9 +253,11 @@ export async function faceSwap(
       type: 'text',
       text: `The FIRST image is a template photo. The SECOND image shows a real person's face.
 
-Replace the face of the person in the FIRST image with the face of the person from the SECOND image. The result must be the exact same template photo — same pose, body, outfit, background, lighting, framing — but the person's face, facial features, and skin tone are now those of the person from the SECOND image, seamlessly blended: matching the scene's lighting direction, color temperature, and grain, with no visible seams.
+Replace the face of the person in the FIRST image with the face of the person from the SECOND image. This is a literal 1:1 face transplant — the output face must be so faithful that a face-recognition system, or the person's own mother, would identify it as the SAME person as in the SECOND image. Copy exactly: face geometry (shape, jawline, chin, cheekbones), eyes (shape, size, spacing, iris color, eyebrows), nose (bridge, length, tip, nostrils), lips (volume, shape, philtrum), skin tone and undertone, and every distinguishing mark — moles, freckles, dimples in the same spots. Do NOT beautify, idealize, or blend with the template's face — a "similar looking" face is a FAILED task.
 
-Do not change anything else in the template. Output only the edited photograph.`,
+Everything else stays the exact same as the FIRST image — same pose, body, outfit, hair, background, lighting, framing, and any text or graphics. The new face must be seamlessly integrated: matching the scene's lighting direction, color temperature, and grain, with the head at the same angle as in the template, no visible seams.
+
+Output only the edited photograph.`,
     },
     templatePart,
     userPart,
