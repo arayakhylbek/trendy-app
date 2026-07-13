@@ -20,10 +20,8 @@ async function main() {
     priorHiddenStaticIds: priorHidden,
     firestoreStatuses: firestoreDocs, // {id, prior status} for every doc
   };
-  writeFileSync(
-    new URL('../../../../docs/hidden-backup.json', import.meta.url),
-    JSON.stringify(backup, null, 2),
-  );
+  // Run from apps/api, so repo root is two levels up
+  writeFileSync('../../docs/hidden-backup.json', JSON.stringify(backup, null, 2));
 
   // --- hide all static templates ---
   const allStaticIds = STATIC_TEMPLATES.map((t) => t.id);

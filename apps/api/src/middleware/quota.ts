@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { db } from '../lib/firebase.js';
-import { PLANS, QuotaExceededError, NotFoundError } from '@trendy/shared';
+import { PLANS, QuotaExceededError } from '@trendy/shared';
 import type { PlanId } from '@trendy/shared';
 
 const ADMIN_EMAILS = ['araiakhylbek78@gmail.com', 'potizhmoti@gmail.com'];
@@ -14,7 +14,22 @@ export async function checkQuota(req: Request, _res: Response, next: NextFunctio
     // the check before either increments the counter.
     const allowed = await db.runTransaction(async (t) => {
       const snap = await t.get(userRef);
-      if (!snap.exists) throw new NotFoundError('User');
+
+      // Safety net: a brand-new user who reached generate before /me created
+      // their doc. Create it now on the free tier and reserve this first slot.
+      if (!snap.exists) {
+        const now = new Date().toISOString();
+        t.set(userRef, {
+          uid: req.uid,
+          email: '',
+          displayName: null,
+          tier: 'free',
+          generationsUsed: 1,
+          createdAt: now,
+          updatedAt: now,
+        });
+        return true;
+      }
 
       const user = snap.data()!;
 

@@ -10,5 +10,7 @@ export function useCurrentUser() {
     queryFn: () => apiFetch<{ user: UserDoc }>('/api/users/me').then((r) => r.user),
     enabled: !!firebaseUser,
     staleTime: 60 * 1000,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
   });
 }
