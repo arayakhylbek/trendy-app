@@ -9,14 +9,14 @@ export const PLANS = {
   lite: {
     id: 'lite' as const,
     label: 'Lite',
-    price: 0.99,
+    price: 2.99,
     monthlyLimit: 5,
     features: ['5 generations / month', 'Full template library', 'HD downloads'],
   },
   pro: {
     id: 'pro' as const,
     label: 'Pro',
-    price: 2.22,
+    price: 3.99,
     monthlyLimit: 10,
     features: ['10 generations / month', 'Full daily template library', 'HD downloads'],
   },

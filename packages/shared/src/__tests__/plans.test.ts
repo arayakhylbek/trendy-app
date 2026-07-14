@@ -7,14 +7,14 @@ describe('PLANS', () => {
     expect(PLANS.free.price).toBe(0);
   });
 
-  it('lite plan has limit of 10 at $0.99', () => {
-    expect(PLANS.lite.monthlyLimit).toBe(10);
-    expect(PLANS.lite.price).toBe(0.99);
+  it('lite plan has limit of 5 at $2.99', () => {
+    expect(PLANS.lite.monthlyLimit).toBe(5);
+    expect(PLANS.lite.price).toBe(2.99);
   });
 
-  it('pro plan has limit of 30 at $2.22', () => {
-    expect(PLANS.pro.monthlyLimit).toBe(30);
-    expect(PLANS.pro.price).toBe(2.22);
+  it('pro plan has limit of 10 at $3.99', () => {
+    expect(PLANS.pro.monthlyLimit).toBe(10);
+    expect(PLANS.pro.price).toBe(3.99);
   });
 
   it('studio plan has Infinity limit at $49', () => {

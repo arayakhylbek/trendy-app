@@ -37,8 +37,11 @@ Last updated: 2026-06-18
 
 ### 2. Polar Dashboard (polar.sh/dashboard)
 
-- [ ] Create product **"Pro"** (recurring subscription, $19/month) → copy Product ID → `POLAR_PRODUCT_PRO`
+- [ ] Create product **"Lite"** (recurring subscription, $2.99/month) → copy Product ID → `POLAR_PRODUCT_LITE`
+- [ ] Create product **"Pro"** (recurring subscription, $3.99/month) → copy Product ID → `POLAR_PRODUCT_PRO`
 - [ ] Create product **"Studio"** (recurring subscription, $49/month) → copy Product ID → `POLAR_PRODUCT_STUDIO`
+
+> ✅ **Prices changed 2026-07-14** (Lite → $2.99, Pro → $3.99). Updated in both `plans.ts` (display) **and** the Polar dashboard (actual billing) — in sync.
 - [ ] Generate **API access token** → `POLAR_ACCESS_TOKEN`
 - [ ] Create **Webhook endpoint**:
   - URL: `https://trendy-app-one.vercel.app/api/webhooks/polar`
