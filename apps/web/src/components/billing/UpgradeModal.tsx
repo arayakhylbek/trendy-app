@@ -80,8 +80,8 @@ export function UpgradeModal({ onClose }: Props) {
             </div>
             <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#888', marginBottom: 12 }}>Lite</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
-              <span style={{ fontSize: 18, fontWeight: 700, color: '#ff5c7a', textDecoration: 'line-through', fontFamily: '"DM Sans", sans-serif' }}>$2.99</span>
-              <span style={{ fontSize: 34, fontWeight: 800, color: '#fff', lineHeight: 1, fontFamily: '"DM Sans", sans-serif' }}>$1.99</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: '#ff5c7a', textDecoration: 'line-through', fontFamily: '"DM Sans", sans-serif' }}>$3.99</span>
+              <span style={{ fontSize: 34, fontWeight: 800, color: '#fff', lineHeight: 1, fontFamily: '"DM Sans", sans-serif' }}>$2.99</span>
             </div>
             <div style={{ fontSize: 12, color: '#888', marginBottom: 14 }}>/ month</div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 20, flex: 1 }}>
@@ -118,8 +118,8 @@ export function UpgradeModal({ onClose }: Props) {
           }}>
             <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#888', marginBottom: 12 }}>Pro</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
-              <span style={{ fontSize: 18, fontWeight: 700, color: '#ff5c7a', textDecoration: 'line-through', fontFamily: '"DM Sans", sans-serif' }}>$4.99</span>
-              <span style={{ fontSize: 34, fontWeight: 800, color: '#fff', lineHeight: 1, fontFamily: '"DM Sans", sans-serif' }}>$2.99</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: '#ff5c7a', textDecoration: 'line-through', fontFamily: '"DM Sans", sans-serif' }}>$5.99</span>
+              <span style={{ fontSize: 34, fontWeight: 800, color: '#fff', lineHeight: 1, fontFamily: '"DM Sans", sans-serif' }}>$3.99</span>
             </div>
             <div style={{ fontSize: 12, color: '#888', marginBottom: 14 }}>/ month</div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 20, flex: 1 }}>

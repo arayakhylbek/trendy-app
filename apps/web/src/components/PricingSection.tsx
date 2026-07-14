@@ -105,11 +105,11 @@ export function PricingSection({ onNeedAuth }: Props) {
           <PopularBadge />
           <PlanName>Lite</PlanName>
           <PriceRow>
-            <OldPrice>$2.99</OldPrice>
-            <BigPrice>$1.99</BigPrice>
+            <OldPrice>$3.99</OldPrice>
+            <BigPrice>$2.99</BigPrice>
           </PriceRow>
           <Per>/ mo</Per>
-          <PromoBadge>Limited time — 33% off</PromoBadge>
+          <PromoBadge>Limited time — 25% off</PromoBadge>
           <Desc>For the casual creator who posts regularly.</Desc>
           <FeatureList features={FEATURES.lite} disabled={DISABLED.lite} />
           <GradientButton onClick={() => handleCheckout('lite')} disabled={loading === 'lite'}>
@@ -121,11 +121,11 @@ export function PricingSection({ onNeedAuth }: Props) {
         <Card>
           <PlanName>Pro</PlanName>
           <PriceRow>
-            <OldPrice>$4.99</OldPrice>
-            <BigPrice>$2.99</BigPrice>
+            <OldPrice>$5.99</OldPrice>
+            <BigPrice>$3.99</BigPrice>
           </PriceRow>
           <Per>/ mo</Per>
-          <PromoBadge>Limited time — 40% off</PromoBadge>
+          <PromoBadge>Limited time — 33% off</PromoBadge>
           <Desc>For the serious creator who posts every day.</Desc>
           <FeatureList features={FEATURES.pro} disabled={DISABLED.pro} />
           <DarkButton onClick={() => handleCheckout('pro')} disabled={loading === 'pro'}>
