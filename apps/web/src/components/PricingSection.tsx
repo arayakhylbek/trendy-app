@@ -8,7 +8,7 @@ interface Props {
 }
 
 const FEATURES = {
-  free: ['2 AI photo generations', 'All 8 templates', 'Standard quality', 'No watermark removal', 'Priority processing'],
+  free: ['1 AI photo generation', 'All 8 templates', 'Standard quality', 'No watermark removal', 'Priority processing'],
   lite: ['5 generations / month', 'All templates + new drops', 'HD quality output', 'No watermark', 'Priority processing'],
   pro:  ['10 generations / month', 'All templates + early access', '4K quality output', 'No watermark', 'Priority processing'],
 };
@@ -89,7 +89,7 @@ export function PricingSection({ onNeedAuth }: Props) {
           </PriceRow>
           <Per>/ forever</Per>
           <AlwaysFreeBadge />
-          <Desc>Perfect for trying it out. 2 generations on us.</Desc>
+          <Desc>Perfect for trying it out. 1 generation on us.</Desc>
           <FeatureList features={FEATURES.free} disabled={DISABLED.free} />
           <DarkButton
             onClick={() =>

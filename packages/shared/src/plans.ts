@@ -3,8 +3,8 @@ export const PLANS = {
     id: 'free' as const,
     label: 'Free',
     price: 0,
-    monthlyLimit: 2,
-    features: ['2 generations / month', 'Limited template library', 'Standard quality'],
+    monthlyLimit: 1,
+    features: ['1 generation / month', 'Limited template library', 'Standard quality'],
   },
   lite: {
     id: 'lite' as const,

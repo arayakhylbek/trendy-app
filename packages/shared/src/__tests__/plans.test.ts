@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { PLANS, getPlanById } from '../plans.js';
 
 describe('PLANS', () => {
-  it('free plan has limit of 2', () => {
-    expect(PLANS.free.monthlyLimit).toBe(2);
+  it('free plan has limit of 1', () => {
+    expect(PLANS.free.monthlyLimit).toBe(1);
     expect(PLANS.free.price).toBe(0);
   });
 

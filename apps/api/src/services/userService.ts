@@ -5,7 +5,7 @@ interface AuthUserInfo {
   displayName?: string | null;
 }
 
-// Every new user is created on the free tier with 0 used → 2 free generations
+// Every new user is created on the free tier with 0 used → 1 free generation
 // (PLANS.free.monthlyLimit). Built as a plain object, NOT via UserDocSchema.parse,
 // because the schema's strict email() check would throw for providers without an
 // email and silently leave the user with no doc (→ 404 → "0 generations").

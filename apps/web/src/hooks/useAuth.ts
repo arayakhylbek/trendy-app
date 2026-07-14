@@ -13,7 +13,7 @@ export function useAuth() {
       setUser(u);
       if (u) {
         // Create the user doc, THEN refetch ['me'] so the quota badge shows the
-        // real grant (2 free) instead of a stale/failed fetch that raced the create.
+        // real grant (1 free) instead of a stale/failed fetch that raced the create.
         await apiFetch('/api/users/me', { method: 'POST' }).catch(() => {});
         await queryClient.invalidateQueries({ queryKey: ['me'] });
       } else {
