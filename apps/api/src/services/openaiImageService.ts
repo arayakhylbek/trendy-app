@@ -52,6 +52,9 @@ export async function generateFromPrompt(
   form.append('prompt', buildPrompt(promptText));
   form.append('size', '1024x1536'); // portrait; closest GPT Image size to 9:16
   form.append('input_fidelity', 'high'); // preserve faces/details from the input
+  // Return JPEG, not the default PNG: a 1024x1536 PNG base64 blows past Vercel's
+  // 4.5 MB serverless response limit → the function 502s with an empty body.
+  form.append('output_format', 'jpeg');
   form.append('image[]', blob1, 'reference-1.png');
   if (blob2) form.append('image[]', blob2, 'reference-2.png');
 
@@ -74,5 +77,5 @@ export async function generateFromPrompt(
   const data = (await res.json()) as { data?: Array<{ b64_json?: string }> };
   const b64 = data.data?.[0]?.b64_json;
   if (!b64) throw new AppError('OPENAI_IMAGE_EMPTY', 'OpenAI returned no image', 502);
-  return `data:image/png;base64,${b64}`;
+  return `data:image/jpeg;base64,${b64}`;
 }
