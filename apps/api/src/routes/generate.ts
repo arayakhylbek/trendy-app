@@ -6,9 +6,14 @@ import { rateLimit } from '../middleware/rateLimit.js';
 import { db } from '../lib/firebase.js';
 import { GenerateRequestSchema, ValidationError } from '@trendy/shared';
 import { GeminiProvider } from '../ai/GeminiProvider.js';
-import { generateFromPrompt } from '../services/geminiImageService.js';
+import { generateFromPrompt as geminiGenerate } from '../services/geminiImageService.js';
+import { generateFromPrompt as openaiGenerate } from '../services/openaiImageService.js';
 
 const router: ReturnType<typeof Router> = Router();
+
+// Image provider switch: IMAGE_PROVIDER=openai → GPT Image, otherwise Gemini.
+const generateFromPrompt =
+  process.env['IMAGE_PROVIDER'] === 'openai' ? openaiGenerate : geminiGenerate;
 
 router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) => {
   try {
