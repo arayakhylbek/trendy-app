@@ -53,6 +53,7 @@ router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) =
 
     res.json({ image: imageDataUri, prompt });
   } catch (e) {
+    console.error(`[generate] failed: ${(e as { code?: string })?.code ?? ''} ${(e as Error)?.message ?? e}`);
     // Generation failed after quota was reserved — refund the slot
     try {
       await db.collection('users').doc(req.uid).update({

@@ -67,6 +67,7 @@ export async function generateFromPrompt(
 
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
+    console.error(`[openai] images error ${res.status} model=${IMAGE_MODEL}: ${detail.slice(0, 800)}`);
     throw new AppError(
       'OPENAI_IMAGE_ERROR',
       `OpenAI images error ${res.status}: ${detail.slice(0, 500)}`,
@@ -77,5 +78,7 @@ export async function generateFromPrompt(
   const data = (await res.json()) as { data?: Array<{ b64_json?: string }> };
   const b64 = data.data?.[0]?.b64_json;
   if (!b64) throw new AppError('OPENAI_IMAGE_EMPTY', 'OpenAI returned no image', 502);
+  const bytes = Math.round((b64.length * 3) / 4);
+  console.log(`[openai] image ok model=${IMAGE_MODEL} ~${Math.round(bytes / 1024)}KB (base64 ${b64.length})`);
   return `data:image/jpeg;base64,${b64}`;
 }
