@@ -66,7 +66,9 @@ export async function generateFromPrompt(
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}` },
     body: form,
-    signal: AbortSignal.timeout(120000),
+    // gpt-image-2 (esp. high quality + edits) can take >2 min; stay under the
+    // Vercel function maxDuration (300s) so we fail gracefully, not killed.
+    signal: AbortSignal.timeout(280000),
   });
 
   if (!res.ok) {
