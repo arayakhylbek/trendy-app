@@ -51,7 +51,11 @@ export async function generateFromPrompt(
   form.append('model', IMAGE_MODEL);
   form.append('prompt', buildPrompt(promptText));
   form.append('size', '1024x1536'); // portrait; closest GPT Image size to 9:16
-  form.append('input_fidelity', 'high'); // preserve faces/details from the input
+  // input_fidelity preserves the input face, but only gpt-image-1/1.5 accept it;
+  // gpt-image-2 rejects it with a 400 (invalid_input_fidelity_model).
+  if (IMAGE_MODEL.startsWith('gpt-image-1')) {
+    form.append('input_fidelity', 'high');
+  }
   // Return JPEG, not the default PNG: a 1024x1536 PNG base64 blows past Vercel's
   // 4.5 MB serverless response limit → the function 502s with an empty body.
   form.append('output_format', 'jpeg');
