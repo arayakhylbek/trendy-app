@@ -56,6 +56,9 @@ export async function generateFromPrompt(
   if (IMAGE_MODEL.startsWith('gpt-image-1')) {
     form.append('input_fidelity', 'high');
   }
+  // medium quality: much faster (~30-60s vs 2+ min) and ~3x cheaper than
+  // high/auto, with face fidelity that's still good for this use case.
+  form.append('quality', 'medium');
   // Return JPEG, not the default PNG: a 1024x1536 PNG base64 blows past Vercel's
   // 4.5 MB serverless response limit → the function 502s with an empty body.
   form.append('output_format', 'jpeg');
