@@ -33,11 +33,23 @@ export async function ensureAuth(req: Request, _res: Response, next: NextFunctio
   }
 }
 
+// Accounts created before verification was enforced are grandfathered in, so
+// the feature doesn't lock out the existing user base — only NEW email/password
+// signups must verify.
+const GRANDFATHER_BEFORE = Date.parse('2026-07-18T00:00:00.000Z');
+
 // Gate valuable actions behind a verified email. Google sign-in always has
 // email_verified=true, so this only stops unverified email/password signups.
 // Must run after ensureAuth.
-export function requireVerifiedEmail(req: Request, _res: Response, next: NextFunction) {
+export async function requireVerifiedEmail(req: Request, _res: Response, next: NextFunction) {
   if (req.emailVerified) return next();
+  try {
+    const user = await adminAuth.getUser(req.uid);
+    const created = user.metadata?.creationTime ? Date.parse(user.metadata.creationTime) : 0;
+    if (created && created < GRANDFATHER_BEFORE) return next(); // existing account, allowed
+  } catch {
+    // fall through to the block below if the lookup fails
+  }
   next(
     new AppError(
       'EMAIL_NOT_VERIFIED',
