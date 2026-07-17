@@ -5,6 +5,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   sendPasswordResetEmail,
+  sendEmailVerification,
 } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
 
@@ -21,6 +22,7 @@ export function AuthModal({ onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [awaitingVerify, setAwaitingVerify] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,9 +30,20 @@ export function AuthModal({ onClose }: Props) {
     setLoading(true);
     try {
       if (view === 'login') {
-        await signInWithEmailAndPassword(auth, email, password);
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        // Existing email/password account that never verified → gate here too.
+        if (!cred.user.emailVerified) {
+          await sendEmailVerification(cred.user).catch(() => {});
+          setAwaitingVerify(true);
+          setLoading(false);
+          return;
+        }
       } else if (view === 'register') {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(cred.user).catch(() => {});
+        setAwaitingVerify(true);
+        setLoading(false);
+        return;
       } else {
         await sendPasswordResetEmail(auth, email);
         setResetSent(true);
@@ -42,6 +55,36 @@ export function AuthModal({ onClose }: Props) {
       setError((err as Error).message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleCheckVerified() {
+    setError(null);
+    setLoading(true);
+    try {
+      await auth.currentUser?.reload();
+      await auth.currentUser?.getIdToken(true); // refresh token so email_verified propagates
+      if (auth.currentUser?.emailVerified) {
+        onClose();
+      } else {
+        setError('Not verified yet — open the link in your email, then tap this again.');
+      }
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setError(null);
+    try {
+      if (auth.currentUser) {
+        await sendEmailVerification(auth.currentUser);
+        setError('Verification email sent again — check your inbox and spam.');
+      }
+    } catch (err) {
+      setError((err as Error).message);
     }
   }
 
@@ -67,7 +110,38 @@ export function AuthModal({ onClose }: Props) {
           </button>
         </div>
 
-        {resetSent ? (
+        {awaitingVerify ? (
+          <div className="text-center py-2">
+            <p className="text-white mb-2">Verify your email</p>
+            <p className="text-text-muted text-sm mb-5">
+              We sent a confirmation link to <span className="text-white">{email}</span>. Open it,
+              then come back and continue.
+            </p>
+            {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
+            <button
+              onClick={handleCheckVerified}
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-gradient-accent text-black font-medium hover:opacity-90 transition-opacity disabled:opacity-50 mb-3"
+            >
+              {loading ? 'Checking…' : "I've verified — continue"}
+            </button>
+            <div className="flex justify-between text-sm">
+              <button onClick={handleResend} className="text-accent hover:underline">
+                Resend email
+              </button>
+              <button
+                onClick={() => {
+                  setAwaitingVerify(false);
+                  setError(null);
+                  setView('login');
+                }}
+                className="text-text-muted hover:text-white"
+              >
+                Back
+              </button>
+            </div>
+          </div>
+        ) : resetSent ? (
           <div className="text-center py-4">
             <p className="text-plan-free mb-4">✓ Password reset email sent</p>
             <button onClick={() => setView('login')} className="text-accent text-sm hover:underline">

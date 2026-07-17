@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { FieldValue } from 'firebase-admin/firestore';
-import { ensureAuth } from '../middleware/auth.js';
+import { ensureAuth, requireVerifiedEmail } from '../middleware/auth.js';
 import { checkQuota } from '../middleware/quota.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 import { db } from '../lib/firebase.js';
@@ -15,7 +15,7 @@ const router: ReturnType<typeof Router> = Router();
 const generateFromPrompt =
   process.env['IMAGE_PROVIDER'] === 'openai' ? openaiGenerate : geminiGenerate;
 
-router.post('/', ensureAuth, rateLimit(10), checkQuota, async (req, res, next) => {
+router.post('/', ensureAuth, requireVerifiedEmail, rateLimit(10), checkQuota, async (req, res, next) => {
   try {
     const parsed = GenerateRequestSchema.safeParse(req.body);
     if (!parsed.success) {
