@@ -11,6 +11,32 @@ import { auth } from '../../lib/firebase';
 
 type View = 'login' | 'register' | 'reset';
 
+// Turn raw Firebase auth error codes into friendly, human messages.
+function authErrorMessage(err: unknown): string {
+  const code = (err as { code?: string })?.code ?? '';
+  switch (code) {
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+      return "We couldn't find an account with that email and password. New here? Create an account first.";
+    case 'auth/invalid-email':
+      return 'That doesn’t look like a valid email address.';
+    case 'auth/email-already-in-use':
+      return 'This email is already registered. Try signing in instead.';
+    case 'auth/weak-password':
+      return 'Password must be at least 6 characters.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please wait a moment and try again.';
+    case 'auth/network-request-failed':
+      return 'Network error — check your connection and try again.';
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+      return 'Google sign-in was cancelled.';
+    default:
+      return 'Something went wrong. Please try again.';
+  }
+}
+
 interface Props {
   onClose: () => void;
 }
@@ -52,7 +78,7 @@ export function AuthModal({ onClose }: Props) {
       }
       onClose();
     } catch (err) {
-      setError((err as Error).message);
+      setError(authErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -70,7 +96,7 @@ export function AuthModal({ onClose }: Props) {
         setError('Not verified yet — open the link in your email, then tap this again.');
       }
     } catch (err) {
-      setError((err as Error).message);
+      setError(authErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -84,7 +110,7 @@ export function AuthModal({ onClose }: Props) {
         setError('Verification email sent again — check your inbox and spam.');
       }
     } catch (err) {
-      setError((err as Error).message);
+      setError(authErrorMessage(err));
     }
   }
 
@@ -94,7 +120,7 @@ export function AuthModal({ onClose }: Props) {
       await signInWithPopup(auth, new GoogleAuthProvider());
       onClose();
     } catch (err) {
-      setError((err as Error).message);
+      setError(authErrorMessage(err));
     }
   }
 
