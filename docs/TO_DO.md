@@ -6,6 +6,20 @@ Last updated: 2026-06-18
 
 ---
 
+## ⏳ Pending — footballer templates awaiting covers (added 2026-07-17)
+
+Three `sports` templates created with `status: pending` (hidden from users until published). Same pitch-invasion selfie prompt as Haaland/Mbappé, player name + description swapped:
+
+- **Yamal Selfie** (Lamine Yamal) — id `Rqu3w4I1JNCIPazaHNkh`
+- **Bellingham Selfie** (Jude Bellingham) — id `KHPymvNnUCfencerdzMk`
+- **Ronaldo Selfie** (Cristiano Ronaldo) — id `5quVrLO3ckxHIxmRWwEU`
+
+To finish (when the user sends assets):
+- [ ] Drop the **cover image** for each → replace `image` (currently placeholder `/templates/prompt-fan-selfie.jpg`) and set `status: 'published'`.
+- [ ] Optional but recommended: add a **reference face photo** of each player (like `ref-haaland.jpg`) → set `referenceImage`, so the player's face is accurate. Without it, the player is generated from the text description only (fine for Ronaldo, less reliable for Yamal/Bellingham).
+
+---
+
 ## 🔴 Required — app won't fully work until these are done
 
 ### 1. Firebase Console (console.firebase.google.com/project/trendy-app-glimr)
