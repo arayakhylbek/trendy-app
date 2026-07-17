@@ -15,6 +15,17 @@ const router: ReturnType<typeof Router> = Router();
 const generateFromPrompt =
   process.env['IMAGE_PROVIDER'] === 'openai' ? openaiGenerate : geminiGenerate;
 
+// Count a generation only AFTER it succeeds, so a failed/aborted/timed-out
+// request never costs the user a slot. checkQuota only checks the limit now.
+async function consumeGeneration(uid: string): Promise<void> {
+  try {
+    await db.collection('users').doc(uid).update({
+      generationsUsed: FieldValue.increment(1),
+      updatedAt: new Date().toISOString(),
+    });
+  } catch { /* best-effort; never fail the request over the counter */ }
+}
+
 router.post('/', ensureAuth, requireVerifiedEmail, rateLimit(10), checkQuota, async (req, res, next) => {
   try {
     const parsed = GenerateRequestSchema.safeParse(req.body);
@@ -44,6 +55,7 @@ router.post('/', ensureAuth, requireVerifiedEmail, rateLimit(10), checkQuota, as
         }
       }
       imageDataUri = await generateFromPrompt(genPrompt, imageBase64, secondRef);
+      await consumeGeneration(req.uid);
       res.json({ image: imageDataUri, prompt: genPrompt });
       return;
     }
@@ -51,16 +63,12 @@ router.post('/', ensureAuth, requireVerifiedEmail, rateLimit(10), checkQuota, as
     const gemini = new GeminiProvider();
     imageDataUri = await gemini.generateUserImage(prompt, undefined, undefined);
 
+    await consumeGeneration(req.uid);
     res.json({ image: imageDataUri, prompt });
   } catch (e) {
     console.error(`[generate] failed: ${(e as { code?: string })?.code ?? ''} ${(e as Error)?.message ?? e}`);
-    // Generation failed after quota was reserved — refund the slot
-    try {
-      await db.collection('users').doc(req.uid).update({
-        generationsUsed: FieldValue.increment(-1),
-        updatedAt: new Date().toISOString(),
-      });
-    } catch { /* ignore refund error */ }
+    // No slot was reserved, so there's nothing to refund — a failed generation
+    // simply doesn't count.
     next(e);
   }
 });

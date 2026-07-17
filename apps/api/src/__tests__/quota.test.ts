@@ -4,7 +4,6 @@ import type { Request, Response, NextFunction } from 'express';
 vi.mock('../lib/firebase.js', () => ({
   db: {
     collection: vi.fn(),
-    runTransaction: vi.fn(),
   },
   adminAuth: {},
 }));
@@ -20,22 +19,17 @@ function mockNext(): NextFunction {
   return vi.fn();
 }
 
-// Wire up db.collection().doc() and a runTransaction that runs the callback
-// against a fake transaction whose get() returns the given snapshot.
+// Wire up db.collection().doc() to a ref whose get() returns the given snapshot.
+// checkQuota now only READS + checks; the slot is consumed in generate.ts on
+// success, so the middleware must not increment.
 function setupUser(snapshot: { exists: boolean; data?: () => unknown }) {
-  const docMock = vi.fn().mockReturnValue({ id: 'ref' });
-  vi.mocked(db.collection).mockReturnValue({ doc: docMock } as unknown as ReturnType<typeof db.collection>);
-
-  const t = {
+  const ref = {
     get: vi.fn().mockResolvedValue(snapshot),
     set: vi.fn(),
-    update: vi.fn(),
   };
-  vi.mocked(db.runTransaction).mockImplementation(
-    // @ts-expect-error minimal transaction shape for the test
-    async (fn) => fn(t),
-  );
-  return t;
+  const docMock = vi.fn().mockReturnValue(ref);
+  vi.mocked(db.collection).mockReturnValue({ doc: docMock } as unknown as ReturnType<typeof db.collection>);
+  return ref;
 }
 
 function userSnap(tier: string, generationsUsed: number) {
@@ -47,16 +41,17 @@ describe('checkQuota middleware', () => {
     vi.clearAllMocks();
   });
 
-  it('allows free user with 0 generations used and reserves a slot', async () => {
-    const t = setupUser(userSnap('free', 0));
+  it('allows free user with 0 generations used without reserving a slot', async () => {
+    const ref = setupUser(userSnap('free', 0));
     const next = mockNext();
     await checkQuota(mockRequest('uid') as Request, {} as Response, next);
     expect(next).toHaveBeenCalledWith();
-    expect(t.update).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ generationsUsed: 1 }));
+    // Must NOT consume here — that happens after a successful generation.
+    expect(ref.set).not.toHaveBeenCalled();
   });
 
-  it('blocks free user at the 2-generation limit', async () => {
-    setupUser(userSnap('free', 2));
+  it('blocks free user at the 1-generation limit', async () => {
+    setupUser(userSnap('free', 1));
     const next = mockNext();
     await checkQuota(mockRequest('uid') as Request, {} as Response, next);
     const callArg = (next as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
@@ -85,14 +80,13 @@ describe('checkQuota middleware', () => {
     expect(next).toHaveBeenCalledWith();
   });
 
-  it('creates the doc and allows generation when the user has no doc yet', async () => {
-    const t = setupUser({ exists: false });
+  it('creates the doc (0 used) and allows generation when the user has no doc yet', async () => {
+    const ref = setupUser({ exists: false });
     const next = mockNext();
     await checkQuota(mockRequest('newuid') as Request, {} as Response, next);
     expect(next).toHaveBeenCalledWith();
-    expect(t.set).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ tier: 'free', generationsUsed: 1 }),
+    expect(ref.set).toHaveBeenCalledWith(
+      expect.objectContaining({ tier: 'free', generationsUsed: 0 }),
     );
   });
 });
